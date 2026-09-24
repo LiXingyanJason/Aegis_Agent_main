@@ -1,7 +1,7 @@
 const routes = [
   ['index.html', '◈', '原型总览'],
   ['task-console.html', '◌', '任务对话'],
-  ['research.html', '⌕', '信息工作台'],
+  ['research.html', '⌕', '邮件管理'],
   ['official-research.html', '▤', '官方资料查询'],
   ['confirmation.html', '✓', '操作确认'],
   ['sandbox.html', '▣', '代码沙箱'],
@@ -51,21 +51,53 @@ document.querySelectorAll('.modalback').forEach(backdrop => {
 document.querySelectorAll('a[href="#"]').forEach(link => {
   link.onclick = event => event.preventDefault();
 });
+
+const mailTabs = document.querySelectorAll('[data-mail-tab]');
+const mailPanels = document.querySelectorAll('[data-mail-panel]');
+if (mailTabs.length) {
+  const selectMailPanel = name => {
+    mailTabs.forEach(tab => {
+      const selected = tab.dataset.mailTab === name;
+      tab.classList.toggle('active', selected);
+      tab.setAttribute('aria-selected', String(selected));
+    });
+    mailPanels.forEach(panel => { panel.hidden = panel.dataset.mailPanel !== name; });
+  };
+  const initialTab = location.hash.replace('#', '');
+  selectMailPanel(['received', 'drafts', 'sent'].includes(initialTab) ? initialTab : 'received');
+  mailTabs.forEach(tab => {
+    tab.onclick = () => {
+      const name = tab.dataset.mailTab;
+      location.hash = name;
+      selectMailPanel(name);
+    };
+  });
+}
+
 document.querySelectorAll('[data-email-generate]').forEach(button => {
   button.onclick = () => {
     const row = button.closest('tr');
-    const summary = row.querySelector('[data-email-summary]');
-    const action = row.querySelector('[data-email-action]');
+    const summary = row.querySelector('[data-email-summary-text]');
+    const action = row.querySelector('[data-email-action-text]');
+    const todo = row.querySelector('[data-email-todo]');
     button.disabled = true;
     button.textContent = '生成中...';
     toast('原型模式：正在调用 LLM 生成邮件摘要。');
     setTimeout(() => {
       summary.textContent = button.dataset.summary;
       action.innerHTML = `<b>${button.dataset.action}</b><br><span class="badge ${button.dataset.due === '暂无明确截止时间' ? 'neutral' : 'write'}">${button.dataset.due}</span>`;
+      todo.disabled = false;
       button.textContent = '已生成';
       toast('原型模式：已生成关键信息与待办。');
     }, 450);
   };
+});
+
+document.querySelectorAll('[data-email-todo]').forEach(button => {
+  button.onclick = () => toast('原型模式：已将当前邮件的待办加入草稿。');
+});
+document.querySelectorAll('[data-email-reply]').forEach(button => {
+  button.onclick = () => toast('原型模式：已打开当前邮件的回复草稿，不会直接发送。');
 });
 
 document.querySelectorAll('[data-approval-item]').forEach(item => {
@@ -84,6 +116,9 @@ document.querySelectorAll('[data-approval-item]').forEach(item => {
     status.textContent = '已批准执行';
     execute.disabled = true;
     reject.disabled = true;
+    if (item.hasAttribute('data-mail-send-approval')) {
+      item.querySelector('[data-sent-link]')?.removeAttribute('hidden');
+    }
     toast('原型模式：已批准当前操作，正在独立执行。');
     updateSummary();
   };

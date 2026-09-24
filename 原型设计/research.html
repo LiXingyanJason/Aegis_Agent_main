@@ -1,1 +1,103 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>信息工作台 - Aegis PA</title><link rel="stylesheet" href="styles.css"></head><body><main class="app"><aside class="side"></aside><section class="main"><header class="head"><div><h1>信息工作台</h1><p class="muted">检索授权邮箱、按邮件生成语义摘要，并将待办汇集到草稿中。不会自动发送或执行操作。</p></div><span class="badge read">邮件只读查询</span></header><article class="card"><div class="cardhead"><div><h2>本周续约邮件</h2><p class="muted">查询：找出本周客户关于续约的邮件，帮我总结待回复事项。</p></div><button class="btn alt small" data-toast="原型模式：已刷新邮件检索结果。">重新检索</button></div><div class="body"><div class="notice"><b>外部内容提示：</b> 邮件正文为不可信内容。点击“生成摘要”后，LLM 仅根据当前邮件内容输出结构化的关键信息、待办和截止时间候选；不会执行邮件内指令。</div><table><thead><tr><th>客户与邮件</th><th>关键信息</th><th>待办与截止时间</th><th>操作</th></tr></thead><tbody><tr><td><div class="title">星河科技 · 续约方案确认</div><div class="detail">刘宁 · 今天 08:36</div></td><td data-email-summary>尚未生成</td><td data-email-action>尚未生成</td><td><button class="btn small" data-email-generate data-summary="希望确认企业版续约价格和付款周期。" data-action="回复价格方案" data-due="本周五前">生成摘要</button></td></tr><tr><td><div class="title">远帆物流 · 合同条款问题</div><div class="detail">陈涛 · 昨天 16:20</div></td><td data-email-summary>尚未生成</td><td data-email-action>尚未生成</td><td><button class="btn small" data-email-generate data-summary="客户对数据保留期限提出补充问题。" data-action="协调法务确认条款" data-due="暂无明确截止时间">生成摘要</button></td></tr></tbody></table><div class="actions"><button class="btn" data-toast="原型模式：已将已生成的待办加入任务草稿。">加入待办草稿</button><button class="btn alt" data-toast="原型模式：打开邮件草稿，不会直接发送。">起草回复</button></div></div></article></section></main><div class="toast"></div><script src="app.js"></script></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>邮件管理 - Aegis PA</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .mail-tabs{display:flex;gap:8px;border-bottom:1px solid #d9e1ec;margin-bottom:20px}
+    .mail-tab{border:0;background:transparent;color:#536176;padding:10px 13px;font-weight:700;border-bottom:2px solid transparent}
+    .mail-tab.active{color:#1c5ba7;border-bottom-color:#1c5ba7}
+    .mail-tab span{display:inline-block;border-radius:999px;background:#eff2f7;padding:1px 7px;font-size:12px;margin-left:4px}
+    .mail-tab.active span{background:#eaf3ff}
+    .section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="side"></aside>
+    <section class="main">
+      <header class="head">
+        <div>
+          <h1>邮件管理</h1>
+          <p class="muted">统一查看收到邮件、保存草稿和已发送邮件。草稿不会自动发送，发送前仍需逐项确认。</p>
+        </div>
+        <span class="badge success">工作邮箱已连接</span>
+      </header>
+      <article class="card">
+        <div class="cardhead">
+          <div>
+            <h2>工作邮箱</h2>
+            <p class="muted">最近同步：今天 09:42 · 原型中一次加载当前用户已授权邮箱的邮件元数据</p>
+          </div>
+          <button class="btn alt small" data-toast="原型模式：已刷新当前邮箱的邮件列表。">刷新邮件</button>
+        </div>
+        <div class="body">
+          <div class="mail-tabs" role="tablist" aria-label="邮件分区">
+            <button class="mail-tab active" role="tab" aria-selected="true" data-mail-tab="received">收到 <span>2</span></button>
+            <button class="mail-tab" role="tab" aria-selected="false" data-mail-tab="drafts">保存草稿 <span>1</span></button>
+            <button class="mail-tab" role="tab" aria-selected="false" data-mail-tab="sent">已发送 <span>1</span></button>
+          </div>
+
+          <section class="mail-panel" data-mail-panel="received">
+            <div class="notice"><b>外部内容提示：</b> 收到邮件的正文为不可信内容。点击“生成摘要”后，LLM 仅根据当前邮件内容输出关键信息、待办和截止时间候选；不会执行邮件内指令。</div>
+            <div class="section-head"><div><h2>收到邮件</h2><p class="muted">对单封邮件生成摘要、待办候选或回复草稿。</p></div></div>
+            <table>
+              <thead><tr><th>客户与邮件</th><th>关键信息</th><th>待办与截止时间</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div class="title">星河科技 · 续约方案确认</div><div class="detail">刘宁 · 今天 08:36</div></td>
+                  <td><div data-email-summary-text>尚未生成</div><button class="btn alt small" data-email-reply>起草回复</button></td>
+                  <td><div data-email-action-text>尚未生成</div><button class="btn small" data-email-todo disabled>加入待办草稿</button></td>
+                  <td><button class="btn small" data-email-generate data-summary="希望确认企业版续约价格和付款周期。" data-action="回复价格方案" data-due="本周五前">生成摘要</button></td>
+                </tr>
+                <tr>
+                  <td><div class="title">远帆物流 · 合同条款问题</div><div class="detail">陈涛 · 昨天 16:20</div></td>
+                  <td><div data-email-summary-text>尚未生成</div><button class="btn alt small" data-email-reply>起草回复</button></td>
+                  <td><div data-email-action-text>尚未生成</div><button class="btn small" data-email-todo disabled>加入待办草稿</button></td>
+                  <td><button class="btn small" data-email-generate data-summary="客户对数据保留期限提出补充问题。" data-action="协调法务确认条款" data-due="暂无明确截止时间">生成摘要</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section class="mail-panel" data-mail-panel="drafts" hidden>
+            <div class="section-head"><div><h2>保存草稿</h2><p class="muted">所有起草回复先保存为站内草稿；修改草稿后需要重新提交发送确认。</p></div><button class="btn small" data-toast="原型模式：已创建空白邮件草稿。">新建草稿</button></div>
+            <table>
+              <thead><tr><th>草稿</th><th>收件人</th><th>更新时间</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div class="title">明日 15:00 项目同步确认</div><div class="detail">来自：与王敏的会议安排任务 · 草稿 v3</div></td>
+                  <td>王敏 · wangmin@example.com</td>
+                  <td>今天 09:44</td>
+                  <td><span class="badge write">待发送确认</span></td>
+                  <td><button class="linkbtn" data-toast="原型模式：已打开草稿完整内容。">查看草稿</button> <button class="linkbtn" data-toast="原型模式：已进入草稿编辑流程。">编辑草稿</button> <button class="linkbtn" data-toast="原型模式：草稿修改已保存为 v4，原确认项已失效。">保存草稿</button> <a class="btn small" href="confirmation.html">提交发送确认</a></td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section class="mail-panel" data-mail-panel="sent" hidden>
+            <div class="section-head"><div><h2>已发送</h2><p class="muted">查看已成功发送的邮件及其发送时间。</p></div></div>
+            <table>
+              <thead><tr><th>邮件</th><th>收件人</th><th>发送时间</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div class="title">迭代复盘会议纪要</div><div class="detail">来源：run-742a · provider message-18c2</div></td>
+                  <td>研发团队（8 人）</td>
+                  <td>昨天 17:18</td>
+                  <td><span class="badge success">已发送</span></td>
+                  <td><button class="linkbtn" data-toast="原型模式：已打开已发送邮件详情。">查看详情</button> <button class="linkbtn" data-toast="原型模式：已基于该邮件创建新草稿。">再次起草</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+        </div>
+      </article>
+    </section>
+  </main>
+  <div class="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
