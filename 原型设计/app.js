@@ -1,5 +1,6 @@
 const routes = [
   ['index.html', '◈', '原型总览'],
+  ['login.html', '⇥', '登录与身份'],
   ['task-console.html', '◌', '任务对话'],
   ['research.html', '⌕', '邮件管理'],
   ['official-research.html', '▤', '官方资料查询'],
@@ -21,7 +22,7 @@ function renderNavigation() {
   const links = routes.map(([path, icon, label]) =>
     `<a class="nav ${path === current ? 'active' : ''}" href="${path}">${icon} ${label}</a>`,
   ).join('');
-  side.innerHTML = `<div class="brand"><span class="mark">⌾</span>Aegis PA</div><p class="label">原型页面</p>${links}<div class="who"><b>王晓晨</b>个人工作空间</div>`;
+  side.innerHTML = `<div class="brand"><span class="mark">⌾</span>Aegis PA</div><p class="label">原型页面</p>${links}<div class="who"><b>Jason Li <span class="badge success">已登录</span></b><span>aegis-dev · Keycloak 身份</span><a class="logout-link" href="login.html">退出登录</a></div>`;
 }
 
 function toast(message) {
@@ -149,4 +150,23 @@ if (form) {
       input.value = '';
     }
   };
+}
+
+const oidcLogin = document.querySelector('[data-oidc-login]');
+if (oidcLogin) {
+  oidcLogin.onclick = () => {
+    oidcLogin.disabled = true;
+    oidcLogin.textContent = '正在跳转至 Keycloak…';
+    setTimeout(() => { location.href = 'auth-callback.html'; }, 550);
+  };
+}
+
+const callbackState = document.querySelector('[data-oidc-callback-state]');
+const enterWorkspace = document.querySelector('[data-enter-workspace]');
+if (callbackState && enterWorkspace) {
+  setTimeout(() => {
+    callbackState.className = 'auth-result success';
+    callbackState.innerHTML = '<b>登录成功</b><span>已获取 access token，并确认当前身份属于 aegis-dev。</span>';
+    enterWorkspace.hidden = false;
+  }, 750);
 }

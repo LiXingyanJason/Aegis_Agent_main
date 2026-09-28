@@ -13,16 +13,18 @@ from app.common.exceptions import TenantContextError
 from app.config.settings import Settings
 
 
+# frozen=True：创建后不能篡改身份信息 slots=True：节省内存，也避免随意添加属性
 @dataclass(frozen=True, slots=True)
 class TenantContext:
     """每次租户范围事务使用的已认证身份。"""
 
-    tenant_id: UUID
-    user_id: UUID
+    tenant_id: UUID  # 当前租户 ID
+    user_id: UUID  #当前已认证用户 ID
 
 
 _tenant_context: ContextVar[TenantContext | None] = ContextVar("tenant_context", default=None)
-
+# _tenant_context 本身是一个 ContextVar(存储当前线程运行时的TenantContext)
+# : ContextVar[TenantContext | None]表示该变量当前保存的值可以是 TenantContext 或是 None
 
 def get_tenant_context() -> TenantContext:
     """返回当前租户上下文；缺失时以拒绝访问的方式失败。"""
@@ -38,17 +40,29 @@ class Database:
     def __init__(self, settings: Settings) -> None:
         self.engine: AsyncEngine = create_async_engine(
             settings.database_async_url,
-            echo=settings.database_echo,
-            pool_pre_ping=True,
+            echo=settings.database_echo,  # 是否输出 SQL 日志
+            pool_pre_ping=True,  # 连接池取出连接前，先检查它是否仍可用
         )
-        self.session_factory = async_sessionmaker(self.engine, expire_on_commit=False)
+        self.session_factory = async_sessionmaker(self.engine, expire_on_commit=False)  # 异步会话工厂
 
+    # 进入 async with
+    #   ↓
+    # session_factory() 创建 AsyncSession
+    #   ↓
+    # yield 把 session 交给调用方
+    #   ↓
+    # 调用方执行数据库操作
+    #   ↓
+    # 离开 async with
+    #   ↓
+    # AsyncSession 自动关闭并归还连接
     @asynccontextmanager
     async def session(self) -> AsyncIterator[AsyncSession]:
         async with self.session_factory() as session:
             yield session
 
     async def dispose(self) -> None:
+        # 应用关闭时调用，关闭并清空连接池
         await self.engine.dispose()
 
 
@@ -57,10 +71,11 @@ async def tenant_transaction(
     session: AsyncSession,
     context: TenantContext,
 ) -> AsyncIterator[AsyncSession]:
-    """开启事务并设置仅在当前事务有效的 PostgreSQL RLS 变量。
-
-    `set_config(..., true)` 会在提交或回滚后清除变量，避免连接回到
-    SQLAlchemy 连接池后遗留上一个租户的上下文。
+    """
+        检查并执行一个 SQL事务
+        数据库执行一个事务有安全检查(RLS)，该代码将上下文必要的信息注入到安全检查中。每一个事务，都会过这个安全检查。符合就执行
+        检查 1：注入 enant_id user_id ，供 SQLRLS 执行检查(实际检查逻辑在 PostgreSQL中，不在该函数内)
+        检查 2：仅根据当前上下文注入 enant_id user_id，执行结束后清空。防止后续事务误用上一个租户或用户的身份
     """
 
     token: Token[TenantContext | None] = _tenant_context.set(context)

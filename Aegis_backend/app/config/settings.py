@@ -26,11 +26,18 @@ class Settings(BaseSettings):
     oidc_issuer_url: AnyHttpUrl
     oidc_audience: str
     oidc_client_id: str
+    auto_provision_users: bool = False
+    default_tenant_name: str | None = None
 
     model_provider: str
     model_api_base: AnyHttpUrl
     model_api_key: SecretStr
     model_default_name: str
+
+    @property
+    def oidc_issuer(self) -> str:
+        """返回不带末尾斜杠的 issuer，避免令牌 `iss` 比较出现形式差异。"""
+        return str(self.oidc_issuer_url).rstrip("/")
 
     @property
     def database_async_url(self) -> str:

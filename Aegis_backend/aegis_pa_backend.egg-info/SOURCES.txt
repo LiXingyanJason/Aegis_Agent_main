@@ -1,3 +1,4 @@
+README.md
 pyproject.toml
 aegis_pa_backend.egg-info/PKG-INFO
 aegis_pa_backend.egg-info/SOURCES.txt
@@ -12,3 +13,8 @@ app/config/__init__.py
 app/config/database.py
 app/config/redis.py
 app/config/settings.py
+app/repository/user_repository.py
+app/security/__init__.py
+app/security/auth_security.py
+app/security/dependencies.py
+app/service/identity_service.py

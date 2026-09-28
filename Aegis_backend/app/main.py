@@ -5,9 +5,12 @@ from typing import AsyncIterator
 
 from fastapi import FastAPI
 
+from app.controller.conversation_controller import router as conversation_router
 from app.config.database import Database
 from app.config.redis import create_redis_client
 from app.config.settings import get_settings
+from app.security.auth_security import OIDCAuthenticator
+from app.service.identity_service import IdentityService
 
 
 
@@ -17,10 +20,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     database = Database(settings)
     redis = create_redis_client(settings)
-    # 将资源挂到 app.state，之后可用临时包 fastapi.database.list_users()使用
+    # 将运行期共享资源挂到 app.state，供认证依赖和后续接口使用。
     app.state.settings = settings
     app.state.database = database
     app.state.redis = redis
+    app.state.oidc_authenticator = OIDCAuthenticator(settings)
+    app.state.identity_service = IdentityService(settings)
     try:
         yield
     finally:
@@ -29,6 +34,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="Aegis PA API", version="0.1.0", lifespan=lifespan)
+app.include_router(conversation_router)
 
 
 @app.get("/health", tags=["system"])

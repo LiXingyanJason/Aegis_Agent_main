@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>正在完成登录 - Aegis PA</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="auth-page">
+  <main class="callback-shell">
+    <a class="brand auth-brand" href="index.html"><span class="mark">⌾</span>Aegis PA</a>
+    <article class="callback-card card">
+      <div class="spinner" aria-hidden="true"></div>
+      <span class="eyebrow">OIDC 登录回调</span>
+      <h1>正在完成安全登录</h1>
+      <p class="muted">浏览器正在校验 Keycloak 返回结果并建立当前会话。</p>
+      <div class="auth-flow">
+        <div class="done"><span>1</span>已从 Keycloak 返回</div>
+        <div class="active"><span>2</span>获取并管理 access token</div>
+        <div><span>3</span>加载 Aegis 工作空间</div>
+      </div>
+      <div class="auth-result neutral" data-oidc-callback-state>
+        <b>正在验证身份</b><span>不会展示或写入 access token。</span>
+      </div>
+      <a class="btn auth-login" href="task-console.html" data-enter-workspace hidden>进入任务工作台 <span>→</span></a>
+      <p class="auth-foot">若长时间未完成，请返回后重新登录。</p>
+    </article>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

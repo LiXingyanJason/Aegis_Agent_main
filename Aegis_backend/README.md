@@ -22,7 +22,7 @@ D:\anaconda\envs\Aegis\python.exe -m pytest tests/config -q
 ## Keycloak OIDC 本地配置
 
 开发环境使用本机 Docker Keycloak 完成登录认证。Aegis 不保存用户密码；Keycloak 签发 access token，后端随后验证 token 的签名、签发者、受众和过期时间。
-
+![img.png](img.png)
 ### 1. 启动 Keycloak
 
 确保 Docker Desktop 已启动后执行：
@@ -118,6 +118,15 @@ OIDC_ISSUER_URL=http://127.0.0.1:8080/realms/aegis
 OIDC_AUDIENCE=aegis-pa-api
 OIDC_CLIENT_ID=aegis-pa-web
 ```
+
+首次使用 Keycloak 测试用户时，用户尚不存在于 Aegis 的 `users` 表。仅在本地开发环境，可额外开启自动映射：
+
+```dotenv
+AUTO_PROVISION_USERS=true
+DEFAULT_TENANT_NAME=aegis-dev
+```
+
+后端会在 `aegis-dev` 租户中创建或复用该 OIDC 用户。生产环境必须保持 `AUTO_PROVISION_USERS=false`，由管理员预先创建用户与租户成员关系，不能让任意外部身份自动加入已有租户。
 
 可访问以下 Discovery 地址确认 Keycloak 正常运行：
 
