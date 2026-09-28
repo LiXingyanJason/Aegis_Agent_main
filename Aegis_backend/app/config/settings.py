@@ -1,0 +1,49 @@
+"""带类型校验的环境配置；其他模块不得直接读取环境变量。"""
+
+from functools import lru_cache
+
+from pydantic import AnyHttpUrl, SecretStr
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """从环境变量及可选 `.env` 文件加载的运行时配置。"""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        case_sensitive=False,
+    )
+
+    app_name: str = "Aegis PA API"
+    app_env: str = "development"
+
+    database_url: str
+    database_echo: bool = False
+    redis_url: str
+
+    oidc_issuer_url: AnyHttpUrl
+    oidc_audience: str
+    oidc_client_id: str
+
+    model_provider: str
+    model_api_base: AnyHttpUrl
+    model_api_key: SecretStr
+    model_default_name: str
+
+    @property
+    def database_async_url(self) -> str:
+        """ 返回 SQLAlchemy 异步 PostgreSQL 地址，并提前拒绝其他数据库驱动。
+            根据普通 PostgreSQL 连接串，生成 SQLAlchemy 异步驱动 asyncpg 所需的地址 """
+        if not self.database_url.startswith(("postgresql+asyncpg://", "postgresql://")):
+            raise ValueError("DATABASE_URL must use postgresql:// or postgresql+asyncpg://")
+        return self.database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+
+# @lru_cache 同一个进程只创建一次Settings()
+@lru_cache
+def get_settings() -> Settings:
+    """每个进程返回一个不可变的配置实例。"""
+    return Settings()
+

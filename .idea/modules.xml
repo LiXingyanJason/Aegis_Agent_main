@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Aegis_Agent_main.iml" filepath="$PROJECT_DIR$/.idea/Aegis_Agent_main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/aegis-pa-backend.iml" filepath="$PROJECT_DIR$/.idea/aegis-pa-backend.iml" />
     </modules>
   </component>
 </project>

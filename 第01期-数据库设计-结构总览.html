@@ -1,0 +1,157 @@
+<html style="margin:0;padding:0;">
+<title>Aegis PA 一期数据库设计总览（更新版）</title>
+<div style="width:100%;box-sizing:border-box;background:#f8fafc;padding:16px;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+<svg viewBox="0 0 1200 1010" width="100%" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+  <style>
+    .h1{font-size:17px;font-weight:700;fill:#0f172a;}
+    .h2{font-size:15px;font-weight:700;fill:#0f172a;}
+    .grp{fill:#ffffff;stroke:#dbe3ec;stroke-width:1;}
+    .grpTitle{font-size:13px;font-weight:700;fill:#334155;}
+    .node{fill:#eef3f8;stroke:#c7d4e2;stroke-width:1;}
+    .core{fill:#e0f2fe;stroke:#38bdf8;stroke-width:1.5;}
+    .new{fill:#fefce8;stroke:#facc15;stroke-width:1.5;}
+    .tname{font-size:13px;font-weight:700;fill:#0f172a;}
+    .tdesc{font-size:11px;fill:#64748b;}
+    .arrow{stroke:#64748b;stroke-width:1.6;fill:none;}
+    .alabel{font-size:11px;fill:#475569;font-weight:600;stroke:#ffffff;stroke-width:3;paint-order:stroke;}
+    .base{fill:#fff7ed;stroke:#fb923c;stroke-width:1.2;}
+    .base2{fill:#ecfeff;stroke:#22d3ee;stroke-width:1.2;}
+    .sm{fill:#ffffff;stroke:#dbe3ec;stroke-width:1;}
+    .smState{fill:#f1f5f9;stroke:#94a3b8;stroke-width:1;}
+    .smMid{fill:#fefce8;stroke:#facc15;stroke-width:1.2;}
+    .smEnd{fill:#fef2f2;stroke:#f87171;stroke-width:1;}
+    .smTxt{font-size:12px;font-weight:700;fill:#0f172a;}
+    .smSub{font-size:10px;fill:#64748b;}
+    .pt{fill:#fff;stroke:#cbd5e1;stroke-width:1;}
+    .ptT{font-size:12px;font-weight:700;fill:#0f172a;}
+    .ptD{font-size:10px;fill:#475569;}
+    .legend{font-size:11px;fill:#64748b;}
+  </style>
+
+  <!-- 行1：存储底座 -->
+  <text x="20" y="52" class="h1">存储底座与职责边界</text>
+  <rect x="80" y="64" width="440" height="54" rx="8" class="base"/>
+  <text x="96" y="85" font-size="13" font-weight="700" fill="#9a3412">PostgreSQL 16+ — 业务事实来源</text>
+  <text x="96" y="104" font-size="11" fill="#9a3412">全部业务主数据 / 确认 / 幂等 / 审计 / SSE 回放 / 事务外盒</text>
+  <rect x="560" y="64" width="440" height="54" rx="8" class="base2"/>
+  <text x="576" y="85" font-size="13" font-weight="700" fill="#155e75">Redis — 短期状态（可丢失、可从 PG 重建）</text>
+  <text x="576" y="104" font-size="11" fill="#155e75">SSE 在线游标 · 限流计数 · Celery Broker/结果 · LangGraph 临时 checkpoint</text>
+
+  <!-- 行2：六组业务表 -->
+  <text x="20" y="158" class="h1">六组 28 张业务表（全部含 tenant_id；不落正文与凭证明文；敏感列应用层加密）</text>
+
+  <!-- 组1 身份与连接 -->
+  <rect x="20" y="172" width="175" height="220" rx="8" class="grp"/>
+  <text x="34" y="194" class="grpTitle">身份与连接</text>
+  <g><rect x="30" y="210" width="155" height="40" rx="6" class="node"/><text x="40" y="226" class="tname">tenants</text><text x="40" y="241" class="tdesc">租户边界 · 个人版也保留</text></g>
+  <g><rect x="30" y="260" width="155" height="40" rx="6" class="node"/><text x="40" y="276" class="tname">users</text><text x="40" y="291" class="tdesc">OIDC 身份 · 不存密码</text></g>
+  <g><rect x="30" y="310" width="155" height="40" rx="6" class="node"/><text x="40" y="326" class="tname">provider_connections</text><text x="40" y="341" class="tdesc">凭据引用 · 绝不存 token</text></g>
+
+  <!-- 组2 对话·运行·事件 -->
+  <rect x="205" y="172" width="180" height="380" rx="8" class="grp"/>
+  <text x="219" y="194" class="grpTitle">对话 · 运行 · 事件</text>
+  <g><rect x="215" y="210" width="160" height="40" rx="6" class="core"/><text x="225" y="226" class="tname">agent_runs</text><text x="225" y="241" class="tdesc">运行核心 · intent/阶段/模型</text></g>
+  <g><rect x="215" y="260" width="160" height="40" rx="6" class="node"/><text x="225" y="276" class="tname">conversations</text><text x="225" y="291" class="tdesc">会话 · active/archived</text></g>
+  <g><rect x="215" y="310" width="160" height="40" rx="6" class="node"/><text x="225" y="326" class="tname">conversation_messages</text><text x="225" y="341" class="tdesc">原文加密+脱敏 · 发送去重</text></g>
+  <g><rect x="215" y="360" width="160" height="40" rx="6" class="node"/><text x="225" y="376" class="tname">run_steps</text><text x="225" y="391" class="tdesc">右侧进度权威数据</text></g>
+  <g><rect x="215" y="410" width="160" height="40" rx="6" class="node"/><text x="225" y="426" class="tname">run_events</text><text x="225" y="441" class="tdesc">SSE 回放 · bigint 主键+event_no</text></g>
+  <g><rect x="215" y="460" width="160" height="40" rx="6" class="node"/><text x="225" y="476" class="tname">tool_calls</text><text x="225" y="491" class="tdesc">脱敏载荷 · 版本/MCP/时延</text></g>
+
+  <!-- 组3 确认与执行 -->
+  <rect x="395" y="172" width="180" height="300" rx="8" class="grp"/>
+  <text x="409" y="194" class="grpTitle">确认与执行</text>
+  <g><rect x="405" y="210" width="160" height="40" rx="6" class="core"/><text x="415" y="226" class="tname">approval_items</text><text x="415" y="241" class="tdesc">确认项 · 快照+参数哈希</text></g>
+  <g><rect x="405" y="260" width="160" height="40" rx="6" class="node"/><text x="415" y="276" class="tname">approval_decisions</text><text x="415" y="291" class="tdesc">决策事实 · 令牌只存哈希</text></g>
+  <g><rect x="405" y="310" width="160" height="40" rx="6" class="node"/><text x="415" y="326" class="tname">external_action_executions</text><text x="415" y="341" class="tdesc">执行+对账事实 · 幂等键</text></g>
+  <g><rect x="405" y="360" width="160" height="40" rx="6" class="node"/><text x="415" y="376" class="tname">idempotency_records</text><text x="415" y="391" class="tdesc">全部公开写接口幂等</text></g>
+  <g><rect x="405" y="410" width="160" height="40" rx="6" class="new"/><text x="415" y="426" class="tname">outbox_events</text><text x="415" y="441" class="tdesc">事务外盒 · 与业务同事务</text></g>
+
+  <!-- 组4 日历草稿 -->
+  <rect x="585" y="172" width="170" height="170" rx="8" class="grp"/>
+  <text x="599" y="194" class="grpTitle">日历草稿</text>
+  <g><rect x="595" y="210" width="150" height="40" rx="6" class="node"/><text x="605" y="226" class="tname">calendar_event_drafts</text><text x="605" y="241" class="tdesc">待创建 · end &gt; start</text></g>
+  <g><rect x="595" y="260" width="150" height="40" rx="6" class="node"/><text x="605" y="276" class="tname">calendar_draft_attendees</text><text x="605" y="291" class="tdesc">参与者 · (draft,email) 唯一</text></g>
+
+  <!-- 组5 邮件全链 -->
+  <rect x="765" y="172" width="190" height="450" rx="8" class="grp"/>
+  <text x="779" y="194" class="grpTitle">邮件全链 + 同步</text>
+  <g><rect x="775" y="210" width="170" height="40" rx="6" class="new"/><text x="785" y="226" class="tname">mail_sync_states</text><text x="785" y="241" class="tdesc">增量同步游标 · 不存正文</text></g>
+  <g><rect x="775" y="260" width="170" height="40" rx="6" class="node"/><text x="785" y="276" class="tname">email_messages</text><text x="785" y="291" class="tdesc">元数据快照 · 无正文</text></g>
+  <g><rect x="775" y="310" width="170" height="40" rx="6" class="node"/><text x="785" y="326" class="tname">mail_extractions</text><text x="785" y="341" class="tdesc">抽取结果 · 版本复用</text></g>
+  <g><rect x="775" y="360" width="170" height="40" rx="6" class="node"/><text x="785" y="376" class="tname">mail_extraction_todos</text><text x="785" y="391" class="tdesc">待办候选 · 原始时间表述</text></g>
+  <g><rect x="775" y="410" width="170" height="40" rx="6" class="node"/><text x="785" y="426" class="tname">todo_drafts</text><text x="785" y="441" class="tdesc">站内待办草稿 · 来源唯一</text></g>
+  <g><rect x="775" y="460" width="170" height="40" rx="6" class="core"/><text x="785" y="476" class="tname">mail_drafts</text><text x="785" y="491" class="tdesc">正文加密 · version 乐观锁</text></g>
+  <g><rect x="775" y="510" width="170" height="40" rx="6" class="node"/><text x="785" y="526" class="tname">mail_draft_recipients</text><text x="785" y="541" class="tdesc">to/cc/bcc 明细</text></g>
+  <g><rect x="775" y="560" width="170" height="40" rx="6" class="node"/><text x="785" y="576" class="tname">sent_mail_messages</text><text x="785" y="591" class="tdesc">发送成功才创建 · 索引</text></g>
+  <!-- 组5 内小箭头 -->
+  <path d="M860 250 L860 258" class="arrow"/>
+  <path d="M860 300 L860 308" class="arrow"/>
+  <path d="M860 400 L860 408" class="arrow"/>
+
+  <!-- 组6 记忆与审计 -->
+  <rect x="965" y="172" width="215" height="300" rx="8" class="grp"/>
+  <text x="979" y="194" class="grpTitle">记忆与审计</text>
+  <g><rect x="975" y="210" width="195" height="40" rx="6" class="node"/><text x="985" y="226" class="tname">memory_items</text><text x="985" y="241" class="tdesc">加密 · 软删除 · 无向量</text></g>
+  <g><rect x="975" y="260" width="195" height="40" rx="6" class="node"/><text x="985" y="276" class="tname">memory_deletion_tokens</text><text x="985" y="291" class="tdesc">删除确认令牌 · 哈希</text></g>
+  <g><rect x="975" y="310" width="195" height="40" rx="6" class="node"/><text x="985" y="326" class="tname">run_memory_usages</text><text x="985" y="341" class="tdesc">使用记录 · 注入/排除明细</text></g>
+  <g><rect x="975" y="360" width="195" height="40" rx="6" class="node"/><text x="985" y="376" class="tname">audit_events</text><text x="985" y="391" class="tdesc">不可变审计 · 只允许 INSERT</text></g>
+
+  <!-- 跨组关键箭头 -->
+  <path d="M385 230 L393 230" class="arrow"/>
+  <text x="376" y="220" text-anchor="end" class="alabel">创建</text>
+  <path d="M575 230 L583 230" class="arrow"/>
+  <text x="575" y="220" text-anchor="middle" class="alabel">冻结(日历)</text>
+  <path d="M575 250 L575 480 L763 480" class="arrow"/>
+  <text x="582" y="468" class="alabel">冻结(邮件)</text>
+
+  <text x="20" y="642" class="legend">图例：实线箭头 = 跨域关键关系（agent_runs 创建确认项；approval_items 冻结两类草稿）｜ 黄框 = 新版新增表（mail_sync_states、outbox_events）｜ 组内纵向顺序 = 从属/派生链 ｜ 其余从属关系以文档 Mermaid ER 图为准</text>
+
+  <!-- 行3：状态机 -->
+  <text x="20" y="700" class="h1">两个状态机</text>
+  <rect x="20" y="717" width="570" height="205" rx="8" class="sm"/>
+  <text x="36" y="739" class="h2">agent_runs · 任务运行</text>
+  <g><rect x="50" y="760" width="90" height="36" rx="6" class="smState"/><text x="95" y="784" text-anchor="middle" class="smTxt">queued</text></g>
+  <g><rect x="220" y="760" width="90" height="36" rx="6" class="smState"/><text x="265" y="784" text-anchor="middle" class="smTxt">running</text></g>
+  <g><rect x="390" y="760" width="120" height="36" rx="6" class="smState"/><text x="450" y="784" text-anchor="middle" class="smTxt">waiting_confirmation</text></g>
+  <path d="M142 778 L218 778" class="arrow"/>
+  <path d="M312 778 L388 778" class="arrow"/>
+  <path d="M450 798 C450 817 265 817 265 797" class="arrow"/>
+  <g><rect x="90" y="835" width="90" height="36" rx="6" class="smEnd"/><text x="135" y="859" text-anchor="middle" class="smTxt">completed</text></g>
+  <g><rect x="270" y="835" width="90" height="36" rx="6" class="smEnd"/><text x="315" y="859" text-anchor="middle" class="smTxt">failed</text></g>
+  <g><rect x="450" y="835" width="90" height="36" rx="6" class="smEnd"/><text x="495" y="859" text-anchor="middle" class="smTxt">cancelled</text></g>
+  <path d="M265 796 L135 833" class="arrow"/>
+  <path d="M265 796 L315 833" class="arrow"/>
+  <path d="M265 796 L495 833" class="arrow"/>
+  <text x="540" y="810" text-anchor="end" class="alabel" font-size="10">批准/拒绝后回 running</text>
+
+  <rect x="610" y="717" width="570" height="205" rx="8" class="sm"/>
+  <text x="626" y="739" class="h2">approval_items · 确认项（新增 reconciling）</text>
+  <g><rect x="640" y="760" width="80" height="36" rx="6" class="smState"/><text x="680" y="784" text-anchor="middle" class="smTxt">pending</text></g>
+  <g><rect x="800" y="760" width="120" height="36" rx="6" class="smState"/><text x="860" y="784" text-anchor="middle" class="smTxt">approved_executing</text></g>
+  <g><rect x="1000" y="760" width="80" height="36" rx="6" class="smState"/><text x="1040" y="784" text-anchor="middle" class="smTxt">executed</text></g>
+  <path d="M722 778 L798 778" class="arrow"/>
+  <path d="M922 778 L998 778" class="arrow"/>
+  <g><rect x="850" y="815" width="90" height="36" rx="6" class="smMid"/><text x="895" y="836" text-anchor="middle" class="smTxt">reconciling</text><text x="895" y="849" text-anchor="middle" class="smSub">外部结果未知</text></g>
+  <g><rect x="615" y="862" width="90" height="36" rx="6" class="smEnd"/><text x="660" y="886" text-anchor="middle" class="smTxt">rejected</text></g>
+  <g><rect x="755" y="862" width="90" height="36" rx="6" class="smEnd"/><text x="800" y="886" text-anchor="middle" class="smTxt">expired</text></g>
+  <g><rect x="895" y="862" width="90" height="40" rx="6" class="smEnd"/><text x="940" y="883" text-anchor="middle" class="smTxt">invalidated</text><text x="940" y="896" text-anchor="middle" class="smSub">草稿被编辑</text></g>
+  <g><rect x="1055" y="862" width="90" height="36" rx="6" class="smEnd"/><text x="1100" y="886" text-anchor="middle" class="smTxt">failed</text></g>
+  <path d="M860 796 L895 813" class="arrow"/>
+  <path d="M898 851 C950 845 1010 830 1038 797" class="arrow"/>
+  <path d="M895 851 L1098 860" class="arrow"/>
+  <path d="M680 796 L660 860" class="arrow"/>
+  <path d="M680 796 L800 860" class="arrow"/>
+  <path d="M680 796 L938 860" class="arrow"/>
+  <path d="M860 796 L1098 860" class="arrow"/>
+
+  <!-- 行4：一致性要点 -->
+  <text x="20" y="948" class="h1">一致性 &amp; 安全要点</text>
+  <g><rect x="20" y="960" width="190" height="42" rx="7" class="pt"/><text x="30" y="978" class="ptT">幂等键</text><text x="30" y="992" class="ptD">同键同哈希只执行一次</text></g>
+  <g><rect x="214" y="960" width="190" height="42" rx="7" class="pt"/><text x="224" y="978" class="ptT">一次性令牌</text><text x="224" y="992" class="ptD">仅存哈希 · 绑定动作+过期</text></g>
+  <g><rect x="408" y="960" width="190" height="42" rx="7" class="pt"/><text x="418" y="978" class="ptT">RLS 隔离</text><text x="418" y="992" class="ptD">子表经父表归属校验</text></g>
+  <g><rect x="602" y="960" width="190" height="42" rx="7" class="pt"/><text x="612" y="978" class="ptT">应用层加密</text><text x="612" y="992" class="ptD">正文/草稿/记忆加密入库</text></g>
+  <g><rect x="796" y="960" width="190" height="42" rx="7" class="pt"/><text x="806" y="978" class="ptT">事务外盒</text><text x="806" y="992" class="ptD">业务写入与 outbox 同事务</text></g>
+  <g><rect x="990" y="960" width="190" height="42" rx="7" class="pt"/><text x="1000" y="978" class="ptT">外部对账</text><text x="1000" y="992" class="ptD">unknown→reconciling 补偿</text></g>
+</svg>
+</div>
+</html>
