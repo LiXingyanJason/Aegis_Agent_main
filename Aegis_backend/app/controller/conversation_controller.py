@@ -9,10 +9,14 @@ from app.security.dependencies import CurrentUser, get_current_user, get_tenant_
 from app.service.conversation_service import ConversationService
 from app.vo.conversation_vo import ConversationVO
 
+# 此文件中的接口路径都会自动加上 /conversations 前缀。
+# 在接口文档中，将这些接口归类到 conversations 分组。
 router = APIRouter(prefix="/conversations", tags=["conversations"])
 _conversation_service = ConversationService()
 
 
+# current_user 由 FastAPI 通过 Depends(get_current_user) 自动注入。
+# get_current_user依赖 HTTPBearer框架会从请求Header的Authorization:Bearer<access_token>中解析JWT完成身份验证与本地用户映射。
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_conversation(
     param: ConversationCreateParam,

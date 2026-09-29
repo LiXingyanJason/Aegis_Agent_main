@@ -23,23 +23,23 @@ class OIDCIdentity:
     subject: str
     email: str
     display_name: str
-    claims: dict[str, Any]
+    claims: dict[str, Any] # claims是JWT解码后的原始对象，我们可能只用其中的一部分，所以重新包装OIDCIdentity对象
 
 
 class OIDCAuthenticator:
     """发现 OIDC 公钥并验证 Keycloak 签发的 RS256 access token。"""
 
-    _cache_ttl_seconds = 300.0
+    _cache_ttl_seconds = 300.0  # JWKS 公钥缓存 300 秒
 
     def __init__(self, settings: Settings, client: httpx.AsyncClient | None = None) -> None:
         self._settings = settings
         self._client = client
-        self._jwks: PyJWKSet | None = None
-        self._jwks_expires_at = 0.0
+        self._jwks: PyJWKSet | None = None  # Keycloak 公钥集合
+        self._jwks_expires_at = 0.0  # 过期时间
 
     @property
     def discovery_url(self) -> str:
-        """返回当前 issuer 的 OpenID Discovery 地址。"""
+        """返回当前 issuer 的 OpenID Discovery 地址(Keycloak 公钥地址)。"""
         return f"{self._settings.oidc_issuer}/.well-known/openid-configuration"
 
     async def authenticate(self, token: str) -> OIDCIdentity:
@@ -48,9 +48,13 @@ class OIDCAuthenticator:
             raise AuthenticationError("缺少 access token")
 
         try:
-            header = jwt.get_unverified_header(token)
-            key = await self._get_signing_key(header.get("kid"))
+            header = jwt.get_unverified_header(token) # 读取 JWT Header 的 kid
+            # kid: Key ID（密钥标识）标识“这个 JWT 是由哪一把 Keycloak 签名密钥签发的，需要用哪一个公钥解码”
+            key = await self._get_signing_key(header.get("kid"))  # 获取对应kid的公钥key
+
             claims = jwt.decode(
+                # 使用 Keycloak 公钥验证 RS256 签名;验证 Token 未过期;验证 issuer;
+                # 验证 audience 包含 aegis-pa-api;必须存在 exp、iat、iss、aud、sub。
                 token,
                 key=key,
                 algorithms=["RS256"],
@@ -60,7 +64,7 @@ class OIDCAuthenticator:
             )
         except (InvalidTokenError, KeyError, TypeError, ValueError) as error:
             raise AuthenticationError("access token 无效或已过期") from error
-
+        # token有azp则必须是：aegis-pa-web 防止本应签发给其他前端 Client 的 Token 被 Aegis 接受
         authorized_party = claims.get("azp")
         if authorized_party is not None and authorized_party != self._settings.oidc_client_id:
             raise AuthenticationError("access token 并非由允许的前端客户端获取")
@@ -74,16 +78,18 @@ class OIDCAuthenticator:
         if not isinstance(display_name, str):
             display_name = email
 
+        # 验证成功后，将可信 Claims 统一封装为 OIDCIdentity
+        # claims是JWT解码后的原始对象，我们可能只用其中的一部分，所以重新包装OIDCIdentity对象
         return OIDCIdentity(
             issuer=self._settings.oidc_issuer,
             subject=subject,
             email=email,
             display_name=display_name[:128],
-            claims=claims,
+            claims=claims, # JWT解码后的原始对象
         )
 
     async def _get_signing_key(self, key_id: str | None) -> Any:
-        """按 JWT 的 `kid` 取 Keycloak JWKS 公钥，并短暂缓存公钥集合。"""
+        """按 JWT 的 kid 取 Keycloak JWKS 公钥，并短暂缓存公钥集合。"""
         if not key_id:
             raise AuthenticationError("access token 缺少 kid")
 

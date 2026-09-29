@@ -31,16 +31,23 @@ async def get_current_user(
     request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
 ) -> CurrentUser:
-    """验证 Bearer token 并解析为 Aegis 本地用户。"""
+    """
+    验证 Bearer token 并解析为 Aegis 本地用户。
+    Args:   request: FastAPI 自动注入当前 HTTP 请求对象
+            credentials: FastAPI解析请求头token并注入
+    eg: credentials.scheme == "Bearer"
+        credentials.credentials == "eyJ..."
+    """
     if credentials is None or credentials.scheme.lower() != "bearer":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="缺少 Bearer access token")
-
+    # 调用共享资源
     authenticator: OIDCAuthenticator = request.app.state.oidc_authenticator
     identity_service: IdentityService = request.app.state.identity_service
     database: Database = request.app.state.database
     try:
+        # 解析JWT-> OIDCIdentity对象，包含(issuer subject email display_name claims )
         identity = await authenticator.authenticate(credentials.credentials)
-        async with database.session() as session:
+        async with database.session() as session: # 执行 SQL 根据 issuer subject查询 users tenants
             local_user = await identity_service.resolve_user(session, identity)
     except AuthenticationError as error:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(error)) from error

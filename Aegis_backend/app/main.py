@@ -20,7 +20,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     database = Database(settings)
     redis = create_redis_client(settings)
-    # 将运行期共享资源挂到 app.state，供认证依赖和后续接口使用。
+    # 将运行期共享资源挂到 app.state，供认证依赖和后续接口使用
+    # Request 对象持有对当前 FastAPI 应用的引用：request.app,应用对象保存共享资源：app.state
     app.state.settings = settings
     app.state.database = database
     app.state.redis = redis

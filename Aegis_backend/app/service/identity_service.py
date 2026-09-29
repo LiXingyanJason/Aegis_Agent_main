@@ -19,11 +19,13 @@ class IdentityService:
         self._users = users or UserRepository()
 
     async def resolve_user(self, session: AsyncSession, identity: OIDCIdentity) -> LocalUser:
-        """返回已有用户，或仅在显式开发配置开启时创建用户。"""
+        """根据 OIDCIdentity返回已有用户(Keycloak 外部身份映射为 Aegis 本地用户),或仅在显式开发配置开启时创建用户。"""
+        # 根据 OIDCIdentity 查询本地 users 表
         local_user = await self._users.find_by_oidc(session, identity.issuer, identity.subject)
         if local_user is not None:
-            return local_user
+            return local_user # 找到有效本地用户时，直接返回
 
+        # 未找到本地用户时，检查是否允许自动创建,生产环境关闭自动创建
         if not self._settings.auto_provision_users or not self._settings.default_tenant_name:
             raise UserNotProvisionedError("该 OIDC 用户尚未被分配到 Aegis 租户")
 

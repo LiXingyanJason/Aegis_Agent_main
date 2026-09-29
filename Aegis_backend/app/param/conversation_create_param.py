@@ -8,6 +8,7 @@ class ConversationCreateParam(BaseModel):
 
     title: str | None = Field(default=None, max_length=200, description="会话标题，可选")
 
+    # 接收到JSON时，自动校验 title 字段
     @field_validator("title")
     @classmethod
     def normalize_title(cls, value: str | None) -> str | None:
