@@ -33,6 +33,11 @@ class Settings(BaseSettings):
     model_api_base: AnyHttpUrl
     model_api_key: SecretStr
     model_default_name: str
+    model_request_timeout_seconds: float = 60.0
+
+    agent_queue_name: str = "aegis:agent-runs"
+    # Redis BLPOP 协议只接受整数秒，不能使用 5.0 这类浮点数。
+    agent_worker_poll_timeout_seconds: int = 5
 
     @property
     def oidc_issuer(self) -> str:

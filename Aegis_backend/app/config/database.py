@@ -1,6 +1,6 @@
 """异步 SQLAlchemy 引擎、会话及 PostgreSQL RLS 租户事务上下文。"""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from contextvars import ContextVar, Token
 from dataclasses import dataclass
@@ -23,6 +23,9 @@ class TenantContext:
 
 
 _tenant_context: ContextVar[TenantContext | None] = ContextVar("tenant_context", default=None)
+_after_commit_callbacks: ContextVar[list[Callable[[], Awaitable[None]]] | None] = ContextVar(
+    "after_commit_callbacks", default=None
+)
 # _tenant_context 本身是一个 ContextVar(存储当前线程运行时的TenantContext)
 # : ContextVar[TenantContext | None]表示该变量当前保存的值可以是 TenantContext 或是 None
 
@@ -32,6 +35,14 @@ def get_tenant_context() -> TenantContext:
     if context is None:
         raise TenantContextError("Tenant context is required for tenant-scoped database access")
     return context
+
+
+def register_after_commit(callback: Callable[[], Awaitable[None]]) -> None:
+    """登记仅在当前数据库事务成功提交后才能执行的异步动作。"""
+    callbacks = _after_commit_callbacks.get()
+    if callbacks is None:
+        raise TenantContextError("After-commit callback requires an active tenant transaction")
+    callbacks.append(callback)
 
 
 class Database:
@@ -79,6 +90,8 @@ async def tenant_transaction(
     """
 
     token: Token[TenantContext | None] = _tenant_context.set(context)
+    callbacks: list[Callable[[], Awaitable[None]]] = []
+    callback_token = _after_commit_callbacks.set(callbacks)
     try:
         async with session.begin():
             await session.execute(
@@ -89,6 +102,10 @@ async def tenant_transaction(
                 {"tenant_id": str(context.tenant_id), "user_id": str(context.user_id)},
             )
             yield session
+        # 只有 session.begin() 正常退出、事务已经提交后，才允许投递 Redis 等外部副作用。
+        for callback in callbacks:
+            await callback()
     finally:
+        _after_commit_callbacks.reset(callback_token)
         _tenant_context.reset(token)
 

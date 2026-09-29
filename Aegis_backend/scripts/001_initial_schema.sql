@@ -88,7 +88,8 @@ CREATE TABLE conversation_messages (
   tool_call_id uuid,
   created_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (conversation_id, sequence_no),
-  UNIQUE NULLS NOT DISTINCT (conversation_id, client_message_id),
+  -- 仅用户消息具有 client_message_id；NULL 的 Agent/系统/工具消息必须允许重复。
+  UNIQUE (conversation_id, client_message_id),
   CHECK ((role = 'user' AND client_message_id IS NOT NULL) OR role <> 'user')
 );
 CREATE INDEX ix_messages_conversation ON conversation_messages (tenant_id, conversation_id, sequence_no);

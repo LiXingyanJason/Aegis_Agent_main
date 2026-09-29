@@ -4,7 +4,12 @@ from uuid import UUID
 import pytest
 
 from app.common.exceptions import TenantContextError
-from app.config.database import TenantContext, get_tenant_context, tenant_transaction
+from app.config.database import (
+    TenantContext,
+    get_tenant_context,
+    register_after_commit,
+    tenant_transaction,
+)
 
 
 class FakeSession:
@@ -58,3 +63,25 @@ def test_tenant_context_fails_closed_outside_transaction() -> None:
     """测试未进入租户事务时读取上下文会失败，避免无租户条件访问数据。"""
     with pytest.raises(TenantContextError):
         get_tenant_context()
+
+
+@pytest.mark.asyncio
+async def test_after_commit_callback_runs_only_after_transaction_exits() -> None:
+    """测试 Redis 投递等外部动作仅会在数据库事务成功提交后执行。"""
+    session = FakeSession()
+    context = TenantContext(
+        tenant_id=UUID("11111111-1111-1111-1111-111111111111"),
+        user_id=UUID("22222222-2222-2222-2222-222222222222"),
+    )
+    called: list[str] = []
+
+    async def callback() -> None:
+        """模拟事务提交后的 Redis 投递。"""
+        assert session.entered is False
+        called.append("enqueued")
+
+    async with tenant_transaction(session, context):
+        register_after_commit(callback)
+        assert called == []
+
+    assert called == ["enqueued"]

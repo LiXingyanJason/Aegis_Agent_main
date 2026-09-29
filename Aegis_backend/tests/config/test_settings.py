@@ -23,6 +23,7 @@ def test_settings_normalizes_postgresql_url() -> None:
     settings = Settings(_env_file=None, **valid_settings())
     assert settings.database_async_url == "postgresql+asyncpg://aegis:secret@localhost:5432/aegis_pa"
     assert settings.model_api_key.get_secret_value() == "test-key"
+    assert settings.agent_worker_poll_timeout_seconds == 5
 
 
 def test_settings_rejects_non_postgresql_database_url() -> None:

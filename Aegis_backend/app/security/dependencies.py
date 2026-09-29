@@ -32,7 +32,7 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
 ) -> CurrentUser:
     """
-    验证 Bearer token 并解析为 Aegis 本地用户。
+    验证 Bearer token 并解析为 Aegis 本地用户对象。
     Args:   request: FastAPI 自动注入当前 HTTP 请求对象
             credentials: FastAPI解析请求头token并注入
     eg: credentials.scheme == "Bearer"
@@ -60,7 +60,7 @@ async def get_tenant_session(
     request: Request,
     current_user: CurrentUser = Depends(get_current_user),
 ) -> AsyncIterator[AsyncSession]:
-    """为 Controller 提供已设置 RLS 变量的数据库事务会话。"""
+    """为 Controller 提供已设置 RLS 的数据库事务会话。"""
     database: Database = request.app.state.database
     async with database.session() as session:
         async with tenant_transaction(session, current_user.tenant_context):
