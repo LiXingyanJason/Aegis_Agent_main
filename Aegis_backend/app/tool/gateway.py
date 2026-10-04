@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repository.tool_repository import CalendarConnectionRepository
 from app.tool.contracts import ToolContext, ToolError, ToolInvocation, ToolResult
-from app.tool.tool_registry import RegisteredTool, ToolRegistry
+from app.tool.registry import RegisteredTool, ToolRegistry
 
 
 @dataclass(frozen=True, slots=True)

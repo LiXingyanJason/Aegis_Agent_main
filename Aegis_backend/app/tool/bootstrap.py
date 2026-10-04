@@ -1,11 +1,11 @@
 """Worker 启动时构造默认只读工具注册表和网关。"""
 
 from app.config.settings import Settings
-from app.tool.calendar_mcp_client import CalendarMCPClient
-from app.tool.calendar_tools import CalendarMCPToolHandler
+from app.tool.calendar.handler import CalendarMCPToolHandler
+from app.tool.calendar.mcp_client import CalendarMCPClient
 from app.tool.contracts import ToolDefinition
-from app.tool.tool_gateway import ToolGateway
-from app.tool.tool_registry import ToolRegistry
+from app.tool.gateway import ToolGateway
+from app.tool.registry import ToolRegistry
 
 
 def create_default_tool_gateway(settings: Settings) -> ToolGateway:

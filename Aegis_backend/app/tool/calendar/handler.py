@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from app.tool.calendar_mcp_client import CalendarMCPClient
+from app.tool.calendar.mcp_client import CalendarMCPClient
 from app.tool.contracts import ToolContext, ToolResult
 
 

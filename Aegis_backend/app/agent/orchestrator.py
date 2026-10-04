@@ -14,7 +14,7 @@ from app.llm.client import LLMError, LLMMessage, OpenAICompatibleClient
 from app.repository.run_repository import AgentRunRepository
 from app.repository.tool_repository import ToolCallRepository
 from app.tool.contracts import ToolError, ToolInvocation
-from app.tool.tool_gateway import ToolGateway
+from app.tool.gateway import ToolGateway
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +54,7 @@ class AgentOrchestrator:
     async def execute(self, run_id: UUID) -> AgentExecutionResult:
         """执行任务，并返回 `completed`、`failed` 或 `ignored` 供 Worker 输出运行状态。"""
         started_event = None
+        # 抢到一个任务 将任务标为运行中 写入“任务已启动”事件 这三者保证保持一致(要么全部成功并提交，要么全部回滚)
         async with self._database.session() as session:
             async with session.begin():
                 run = await self._runs.claim_queued_run(
@@ -61,9 +62,11 @@ class AgentOrchestrator:
                     run_id,
                     model_provider=self._llm_client.provider_name,
                     model_name=self._llm_client.model_name,
-                )
+                ) # 只有一个 Worker 能把该任务从 queued 改为 running 其他 Worker 会得到 None，不会重复调用 LLM
+                # 通过数据库sql查询实现(SET status = 'running')
                 if run is not None and self._events is not None:
-                    started_event = await self._runs.append_event(
+                    # 成功抢到任务，并且系统启用了事件发布器时，记录事件
+                    started_event = await self._runs.append_event( # 持久化该事件
                         session,
                         run_id=run.id,
                         tenant_id=run.tenant_id,
@@ -78,12 +81,16 @@ class AgentOrchestrator:
         if run is None:
             return AgentExecutionResult(status="ignored")
         if started_event is not None:
-            await self._events.publish_best_effort(started_event)
+            await self._events.publish_best_effort(started_event) # 发布 Redis 事件 started_event
 
         context = TenantContext(tenant_id=run.tenant_id, user_id=run.user_id)
         step_id: UUID | None = None
         try:
             async with self._database.session() as session:
+                # 读取该会话的历史消息
+                # eg:[{"role": "user", "content": "查看我明天的日程"},
+                #     {"role": "assistant", "content": "此前的回复"},
+                #     {"role": "user", "content": "那下午有空吗？"}]
                 async with tenant_transaction(session, context):
                     history = await self._runs.load_conversation_history(
                         session,
@@ -92,8 +99,11 @@ class AgentOrchestrator:
                         user_id=run.user_id,
                     )
 
+            # 根据当前会话最新的用户消息，决定是否调用工具；若调用，则把工具结果整理成给 LLM 使用的可信上下文
+            # 当前不是 LLM 选择工具，而是后端代码按关键词写死路由规则
             tool_context = await self._execute_selected_tool(run, context, history)
 
+            # 在数据库中登记“模型生成回复”，并在事务提交后通知前端
             async with self._database.session() as session:
                 async with tenant_transaction(session, context):
                     step_id = await self._runs.create_running_llm_step(
@@ -113,12 +123,15 @@ class AgentOrchestrator:
                         )
                         self._events.publish_after_commit(event)
 
+            # 组装发送给 LLM 的消息列表(系统提示词，可信工具结果，会话历史消息，最新用户问题)
             messages = [LLMMessage(role="system", content=self._system_prompt)]
             if tool_context is not None:
                 messages.append(LLMMessage(role="system", content=tool_context))
             messages.extend(LLMMessage(role=item["role"], content=item["content"]) for item in history)
+            # 调用模型服务，并等待模型返回文本
             reply = await self._llm_client.complete(messages)
 
+            # 数据库保存最终结果、完成任务、发布完成事件
             async with self._database.session() as session:
                 async with tenant_transaction(session, context):
                     await self._runs.complete_run_with_assistant_message(
@@ -180,18 +193,22 @@ class AgentOrchestrator:
     async def _invoke_read_tool(
         self, run, context: TenantContext, invocation: ToolInvocation
     ) -> str:
-        """持久化只读工具调用、发出 SSE 预览事件，并返回可供 LLM 使用的可信上下文。"""
-        assert self._tools is not None
-        definition = self._tools.get_definition(invocation.tool_name)
+        """
+        持久化只读工具调用、发出 SSE 预览事件，并返回可供 LLM 使用的可信上下文。
+        invocation:需要调用工具的名称
+        """
+        assert self._tools is not None # 断言工具网关已经注入
+        definition = self._tools.get_definition(invocation.tool_name) # 读取该工具权威定义(写入数据库),工具白名单检查
         label = "正在查询可用时间" if invocation.tool_name.endswith("find_free_time") else "正在查询日程"
         step_key = invocation.tool_name.replace(".", "_")
         step_id: UUID | None = None
         tool_call_id: UUID | None = None
         prepared = None
-        started_at = monotonic()
+        started_at = monotonic() # 记录本次工具调用的单调时钟起点
         try:
             async with self._database.session() as session:
                 async with tenant_transaction(session, context):
+                    #  run_steps 表创建当前任务的一个工具步骤 status: running
                     step_id = await self._runs.create_running_tool_step(
                         session,
                         run_id=run.id,
@@ -200,6 +217,7 @@ class AgentOrchestrator:
                         label=label,
                     )
                     try:
+                        # ToolGateway.prepare() 做调用前校验和准备
                         prepared = await self._tools.prepare(
                             session,
                             tenant_id=run.tenant_id,
@@ -207,6 +225,8 @@ class AgentOrchestrator:
                             run_id=run.id,
                             invocation=invocation,
                         )
+
+                    # ToolGateway校验阶段失败，记录“用户曾尝试调用哪个工具、传了什么安全参数、为什么失败”，用于追溯
                     except ToolError as error:
                         tool_call_id = await self._tool_calls.create_running(
                             session,
@@ -246,6 +266,9 @@ class AgentOrchestrator:
                             error=error,
                         )
                         return f"日历工具暂不可用：{error.message}。请明确告知用户，不要编造日程或空闲时间。"
+
+                    # 工具准备成功后，登记一次真正即将发生的工具调用，并通知前端开始执行
+                    # 在 tool_calls 表新增一条记录，状态为 running
                     tool_call_id = await self._tool_calls.create_running(
                         session,
                         tenant_id=run.tenant_id,
@@ -259,6 +282,7 @@ class AgentOrchestrator:
                         request_payload=invocation.arguments,
                         input_summary=_input_summary(invocation.arguments),
                     )
+                    # Worker 启用了 SSE 事件发布器，就写入一条任务进度事件 progress_updated
                     if self._events is not None:
                         event = await self._runs.append_event(
                             session,
@@ -270,6 +294,7 @@ class AgentOrchestrator:
                         self._events.publish_after_commit(event)
 
             assert prepared is not None and step_id is not None and tool_call_id is not None
+            # 调用工具，返回结果
             result = await self._tools.invoke(prepared)
         except ToolError as error:
             await self._finish_tool_failure(

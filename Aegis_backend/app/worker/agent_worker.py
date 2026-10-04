@@ -26,7 +26,7 @@ async def run_worker() -> None:
         database,
         OpenAICompatibleClient(settings),
         events=RunEventPublisher(redis),
-        tools=create_default_tool_gateway(settings),
+        tools=create_default_tool_gateway(settings), # 创建 CalendarMCPToolHandler实例
         tool_router=AgentToolRouter(settings.app_timezone),
     )
     print(

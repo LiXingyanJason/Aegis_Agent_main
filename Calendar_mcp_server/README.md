@@ -2,6 +2,24 @@
 
 该服务是 Aegis Worker 的 Calendar MCP Client 所调用的独立 HTTP 服务。当前使用固定 Mock 日程数据，只支持读取，不连接 Google Calendar 或 Outlook。
 
+## 目录与职责
+
+```text
+app/
+├── controller/     # /health、/mcp 等 HTTP 与 JSON-RPC 接口
+├── service/        # MCP 方法分发、日历查询与空闲时间计算
+├── provider/       # Mock / Google / Outlook 等日历提供商适配接口
+├── param/          # MCP 请求、时间范围等输入校验模型
+├── entity/         # CalendarEvent、FreeTimeSlot 等领域实体
+├── vo/             # MCP structuredContent 与 tools/list 输出模型
+├── security/       # 服务间 API Key、Aegis _meta 上下文校验
+├── common/         # JSON-RPC 响应、异常与常量
+├── config/         # 配置读取与依赖组装
+└── main.py         # FastAPI 启动入口和路由注册
+```
+
+调用方向为：`Controller → MCPService → CalendarService → CalendarProvider`。一期的 `MockCalendarProvider` 可在不改变 Controller、Service 协议的前提下，被 Google 或 Outlook Provider 替换。
+
 ## 启动
 
 ```powershell
