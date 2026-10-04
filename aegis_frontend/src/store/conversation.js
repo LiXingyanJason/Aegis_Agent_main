@@ -13,6 +13,7 @@ export const useConversationStore = defineStore('conversation', {
     current: null,
     messages: [],
     runs: [],
+    runEventNos: {},
     latestSubmission: null,
     loadingHistory: false,
     loadingDetail: false,
@@ -122,6 +123,84 @@ export const useConversationStore = defineStore('conversation', {
         }
       }
       return run
+    },
+    applyRunEvent(event) {
+      const runId = event.run_id
+      const eventNo = Number(event.event_no)
+      if (!runId || !Number.isSafeInteger(eventNo)) return false
+      if (eventNo <= (this.runEventNos[runId] ?? 0)) return false
+
+      const runIndex = this.runs.findIndex((run) => run.run_id === runId)
+      if (runIndex === -1) return false
+
+      const payload = event.payload ?? {}
+      const run = {
+        ...this.runs[runIndex],
+        steps: [...(this.runs[runIndex].steps ?? [])],
+      }
+
+      if (event.event_type === 'run_started') {
+        run.status = payload.status ?? 'running'
+        run.current_stage = payload.current_stage ?? run.current_stage
+        run.model_provider = payload.model_provider ?? run.model_provider
+        run.model_name = payload.model_name ?? run.model_name
+      }
+
+      if (event.event_type === 'progress_updated') {
+        run.status = run.status === 'queued' ? 'running' : run.status
+        const stepIndex = run.steps.findIndex((step) => step.step_id === payload.step_id)
+        const step = {
+          ...(stepIndex === -1 ? {} : run.steps[stepIndex]),
+          step_id: payload.step_id,
+          label: payload.label,
+          status: payload.status,
+          detail: payload.detail ?? null,
+          started_at: payload.occurred_at ?? null,
+        }
+        if (stepIndex === -1) run.steps.push(step)
+        else run.steps.splice(stepIndex, 1, step)
+      }
+
+      if (event.event_type === 'assistant_message_completed' && payload.content) {
+        const alreadyPresent = this.messages.some(
+          (message) => message.role === 'assistant'
+            && message.run_id === runId
+            && message.content === payload.content,
+        )
+        if (!alreadyPresent) {
+          this.messages.push({
+            message_id: 'sse-' + runId + '-' + eventNo,
+            role: 'assistant',
+            content: payload.content,
+            created_at: event.created_at ?? new Date().toISOString(),
+            run_id: runId,
+            is_final: payload.is_final ?? true,
+          })
+        }
+      }
+
+      if (event.event_type === 'run_completed') {
+        run.status = payload.status ?? 'completed'
+        run.current_stage = '已完成'
+        run.result_summary = payload.result_summary ?? run.result_summary
+      }
+
+      if (event.event_type === 'run_failed') {
+        run.status = payload.status ?? 'failed'
+        run.current_stage = '执行失败'
+        run.error_code = payload.error_code ?? run.error_code
+        run.error_message = payload.error_message ?? payload.message ?? run.error_message
+      }
+
+      this.runs.splice(runIndex, 1, run)
+      this.runEventNos[runId] = eventNo
+      if (this.latestSubmission?.run_id === runId) {
+        this.latestSubmission = {
+          ...this.latestSubmission,
+          status: run.status,
+        }
+      }
+      return true
     },
   },
 })

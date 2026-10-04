@@ -67,12 +67,18 @@ async def get_run_detail(
 @router.get("/{run_id}/events")
 async def stream_run_events(
     run_id: UUID,
-    request: Request,
+    request: Request, # 当前 HTTP 请求对象，取得应用启动时保存的共享资源
     current_user: CurrentUser = Depends(get_current_user),
     last_event_id: str | None = Header(default=None, alias="Last-Event-ID"),
 ) -> StreamingResponse:
-    """以 SSE 补发并实时推送当前用户任务的进度和最终结果事件。"""
+    """
+    建立 SSE 连接，实时推送任务进度(首次建立;重连恢复)
+    一个 run_id 对应 一次 Agent 执行 对应 一条短生命周期 SSE
+    :param last_event_id:  从请求头读取断线恢复位置 Last-Event-ID: 5表示前端已经成功处理第 5 条事件，服务端只补发 event_no > 5 的事件
+
+    """
     after_event_no = _parse_last_event_id(last_event_id)
+    # 建立 SSE 连接前，确认“当前登录用户是否拥有这个任务”
     database: Database = request.app.state.database
     async with database.session() as session:
         async with tenant_transaction(session, current_user.tenant_context):
@@ -120,35 +126,40 @@ async def _run_event_stream(
     current_user: CurrentUser,
     after_event_no: int,
 ) -> AsyncIterator[str]:
-    """先订阅实时通道再补发数据库事件，避免订阅期间遗漏已提交事件。"""
-    pubsub = redis.pubsub()
-    await pubsub.subscribe(run_event_channel(run_id))
+    """
+    SSE 持续推送事件异步生成器
+    订阅 Redis事件、补发数据库历史事件持续、等 Redis 新事件并推给前端
+    """
+    pubsub = redis.pubsub() # 创建 Redis Pub/Sub 订阅对象
+    await pubsub.subscribe(run_event_channel(run_id)) # 订阅当前任务专属频道 aegis:run:2dde...:events
+    # Redis 不需要预先创建或登记频道。第一次执行 publish 或 subscribe 时，这个名字对应的频道就自然存在
     last_sent_event_no = after_event_no
     try:
-        # 订阅成功后再读取持久历史：期间到达的实时消息会留在 Pub/Sub 缓冲中，后续按 event_no 去重。
+        # 订阅成功后，从 PostgreSQL 补发该任务此前已经产生、但前端可能没收到的事件。
         async with database.session() as session:
             async with tenant_transaction(session, current_user.tenant_context):
                 history = await _run_service.list_run_events(
                     session, current_user.user, run_id, after_event_no
                 )
         for event in history:
-            yield _format_sse_event(event)
+            yield _format_sse_event(event) # 将历史事件转换成 SSE 文本并立即推送给前端
             last_sent_event_no = event.event_no
-            if event.event_type in _terminal_event_types:
+            if event.event_type in _terminal_event_types: # run_completed 时直接结束 SSE 连接
                 return
 
-        while not await request.is_disconnected():
+        while not await request.is_disconnected(): # 浏览器没有关闭页面、取消请求或网络断开，就持续循环
+            # 等待 Redis 频道的新消息，最长等待 15 秒
             message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=15.0)
             if message is None:
-                yield ": keepalive\n\n"
+                yield ": keepalive\n\n" # 没有事件时，向前端发一条 SSE 心跳注释
                 continue
             raw_payload = message["data"]
-            if not isinstance(raw_payload, str):
+            if not isinstance(raw_payload, str): # 忽略非字符串的异常消息
                 continue
-            event = RunEvent.from_wire_payload(raw_payload)
-            if event.event_no <= last_sent_event_no:
+            event = RunEvent.from_wire_payload(raw_payload) #将 JSON 字符串还原为后端的 RunEvent 对象
+            if event.event_no <= last_sent_event_no: # 去重，不在补发已经发送的事件
                 continue
-            yield _format_sse_event(event)
+            yield _format_sse_event(event) # 将历史事件转换成 SSE 文本并立即推送给前端
             last_sent_event_no = event.event_no
             if event.event_type in _terminal_event_types:
                 return

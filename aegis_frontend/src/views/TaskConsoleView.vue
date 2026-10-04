@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { subscribeRunEvents } from '../api/run'
 import { useAuthStore } from '../store/auth'
 import { useConversationStore } from '../store/conversation'
 
@@ -13,9 +14,13 @@ const conversationTitle = ref('')
 const pendingClientMessageId = ref(null)
 const error = ref('')
 const isPolling = ref(false)
+const isRunActive = ref(false)
 let pollTimer = null
 let pollingRunId = null
 let pollingInFlight = false
+let streamAbortController = null
+let streamingRunId = null
+let streamRetryTimer = null
 
 const activeConversation = computed(() => conversations.current)
 
@@ -39,11 +44,19 @@ async function loadHistory() {
 }
 
 async function restoreConversation(conversationId, syncUrl = true) {
+  stopRunTracking()
   error.value = ''
   try {
-    await conversations.loadConversation(conversationId)
+    const detail = await conversations.loadConversation(conversationId)
     draftMessage.value = ''
     pendingClientMessageId.value = null
+    const activeRun = detail.runs?.find(
+      (run) => run.status !== 'completed' && run.status !== 'failed' && run.status !== 'cancelled',
+    )
+    if (activeRun) {
+      isRunActive.value = true
+      startRunPolling(activeRun.run_id, conversationId)
+    }
     if (syncUrl) {
       await router.replace({ query: { conversation_id: conversationId } })
     }
@@ -53,6 +66,7 @@ async function restoreConversation(conversationId, syncUrl = true) {
 }
 
 async function startNewConversation() {
+  stopRunTracking()
   error.value = ''
   try {
     await conversations.start(conversationTitle.value.trim())
@@ -75,7 +89,7 @@ async function sendMessage() {
     const result = await conversations.send(content, pendingClientMessageId.value)
     draftMessage.value = ''
     pendingClientMessageId.value = null
-    startRunPolling(result.run_id, conversationId)
+    startRunTracking(result.run_id, conversationId)
   } catch (cause) {
     error.value = cause.response?.data?.detail || cause.message || '发送消息失败。'
   }
@@ -97,11 +111,7 @@ async function pollRun(runId, conversationId) {
     const run = await conversations.refreshRun(runId)
     error.value = ''
     if (run.status === 'completed' || run.status === 'failed') {
-      stopRunPolling(runId)
-      if (activeConversation.value?.conversation_id === conversationId) {
-        await conversations.loadConversation(conversationId)
-      }
-      await conversations.loadHistory()
+      await finishRunTracking(runId, conversationId)
     }
   } catch (cause) {
     error.value = cause.response?.data?.detail || cause.message || '查询任务状态失败，将自动重试。'
@@ -111,6 +121,7 @@ async function pollRun(runId, conversationId) {
 }
 
 function startRunPolling(runId, conversationId) {
+  if (pollingRunId === runId) return
   stopRunPolling()
   pollingRunId = runId
   isPolling.value = true
@@ -118,6 +129,85 @@ function startRunPolling(runId, conversationId) {
   pollTimer = window.setInterval(() => {
     void pollRun(runId, conversationId)
   }, 1500)
+}
+
+function stopRunStream(runId = streamingRunId) {
+  if (runId !== streamingRunId) return
+  if (streamRetryTimer !== null) window.clearTimeout(streamRetryTimer)
+  streamRetryTimer = null
+  streamAbortController?.abort()
+  streamAbortController = null
+  streamingRunId = null
+}
+
+function stopRunTracking() {
+  stopRunStream()
+  stopRunPolling()
+  isRunActive.value = false
+}
+
+async function finishRunTracking(runId, conversationId) {
+  if (runId !== streamingRunId && runId !== pollingRunId) return
+  stopRunStream(runId)
+  stopRunPolling(runId)
+  isRunActive.value = false
+  if (activeConversation.value?.conversation_id === conversationId) {
+    await conversations.loadConversation(conversationId)
+  }
+  await conversations.loadHistory()
+}
+
+function scheduleRunStreamReconnect(runId, conversationId) {
+  if (runId !== streamingRunId || streamRetryTimer !== null) return
+  startRunPolling(runId, conversationId)
+  streamRetryTimer = window.setTimeout(() => {
+    streamRetryTimer = null
+    void startRunStream(runId, conversationId)
+  }, 2000)
+}
+
+async function startRunStream(runId, conversationId) {
+  if (streamingRunId !== runId) return
+  const controller = new AbortController()
+  streamAbortController = controller
+  try {
+    await subscribeRunEvents(runId, {
+      lastEventId: conversations.runEventNos[runId] ?? 0,
+      signal: controller.signal,
+      onOpen: () => {
+        if (streamingRunId === runId) stopRunPolling(runId)
+      },
+      onEvent: async (sseEvent) => {
+        if (streamingRunId !== runId) return
+        const handled = conversations.applyRunEvent({
+          ...sseEvent.data,
+          event_no: sseEvent.data.event_no ?? sseEvent.id,
+          event_type: sseEvent.event,
+        })
+        if (!handled) return
+        error.value = ''
+        if (sseEvent.event === 'run_completed' || sseEvent.event === 'run_failed') {
+          await finishRunTracking(runId, conversationId)
+        }
+      },
+    })
+    if (streamingRunId === runId && !controller.signal.aborted) {
+      scheduleRunStreamReconnect(runId, conversationId)
+    }
+  } catch (cause) {
+    if (streamingRunId !== runId || controller.signal.aborted) return
+    error.value = cause.message || '实时任务连接中断，已切换为轮询查询。'
+    scheduleRunStreamReconnect(runId, conversationId)
+  } finally {
+    if (streamAbortController === controller) streamAbortController = null
+  }
+}
+
+function startRunTracking(runId, conversationId) {
+  stopRunTracking()
+  isRunActive.value = true
+  streamingRunId = runId
+  void startRunStream(runId, conversationId)
 }
 
 async function signOut() {
@@ -133,7 +223,7 @@ onMounted(async () => {
   }
 })
 
-onBeforeUnmount(() => stopRunPolling())
+onBeforeUnmount(() => stopRunTracking())
 </script>
 
 <template>
@@ -209,7 +299,7 @@ onBeforeUnmount(() => stopRunPolling())
               </div>
               <div v-if="conversations.messages.length === 0" class="empty-messages">此会话暂无可见消息。</div>
               <div v-if="conversations.latestSubmission" class="queued-notice">
-                <b>{{ isPolling ? '任务已提交，正在处理' : '任务状态：' + conversations.latestSubmission.status }}</b>
+                <b>{{ isRunActive ? '任务已提交，正在处理' : '任务状态：' + conversations.latestSubmission.status }}</b>
                 <span>任务 ID：{{ conversations.latestSubmission.run_id }}</span>
               </div>
             </div>
@@ -220,8 +310,8 @@ onBeforeUnmount(() => stopRunPolling())
             </div>
 
             <form class="new-conversation" @submit.prevent="sendMessage">
-              <el-input v-model="draftMessage" maxlength="8000" placeholder="输入任务，例如：帮我整理今天的邮件" aria-label="输入任务" :disabled="!activeConversation || isPolling" />
-              <el-button native-type="submit" type="primary" :loading="conversations.sending" :disabled="!activeConversation || isPolling">发送</el-button>
+              <el-input v-model="draftMessage" maxlength="8000" placeholder="输入任务，例如：帮我整理今天的邮件" aria-label="输入任务" :disabled="!activeConversation || isRunActive" />
+              <el-button native-type="submit" type="primary" :loading="conversations.sending" :disabled="!activeConversation || isRunActive">发送</el-button>
             </form>
           </article>
 
