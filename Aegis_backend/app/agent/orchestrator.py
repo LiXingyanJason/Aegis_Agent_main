@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from app.config.database import Database, TenantContext, tenant_transaction
+from app.event.run_event import RunEventPublisher
 from app.llm.client import LLMError, LLMMessage, OpenAICompatibleClient
 from app.repository.run_repository import AgentRunRepository
 
@@ -31,13 +32,16 @@ class AgentOrchestrator:
         database: Database,
         llm_client: OpenAICompatibleClient,
         runs: AgentRunRepository | None = None,
+        events: RunEventPublisher | None = None,
     ) -> None:
         self._database = database
         self._llm_client = llm_client
         self._runs = runs or AgentRunRepository()
+        self._events = events
 
     async def execute(self, run_id: UUID) -> AgentExecutionResult:
         """执行任务，并返回 `completed`、`failed` 或 `ignored` 供 Worker 输出运行状态。"""
+        started_event = None
         async with self._database.session() as session:
             async with session.begin():
                 run = await self._runs.claim_queued_run(
@@ -46,8 +50,23 @@ class AgentOrchestrator:
                     model_provider=self._llm_client.provider_name,
                     model_name=self._llm_client.model_name,
                 )
+                if run is not None and self._events is not None:
+                    started_event = await self._runs.append_event(
+                        session,
+                        run_id=run.id,
+                        tenant_id=run.tenant_id,
+                        event_type="run_started",
+                        payload={
+                            "status": "running",
+                            "current_stage": "正在调用模型",
+                            "model_provider": self._llm_client.provider_name,
+                            "model_name": self._llm_client.model_name,
+                        },
+                    )
         if run is None:
             return AgentExecutionResult(status="ignored")
+        if started_event is not None:
+            await self._events.publish_best_effort(started_event)
 
         context = TenantContext(tenant_id=run.tenant_id, user_id=run.user_id)
         step_id: UUID | None = None
@@ -63,6 +82,19 @@ class AgentOrchestrator:
                     step_id = await self._runs.create_running_llm_step(
                         session, run_id=run.id, tenant_id=run.tenant_id
                     )
+                    if self._events is not None:
+                        event = await self._runs.append_event(
+                            session,
+                            run_id=run.id,
+                            tenant_id=run.tenant_id,
+                            event_type="progress_updated",
+                            payload={
+                                "step_id": str(step_id),
+                                "label": "正在生成回复",
+                                "status": "running",
+                            },
+                        )
+                        self._events.publish_after_commit(event)
 
             messages = [LLMMessage(role="system", content=self._system_prompt)] + [
                 LLMMessage(role=item["role"], content=item["content"]) for item in history
@@ -80,6 +112,23 @@ class AgentOrchestrator:
                         assistant_content=reply,
                         step_id=step_id,
                     )
+                    if self._events is not None:
+                        message_event = await self._runs.append_event(
+                            session,
+                            run_id=run.id,
+                            tenant_id=run.tenant_id,
+                            event_type="assistant_message_completed",
+                            payload={"content": reply, "is_final": True},
+                        )
+                        completed_event = await self._runs.append_event(
+                            session,
+                            run_id=run.id,
+                            tenant_id=run.tenant_id,
+                            event_type="run_completed",
+                            payload={"status": "completed", "result_summary": reply[:1000]},
+                        )
+                        self._events.publish_after_commit(message_event)
+                        self._events.publish_after_commit(completed_event)
             return AgentExecutionResult(status="completed")
         except asyncio.CancelledError:
             raise
@@ -111,3 +160,16 @@ class AgentOrchestrator:
                     error_code=error_code,
                     error_message=error_message,
                 )
+                if self._events is not None:
+                    event = await self._runs.append_event(
+                        session,
+                        run_id=run.id,
+                        tenant_id=run.tenant_id,
+                        event_type="run_failed",
+                        payload={
+                            "status": "failed",
+                            "error_code": error_code,
+                            "error_message": error_message,
+                        },
+                    )
+                    self._events.publish_after_commit(event)

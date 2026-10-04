@@ -5,6 +5,7 @@ import {
   listConversations,
   sendConversationMessage,
 } from '../api/conversation'
+import { getRunDetail } from '../api/run'
 
 export const useConversationStore = defineStore('conversation', {
   state: () => ({
@@ -100,6 +101,27 @@ export const useConversationStore = defineStore('conversation', {
       } finally {
         this.sending = false
       }
+    },
+    async refreshRun(runId) {
+      const run = await getRunDetail(runId)
+      if (this.current?.conversation_id === run.conversation_id) {
+        const index = this.runs.findIndex((item) => item.run_id === run.run_id)
+        if (index === -1) {
+          this.runs.unshift(run)
+        } else {
+          this.runs.splice(index, 1, {
+            ...this.runs[index],
+            ...run,
+          })
+        }
+      }
+      if (this.latestSubmission?.run_id === run.run_id) {
+        this.latestSubmission = {
+          ...this.latestSubmission,
+          status: run.status,
+        }
+      }
+      return run
     },
   },
 })

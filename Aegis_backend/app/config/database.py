@@ -42,7 +42,7 @@ def register_after_commit(callback: Callable[[], Awaitable[None]]) -> None:
     callbacks = _after_commit_callbacks.get()
     if callbacks is None:
         raise TenantContextError("After-commit callback requires an active tenant transaction")
-    callbacks.append(callback)
+    callbacks.append(callback) # 写入数据库回调函数，等待数据库提交完毕再执行这些函数
 
 
 class Database:
@@ -55,7 +55,6 @@ class Database:
             pool_pre_ping=True,  # 连接池取出连接前，先检查它是否仍可用
         )
         self.session_factory = async_sessionmaker(self.engine, expire_on_commit=False)  # 异步会话工厂
-
     # 进入 async with
     #   ↓
     # session_factory() 创建 AsyncSession
@@ -87,6 +86,8 @@ async def tenant_transaction(
         数据库执行一个事务有安全检查(RLS)，该代码将上下文必要的信息注入到安全检查中。每一个事务，都会过这个安全检查。符合就执行
         检查 1：注入 enant_id user_id ，供 SQLRLS 执行检查(实际检查逻辑在 PostgreSQL中，不在该函数内)
         检查 2：仅根据当前上下文注入 enant_id user_id，执行结束后清空。防止后续事务误用上一个租户或用户的身份
+        正常时自动提交，异常时自动回滚；提交后执行 Redis 入队等回调函数
+        回调函数：先把一个函数交给别人保存，等某个事件发生后，再由对方调用它
     """
 
     token: Token[TenantContext | None] = _tenant_context.set(context)
@@ -102,9 +103,13 @@ async def tenant_transaction(
                 {"tenant_id": str(context.tenant_id), "user_id": str(context.user_id)},
             )
             yield session
-        # 只有 session.begin() 正常退出、事务已经提交后，才允许投递 Redis 等外部副作用。
+            # 把 session 交给接口Controller使用
+            # → 暂停在这里
+            # → 等接口函数执行结束
+            # → 再回来继续执行 yield 后面的退出逻辑(事务提交)
+            # 只有 session.begin() 正常退出、事务已经提交后，才允许投递 Redis 等外部副作用。
         for callback in callbacks:
-            await callback()
+            await callback() # 真正执行回调函数
     finally:
         _after_commit_callbacks.reset(callback_token)
         _tenant_context.reset(token)

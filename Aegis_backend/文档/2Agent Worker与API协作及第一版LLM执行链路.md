@@ -4,7 +4,7 @@
 
 本文说明 Aegis PA 当前后端中 Web API、Redis 队列、PostgreSQL 与 Python Agent Worker 的职责边界，以及一条用户任务从提交到保存 LLM 回复的完整执行路径。
 
-适用范围为一期当前已经实现的最小链路：**用户发送文本任务 → DeepSeek/OpenAI 兼容模型生成文本回复 → 系统保存回复**。日历、邮件、MCP 工具、SSE 实时推送、审批和 LangGraph 尚未接入这条链路。
+适用范围为一期当前已经实现的最小链路：**用户发送文本任务 → DeepSeek/OpenAI 兼容模型生成文本回复 → 系统保存回复 → SSE 通知页面**。日历、邮件、MCP 工具、审批和 LangGraph 尚未接入这条链路。
 
 ## 2. 运行架构
 
@@ -25,16 +25,21 @@ Python Agent Worker
   ├─ 取出 run_id
   ├─ 查询并更新 PostgreSQL 任务状态
   ├─ 调用 DeepSeek / OpenAI 兼容模型
-  └─ 写回 Agent 消息、运行步骤、最终状态
+  ├─ 写回运行事件、Agent 消息、运行步骤、最终状态
+  └─ 提交后通过 Redis Pub/Sub 发布运行事件
         │
         ▼
 PostgreSQL
+        ▲
+        │ 历史补发
+FastAPI SSE 接口 ← Redis Pub/Sub 实时通知 ← Vue 前端
 ```
 
 API 与 Worker 是两个独立进程，**不通过 HTTP 直接调用彼此**。二者运行时只通过 Redis 和 PostgreSQL 协作：
 
 - Redis 负责通知 Worker “哪一个任务需要处理”，队列中只存储 `run_id`；
 - PostgreSQL 是会话、消息、任务状态和模型结果的唯一业务数据来源；
+- `run_events` 是 SSE 的可恢复事件记录；Redis Pub/Sub 只用于低延迟通知，不是事件的唯一存储；
 - 前端始终调用 API；后续可通过 `GET /conversations/{conversation_id}` 读取 Worker 已写入的最终回复。
 
 当前无需拆分为两个代码仓库。API 与 Worker 共用 `app/` 下的配置、仓储、数据库事务和领域代码，但在生产环境应部署成两个独立服务。
@@ -173,7 +178,8 @@ while True
 6. 通过 `OpenAICompatibleClient` 调用 `{MODEL_API_BASE}/chat/completions`；
 7. 锁定会话，写入一条 `role = assistant` 的消息；
 8. 将运行步骤更新为 `succeeded`，将 `agent_runs` 更新为 `completed`；
-9. 发生模型或执行错误时，步骤更新为 `failed`，任务更新为 `failed`，并记录脱敏错误码。
+9. 发生模型或执行错误时，步骤更新为 `failed`，任务更新为 `failed`，并记录脱敏错误码；
+10. 每个关键状态变更在同一数据库事务内追加 `run_events`，提交后尽力通过 Redis Pub/Sub 通知 SSE API；Redis 通知失败时事件仍保留在 PostgreSQL。
 
 状态值不可混用：
 
@@ -220,11 +226,14 @@ WHERE client_message_id IS NOT NULL;
 | 文件 | 职责 |
 |---|---|
 | `app/controller/conversation_controller.py` | 会话、历史恢复、发送消息 HTTP 接口 |
+| `app/controller/run_controller.py` | `GET /runs/{run_id}` 状态查询和 `GET /runs/{run_id}/events` SSE 接口 |
 | `app/service/conversation_service.py` | 会话及发送消息业务协调 |
+| `app/service/run_service.py` | 当前用户任务状态与步骤查询业务协调 |
 | `app/service/run_dispatch_service.py` | 数据库提交后投递 Redis run_id |
 | `app/config/database.py` | SQLAlchemy 异步事务、RLS 上下文、提交后回调 |
 | `app/worker/agent_worker.py` | Redis 常驻消费循环与本地运行日志 |
 | `app/agent/orchestrator.py` | 领取任务、构造上下文、调用模型、保存结果 |
+| `app/event/run_event.py` | 运行事件模型、Redis Pub/Sub 通道及提交后发布器 |
 | `app/llm/client.py` | OpenAI/DeepSeek 兼容模型 HTTP 客户端 |
 | `app/repository/run_repository.py` | `agent_runs`、`run_steps`、Agent 回复的数据库读写 |
 | `app/repository/conversation_repository.py` | 会话、用户消息、会话详情的数据库读写 |
@@ -232,7 +241,7 @@ WHERE client_message_id IS NOT NULL;
 
 ## 11. 当前验证与下一步
 
-当前自动化测试覆盖了配置、租户上下文、OIDC 身份映射、会话创建/恢复、发送消息幂等、提交后回调、模型客户端、Agent 最小编排以及任务步骤状态。
+当前自动化测试覆盖了配置、租户上下文、OIDC 身份映射、会话创建/恢复、发送消息幂等、任务状态查询、SSE 帧及断线续传参数、提交后回调、模型客户端、Agent 最小编排以及任务步骤状态。
 
 运行测试：
 
@@ -242,9 +251,34 @@ python.exe -m pytest tests -q
 
 当前已验证真实 DeepSeek HTTP 请求能返回 `200 OK`，并已完成一次任务 `completed`。仍需后续实现：
 
-1. `GET /runs/{run_id}` 与 SSE 事件，使页面实时展示运行状态；
-2. Transactional Outbox、重试和超时恢复；
-3. Prompt Injection 防护、输出脱敏与工具权限策略；
-4. MCP 工具调用、工具预览和逐项审批；
-5. 多 Worker 并发、监控、日志聚合和告警；
-6. 复杂任务状态机或 LangGraph 编排。
+1. Transactional Outbox、重试和超时恢复；
+2. Prompt Injection 防护、输出脱敏与工具权限策略；
+3. MCP 工具调用、工具预览和逐项审批；
+4. 多 Worker 并发、监控、日志聚合和告警；
+5. 复杂任务状态机或 LangGraph 编排。
+
+## 12. SSE 订阅、断线恢复与前端接入
+
+页面在收到 `POST /conversations/{conversation_id}/messages` 的 `run_id` 后，可连接：
+
+```text
+GET /runs/{run_id}/events
+Authorization: Bearer <access_token>
+Last-Event-ID: <已成功处理的最大 event_no，可选>
+```
+
+服务端的处理顺序是：先校验当前用户对 `run_id` 的归属；随后先订阅 `aegis:run:{run_id}:events`，再查询 PostgreSQL 中 `event_no` 大于 `Last-Event-ID` 的 `run_events`，最后持续读取 Redis 通知。这个顺序避免了“读取历史与开始订阅之间恰好产生新事件”的遗漏；实时消息会按 `event_no` 去重。
+
+第一版事件及用途如下：
+
+| 事件 | 页面用途 |
+|---|---|
+| `run_started` | 显示模型、运行状态和当前阶段 |
+| `progress_updated` | 更新任务步骤面板 |
+| `assistant_message_completed` | 写入完整 Agent 回复 |
+| `run_completed` | 标记结束并关闭订阅 |
+| `run_failed` | 展示脱敏错误并关闭订阅 |
+
+每个 SSE 帧的 `id` 为单调递增的 `event_no`。前端成功处理后保存该编号；断线后以 `Last-Event-ID` 重连即可只接收未处理事件。`GET /runs/{run_id}` 仍保留作为页面刷新和 SSE 暂时不可达时的轮询兜底。
+
+当前接口必须使用 Bearer access token。浏览器原生 `EventSource` API 不支持自定义 `Authorization` 请求头，因此 Vue 前端应使用 `fetch` + `ReadableStream` 读取 `text/event-stream`，并在请求头传入 token；不得为兼容 `EventSource` 而把 token 放入 URL。

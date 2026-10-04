@@ -10,7 +10,16 @@ from app.config.settings import Settings
 
 
 class RunDispatchService:
-    """将已提交的 Agent 任务标识投递到 Redis 列表队列。"""
+    """
+        接口调用 enqueue_after_commit(run_id)
+        只登记 enqueue 函数
+        继续写 conversation_messages、agent_runs 等数据
+        PostgreSQL 事务提交成功
+        tenant_transaction 依次执行已登记的回调
+        await enqueue()
+        Redis RPUSH run_id
+        Worker 收到任务
+    """
 
     def __init__(self, redis: Redis, settings: Settings) -> None:
         self._redis = redis
@@ -22,7 +31,7 @@ class RunDispatchService:
         async def enqueue() -> None:
             await self._redis.rpush(self._queue_name, str(run_id))
 
-        register_after_commit(enqueue)
+        register_after_commit(enqueue) # 写入数据库回调函数，等待数据库提交完毕再执行这些函数
 
 
 def get_run_dispatcher_from_request(request: Request) -> RunDispatchService:

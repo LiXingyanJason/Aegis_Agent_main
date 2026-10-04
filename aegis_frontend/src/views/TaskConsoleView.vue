@@ -1,16 +1,21 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
 import { useConversationStore } from '../store/conversation'
 
 const auth = useAuthStore()
 const conversations = useConversationStore()
 const router = useRouter()
+const route = useRoute()
 const draftMessage = ref('')
 const conversationTitle = ref('')
 const pendingClientMessageId = ref(null)
 const error = ref('')
+const isPolling = ref(false)
+let pollTimer = null
+let pollingRunId = null
+let pollingInFlight = false
 
 const activeConversation = computed(() => conversations.current)
 
@@ -33,12 +38,15 @@ async function loadHistory() {
   }
 }
 
-async function restoreConversation(conversationId) {
+async function restoreConversation(conversationId, syncUrl = true) {
   error.value = ''
   try {
     await conversations.loadConversation(conversationId)
     draftMessage.value = ''
     pendingClientMessageId.value = null
+    if (syncUrl) {
+      await router.replace({ query: { conversation_id: conversationId } })
+    }
   } catch (cause) {
     error.value = cause.response?.data?.detail || cause.message || '恢复会话失败。'
   }
@@ -51,6 +59,7 @@ async function startNewConversation() {
     conversationTitle.value = ''
     draftMessage.value = ''
     pendingClientMessageId.value = null
+    await router.replace({ query: { conversation_id: conversations.current.conversation_id } })
   } catch (cause) {
     error.value = cause.response?.data?.detail || cause.message || '创建会话失败。'
   }
@@ -59,15 +68,56 @@ async function startNewConversation() {
 async function sendMessage() {
   const content = draftMessage.value.trim()
   if (!content || !activeConversation.value) return
+  const conversationId = activeConversation.value.conversation_id
   error.value = ''
   try {
     pendingClientMessageId.value ??= crypto.randomUUID()
-    await conversations.send(content, pendingClientMessageId.value)
+    const result = await conversations.send(content, pendingClientMessageId.value)
     draftMessage.value = ''
     pendingClientMessageId.value = null
+    startRunPolling(result.run_id, conversationId)
   } catch (cause) {
     error.value = cause.response?.data?.detail || cause.message || '发送消息失败。'
   }
+}
+
+function stopRunPolling(runId = pollingRunId) {
+  if (runId !== pollingRunId) return
+  if (pollTimer !== null) window.clearInterval(pollTimer)
+  pollTimer = null
+  pollingRunId = null
+  pollingInFlight = false
+  isPolling.value = false
+}
+
+async function pollRun(runId, conversationId) {
+  if (pollingRunId !== runId || pollingInFlight) return
+  pollingInFlight = true
+  try {
+    const run = await conversations.refreshRun(runId)
+    error.value = ''
+    if (run.status === 'completed' || run.status === 'failed') {
+      stopRunPolling(runId)
+      if (activeConversation.value?.conversation_id === conversationId) {
+        await conversations.loadConversation(conversationId)
+      }
+      await conversations.loadHistory()
+    }
+  } catch (cause) {
+    error.value = cause.response?.data?.detail || cause.message || '查询任务状态失败，将自动重试。'
+  } finally {
+    pollingInFlight = false
+  }
+}
+
+function startRunPolling(runId, conversationId) {
+  stopRunPolling()
+  pollingRunId = runId
+  isPolling.value = true
+  void pollRun(runId, conversationId)
+  pollTimer = window.setInterval(() => {
+    void pollRun(runId, conversationId)
+  }, 1500)
 }
 
 async function signOut() {
@@ -75,7 +125,15 @@ async function signOut() {
   await router.replace({ name: 'login' })
 }
 
-onMounted(loadHistory)
+onMounted(async () => {
+  await loadHistory()
+  const conversationId = route.query.conversation_id
+  if (typeof conversationId === 'string' && conversationId) {
+    await restoreConversation(conversationId, false)
+  }
+})
+
+onBeforeUnmount(() => stopRunPolling())
 </script>
 
 <template>
@@ -150,8 +208,8 @@ onMounted(loadHistory)
                 </div>
               </div>
               <div v-if="conversations.messages.length === 0" class="empty-messages">此会话暂无可见消息。</div>
-              <div v-if="conversations.latestSubmission?.status === 'queued'" class="queued-notice">
-                <b>任务已提交，等待处理</b>
+              <div v-if="conversations.latestSubmission" class="queued-notice">
+                <b>{{ isPolling ? '任务已提交，正在处理' : '任务状态：' + conversations.latestSubmission.status }}</b>
                 <span>任务 ID：{{ conversations.latestSubmission.run_id }}</span>
               </div>
             </div>
@@ -162,12 +220,43 @@ onMounted(loadHistory)
             </div>
 
             <form class="new-conversation" @submit.prevent="sendMessage">
-              <el-input v-model="draftMessage" maxlength="8000" placeholder="输入任务，例如：帮我整理今天的邮件" aria-label="输入任务" :disabled="!activeConversation" />
-              <el-button native-type="submit" type="primary" :loading="conversations.sending" :disabled="!activeConversation">发送</el-button>
+              <el-input v-model="draftMessage" maxlength="8000" placeholder="输入任务，例如：帮我整理今天的邮件" aria-label="输入任务" :disabled="!activeConversation || isPolling" />
+              <el-button native-type="submit" type="primary" :loading="conversations.sending" :disabled="!activeConversation || isPolling">发送</el-button>
             </form>
           </article>
 
           <aside>
+            <article class="card side-card execution-card">
+              <div class="card-head"><h2>执行进度</h2><span class="badge read">{{ conversations.runs.length }} 条运行</span></div>
+              <div v-if="conversations.runs.length" class="card-body run-list">
+                <section v-for="run in conversations.runs" :key="run.run_id" class="run-item">
+                  <div class="run-heading">
+                    <b>{{ run.current_stage || '等待处理' }}</b>
+                    <span class="badge neutral">{{ run.status }}</span>
+                  </div>
+                  <p class="run-id">任务 ID：{{ run.run_id }}</p>
+                  <p v-if="run.model_provider || run.model_name" class="run-id">模型：{{ [run.model_provider, run.model_name].filter(Boolean).join(' / ') }}</p>
+                  <p v-if="run.result_summary" class="run-detail">{{ run.result_summary }}</p>
+                  <p v-if="run.error_message" class="run-error">{{ run.error_message }}</p>
+                  <ol v-if="run.steps?.length" class="run-steps">
+                    <li v-for="step in run.steps" :key="step.step_id">
+                      <b>{{ step.label }}</b>
+                      <span>{{ step.status }}{{ step.detail ? ' · ' + step.detail : '' }}</span>
+                    </li>
+                  </ol>
+                  <div v-if="run.tool_previews?.length" class="run-section">
+                    <b>工具预览</b>
+                    <p v-for="tool in run.tool_previews" :key="tool.tool_call_id">{{ tool.tool_name }} · {{ tool.status }}</p>
+                  </div>
+                  <div v-if="run.approval_items?.length" class="run-section">
+                    <b>待确认项目</b>
+                    <p v-for="approval in run.approval_items" :key="approval.approval_item_id">{{ approval.title }} · {{ approval.status }}</p>
+                  </div>
+                </section>
+              </div>
+              <div v-else class="card-body run-empty">选择历史会话后，将在此恢复关联运行与进度。</div>
+            </article>
+
             <article class="card side-card">
               <div class="card-head"><h2>安全状态</h2><span class="badge read">OIDC + PKCE</span></div>
               <div class="card-body status-list">

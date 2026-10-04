@@ -25,7 +25,7 @@ D:\anaconda\envs\Aegis\python.exe -m pytest tests/config -q
 D:\anaconda\envs\Aegis\python.exe -m pytest tests -q
 ```
 
-## 当前已实现的会话接口
+## 当前已实现的会话与任务接口
 
 启动服务后可访问 Swagger：`http://127.0.0.1:8000/docs`。下列接口都要求请求头包含 `Authorization: Bearer <access_token>`；后端验证 Keycloak token 并按本地 `tenant_id + user_id` 限制数据范围。
 
@@ -35,12 +35,14 @@ D:\anaconda\envs\Aegis\python.exe -m pytest tests -q
 | `GET` | `/conversations` | 获取当前用户的历史会话摘要 |
 | `GET` | `/conversations/{conversation_id}` | 恢复一个会话的可见消息、运行进度、工具预览及确认项 |
 | `POST` | `/conversations/{conversation_id}/messages` | 保存用户任务消息，并创建初始状态为 `queued` 的任务运行 |
+| `GET` | `/runs/{run_id}` | 查询当前用户任务的状态、模型信息、进度步骤、结果摘要或脱敏错误 |
+| `GET` | `/runs/{run_id}/events` | 以 SSE 补发并实时推送当前任务的进度、回复、完成或失败事件 |
 
 当前开发版本尚未挂载 `/api/v1` 前缀。查询其他用户的会话不会暴露其存在性，统一返回 `404`。发送消息时，前端必须提交 `client_message_id`；同一会话内重复提交相同标识会复用原消息和任务，而不会重复创建任务。
 
 ## 第一版 Agent Worker 与 LLM 链路
 
-第一版仅实现“文本任务 → LLM 文本回复”，尚未接入 MCP 工具、SSE 流式事件、审批或邮件/日历外部写入。任务处理流程如下：
+第一版已实现“文本任务 → LLM 文本回复 → SSE 状态/结果通知”。MCP 工具、审批和邮件/日历外部写入尚未接入。任务处理流程如下：
 
 ```text
 POST /conversations/{conversation_id}/messages
@@ -48,7 +50,8 @@ POST /conversations/{conversation_id}/messages
 → 数据库事务提交后：将 run_id 写入 Redis 列表队列
 → Agent Worker：取出 run_id，将任务更新为 running
 → 读取该会话最近 20 条消息，调用 OpenAI 兼容 Chat Completions 接口
-→ PostgreSQL：保存 assistant 消息、run_steps，并将任务更新为 completed 或 failed
+→ PostgreSQL：保存 run_events、assistant 消息、run_steps，并将任务更新为 completed 或 failed
+→ Redis Pub/Sub：通知 SSE API 实例向前端推送新增事件
 ```
 
 除启动 API 外，另开一个终端启动 Worker：
@@ -79,6 +82,30 @@ MODEL_DEFAULT_NAME=deepseek-chat
 ```
 
 如果 Worker 未启动，消息接口仍会成功创建 `queued` 任务，但不会产生 Agent 回复；Worker 启动后会消费后续投递到 Redis 的任务。Redis 中只存储 `run_id`，会话内容和模型结果始终存储在 PostgreSQL。
+
+## SSE 实时任务事件
+
+发送消息成功后，前端可在保留轮询兜底的同时订阅：
+
+```text
+GET /runs/{run_id}/events
+Authorization: Bearer <access_token>
+Last-Event-ID: <最近已处理的 event_no，可选>
+```
+
+服务端先按 `event_no` 从 PostgreSQL `run_events` 补发断线期间漏掉的事件，再订阅 Redis Pub/Sub 通道 `aegis:run:{run_id}:events` 接收实时通知。每条事件均已先写入数据库；Redis 通知短暂失败不会丢失事件，下次连接仍可补发。
+
+当前第一版会产生以下事件：
+
+| 事件名 | `data.payload` 关键内容 | 前端行为 |
+|---|---|---|
+| `run_started` | 状态、当前阶段、模型提供方和模型名 | 将任务标记为运行中 |
+| `progress_updated` | 步骤 ID、标签、状态 | 更新右侧进度 |
+| `assistant_message_completed` | 最终回复 `content` | 在对话区写入 Agent 完整消息 |
+| `run_completed` | 完成状态、结果摘要 | 停止本任务的轮询和 SSE 订阅 |
+| `run_failed` | 失败状态、脱敏错误码和提示 | 展示失败提示并停止订阅 |
+
+SSE 帧中的 `id` 等于 `event_no`，前端应保存最近成功处理的编号，并在重连时放入 `Last-Event-ID`。由于浏览器原生 `EventSource` 不能附加 `Authorization` 请求头，当前 Bearer Token 认证方案下应使用 `fetch` 的流式读取（`ReadableStream`）订阅该接口；不要把 access token 拼接到 URL 查询参数。`GET /runs/{run_id}` 仍建议保留为页面刷新、SSE 不可用时的轮询兜底，最终可通过 `GET /conversations/{conversation_id}` 恢复完整会话。
 
 已在旧版本数据库执行过初始化脚本时，还需要执行一次消息幂等约束修复脚本；它只修复 `client_message_id` 的唯一约束，不删除业务数据：
 

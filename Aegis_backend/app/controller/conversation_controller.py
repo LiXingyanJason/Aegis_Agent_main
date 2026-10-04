@@ -54,16 +54,16 @@ async def send_message(
     param: MessageSendParam,
     current_user: CurrentUser = Depends(get_current_user),
     session: AsyncSession = Depends(get_tenant_session),
-    dispatcher: RunDispatchService = Depends(get_run_dispatcher_from_request),
+    dispatcher: RunDispatchService = Depends(get_run_dispatcher_from_request), # 需要用到运行期资源：Redis 和配置
 ) -> dict[str, MessageSendVO]:
     """保存用户任务消息，并创建一个等待 Agent 消费的 queued 任务运行。"""
     sent_message_run = await _conversation_service.send_message(
         session, current_user.user, conversation_id, param
-    )
+    ) # 在 PostgreSQL 事务中写入，但还没有提交数据库事务
     if sent_message_run is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="会话不存在或无权访问")
     if sent_message_run.status == "queued":
-        dispatcher.enqueue_after_commit(sent_message_run.run_id)
+        dispatcher.enqueue_after_commit(sent_message_run.run_id) # 先创建该入redis队列申请，等待提交数据库事务后，再真正入队
 
     response = MessageSendVO(
         message_id=sent_message_run.message_id,
