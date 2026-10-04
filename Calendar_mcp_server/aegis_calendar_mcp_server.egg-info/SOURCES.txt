@@ -1,0 +1,11 @@
+README.md
+pyproject.toml
+aegis_calendar_mcp_server.egg-info/PKG-INFO
+aegis_calendar_mcp_server.egg-info/SOURCES.txt
+aegis_calendar_mcp_server.egg-info/dependency_links.txt
+aegis_calendar_mcp_server.egg-info/requires.txt
+aegis_calendar_mcp_server.egg-info/top_level.txt
+app/__init__.py
+app/main.py
+app/mock_calendar.py
+tests/test_mcp.py

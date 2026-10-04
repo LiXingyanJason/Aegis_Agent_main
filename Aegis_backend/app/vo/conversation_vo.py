@@ -59,8 +59,8 @@ class ToolPreviewVO(BaseModel):
     tool_call_id: UUID
     tool_name: str
     risk_level: str
-    input_summary: str | None
-    output_summary: str | None
+    input_summary: dict[str, Any] | str | None
+    output_summary: dict[str, Any] | str | None
     status: str
     error_code: str | None
     error_message: str | None

@@ -161,6 +161,33 @@ export const useConversationStore = defineStore('conversation', {
         else run.steps.splice(stepIndex, 1, step)
       }
 
+      if (event.event_type === 'tool_preview' && payload.tool_call_id) {
+        const previewIndex = run.tool_previews.findIndex(
+          (tool) => tool.tool_call_id === payload.tool_call_id,
+        )
+        const preview = {
+          ...(previewIndex === -1 ? {} : run.tool_previews[previewIndex]),
+          tool_call_id: payload.tool_call_id,
+          tool_name: payload.tool_name,
+          risk_level: payload.risk_level,
+          input_summary: payload.input_summary ?? null,
+          output_summary: payload.output_summary ?? null,
+          status: payload.status,
+          error_code: payload.error_code ?? null,
+          error_message: payload.error_message ?? null,
+        }
+        if (previewIndex === -1) run.tool_previews.push(preview)
+        else run.tool_previews.splice(previewIndex, 1, preview)
+      }
+
+      if (event.event_type === 'connection_required') {
+        run.current_stage = '需要连接日历'
+        run.connection_required = {
+          provider: payload.provider,
+          message: payload.message,
+        }
+      }
+
       if (event.event_type === 'assistant_message_completed' && payload.content) {
         const alreadyPresent = this.messages.some(
           (message) => message.role === 'assistant'

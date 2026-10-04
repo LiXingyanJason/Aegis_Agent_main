@@ -6,11 +6,13 @@ from time import monotonic
 from uuid import UUID
 
 from app.agent.orchestrator import AgentOrchestrator
+from app.agent.tool_router import AgentToolRouter
 from app.config.database import Database
 from app.config.redis import create_redis_client
 from app.config.settings import get_settings
 from app.event.run_event import RunEventPublisher
 from app.llm.client import OpenAICompatibleClient
+from app.tool.bootstrap import create_default_tool_gateway
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +26,8 @@ async def run_worker() -> None:
         database,
         OpenAICompatibleClient(settings),
         events=RunEventPublisher(redis),
+        tools=create_default_tool_gateway(settings),
+        tool_router=AgentToolRouter(settings.app_timezone),
     )
     print(
         f"[Agent Worker] 已启动，正在等待 Redis 队列「{settings.agent_queue_name}」中的任务。",

@@ -2,6 +2,7 @@
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/Calendar_mcp_server" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/参考文档" />
     </content>
     <orderEntry type="jdk" jdkName="D:\anaconda\envs\Aegis" jdkType="Python SDK" />

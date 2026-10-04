@@ -336,8 +336,20 @@ onBeforeUnmount(() => stopRunTracking())
                   </ol>
                   <div v-if="run.tool_previews?.length" class="run-section">
                     <b>工具预览</b>
-                    <p v-for="tool in run.tool_previews" :key="tool.tool_call_id">{{ tool.tool_name }} · {{ tool.status }}</p>
+                    <div v-for="tool in run.tool_previews" :key="tool.tool_call_id" class="tool-preview">
+                      <p><b>{{ tool.tool_name }}</b> · {{ tool.status }} · {{ tool.risk_level }}</p>
+                      <p v-if="tool.input_summary">查询条件：{{ JSON.stringify(tool.input_summary) }}</p>
+                      <p v-if="tool.output_summary">查询结果：{{ JSON.stringify(tool.output_summary) }}</p>
+                      <p v-if="tool.error_message" class="run-error">{{ tool.error_message }}</p>
+                    </div>
                   </div>
+                  <el-alert
+                    v-if="run.connection_required"
+                    :title="run.connection_required.message || '需要连接日历账户后才能查询。'"
+                    type="warning"
+                    :closable="false"
+                    show-icon
+                  />
                   <div v-if="run.approval_items?.length" class="run-section">
                     <b>待确认项目</b>
                     <p v-for="approval in run.approval_items" :key="approval.approval_item_id">{{ approval.title }} · {{ approval.status }}</p>

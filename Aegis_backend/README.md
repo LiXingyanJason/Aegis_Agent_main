@@ -42,13 +42,14 @@ D:\anaconda\envs\Aegis\python.exe -m pytest tests -q
 
 ## 第一版 Agent Worker 与 LLM 链路
 
-第一版已实现“文本任务 → LLM 文本回复 → SSE 状态/结果通知”。MCP 工具、审批和邮件/日历外部写入尚未接入。任务处理流程如下：
+第一版已实现“文本任务 → 可控的只读日历 MCP 查询 → LLM 文本回复 → SSE 状态/结果通知”。审批、邮件和日历外部写入尚未接入。任务处理流程如下：
 
 ```text
 POST /conversations/{conversation_id}/messages
 → PostgreSQL：写入用户消息和 queued agent_run
 → 数据库事务提交后：将 run_id 写入 Redis 列表队列
 → Agent Worker：取出 run_id，将任务更新为 running
+→ 命中日历意图时：调用 Calendar MCP 的只读日程/可用时间工具，保存 tool_calls
 → 读取该会话最近 20 条消息，调用 OpenAI 兼容 Chat Completions 接口
 → PostgreSQL：保存 run_events、assistant 消息、run_steps，并将任务更新为 completed 或 failed
 → Redis Pub/Sub：通知 SSE API 实例向前端推送新增事件
@@ -104,6 +105,8 @@ Last-Event-ID: <最近已处理的 event_no，可选>
 | `assistant_message_completed` | 最终回复 `content` | 在对话区写入 Agent 完整消息 |
 | `run_completed` | 完成状态、结果摘要 | 停止本任务的轮询和 SSE 订阅 |
 | `run_failed` | 失败状态、脱敏错误码和提示 | 展示失败提示并停止订阅 |
+| `tool_preview` | 工具名、风险、查询条件和只读结果摘要 | 展示右侧工具预览 |
+| `connection_required` | 所需日历连接与权限提示 | 展示连接日历提示 |
 
 SSE 帧中的 `id` 等于 `event_no`，前端应保存最近成功处理的编号，并在重连时放入 `Last-Event-ID`。由于浏览器原生 `EventSource` 不能附加 `Authorization` 请求头，当前 Bearer Token 认证方案下应使用 `fetch` 的流式读取（`ReadableStream`）订阅该接口；不要把 access token 拼接到 URL 查询参数。`GET /runs/{run_id}` 仍建议保留为页面刷新、SSE 不可用时的轮询兜底，最终可通过 `GET /conversations/{conversation_id}` 恢复完整会话。
 

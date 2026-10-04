@@ -100,7 +100,69 @@ class AgentRunRepository:
             ),
             {"run_id": run_id, "tenant_id": tenant_id},
         )
-        return result.mappings().one()["id"]
+        step_id = result.mappings().one()["id"]
+        await session.execute(
+            text(
+                "UPDATE agent_runs SET current_stage = '正在生成回复', updated_at = now() "
+                "WHERE id = :run_id AND tenant_id = :tenant_id"
+            ),
+            {"run_id": run_id, "tenant_id": tenant_id},
+        )
+        return step_id
+
+    async def create_running_tool_step(
+        self,
+        session: AsyncSession,
+        *,
+        run_id: UUID,
+        tenant_id: UUID,
+        step_key: str,
+        label: str,
+    ) -> UUID:
+        """记录正在执行的只读工具步骤，并将任务阶段更新为该步骤。"""
+        result = await session.execute(
+            text(
+                "INSERT INTO run_steps (tenant_id, run_id, sequence_no, step_key, label, status, started_at) "
+                "SELECT :tenant_id, :run_id, COALESCE(MAX(sequence_no), 0) + 1, "
+                "       :step_key, :label, 'running', now() "
+                "FROM run_steps WHERE run_id = :run_id AND tenant_id = :tenant_id RETURNING id"
+            ),
+            {"run_id": run_id, "tenant_id": tenant_id, "step_key": step_key, "label": label},
+        )
+        step_id = result.mappings().one()["id"]
+        await session.execute(
+            text(
+                "UPDATE agent_runs SET current_stage = :label, updated_at = now() "
+                "WHERE id = :run_id AND tenant_id = :tenant_id"
+            ),
+            {"run_id": run_id, "tenant_id": tenant_id, "label": label},
+        )
+        return step_id
+
+    async def finish_step(
+        self,
+        session: AsyncSession,
+        *,
+        step_id: UUID,
+        run_id: UUID,
+        tenant_id: UUID,
+        status: str,
+        detail: str,
+    ) -> None:
+        """结束一个工具步骤；调用者仅传入数据库允许的 succeeded 或 failed 状态。"""
+        await session.execute(
+            text(
+                "UPDATE run_steps SET status = :status, detail = :detail, finished_at = now() "
+                "WHERE id = :step_id AND run_id = :run_id AND tenant_id = :tenant_id"
+            ),
+            {
+                "step_id": step_id,
+                "run_id": run_id,
+                "tenant_id": tenant_id,
+                "status": status,
+                "detail": detail[:1000],
+            },
+        )
 
     async def complete_run_with_assistant_message(
         self,

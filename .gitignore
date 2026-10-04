@@ -6,3 +6,6 @@ aegis_frontend/.idea/
 Aegis_backend/**/__pycache__/
 Aegis_backend/aegis_pa_backend.egg-info/
 Aegis_backend/.env
+Calendar_mcp_server/.env
+Calendar_mcp_server/**/__pycache__/
+Calendar_mcp_server/.pytest_cache/

@@ -39,6 +39,14 @@ class Settings(BaseSettings):
     # Redis BLPOP 协议只接受整数秒，不能使用 5.0 这类浮点数。
     agent_worker_poll_timeout_seconds: int = 5
 
+    # 用户相对日期（今天、明天等）的解释时区。后续可迁移为租户或用户级偏好。
+    app_timezone: str = "Asia/Shanghai"
+
+    # Calendar MCP Server 为内部受信任服务；未配置时仅影响日历意图，不影响普通对话。
+    calendar_mcp_url: AnyHttpUrl | None = None
+    calendar_mcp_api_key: SecretStr | None = None
+    calendar_mcp_timeout_seconds: float = 20.0
+
     @property
     def oidc_issuer(self) -> str:
         """返回不带末尾斜杠的 issuer，避免令牌 `iss` 比较出现形式差异。"""
