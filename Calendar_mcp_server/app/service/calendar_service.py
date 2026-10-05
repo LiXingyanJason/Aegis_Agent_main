@@ -24,22 +24,26 @@ class CalendarService:
         )
 
     async def find_free_time(self, context: AegisContext, param: FindFreeTimeParam) -> FreeTimeVO:
-        """在 UTC 工作时段中排除忙碌事件，计算满足时长要求的空闲时间。"""
+        """
+        在 UTC 工作时段中排除忙碌事件，计算满足时长要求的空闲时间。
+
+        """
         busy_events = await self._provider.list_events(context, param.start_at, param.end_at)
-        slots: list[FreeTimeSlot] = []
+        slots: list[FreeTimeSlot] = [] # 最终找到的空闲时间段
         day = param.start_at.astimezone(UTC).date()
         start_at = param.start_at.astimezone(UTC)
         end_at = param.end_at.astimezone(UTC)
-        while datetime.combine(day, time.min, tzinfo=UTC) < end_at:
+        while datetime.combine(day, time.min, tzinfo=UTC) < end_at: # 逐天处理
+            # 定义当天可安排会议的工作时间 01:00–10:00 UTC == 09:00–18:00 Asia/Shanghai
             work_start = max(datetime.combine(day, time(1, 0), tzinfo=UTC), start_at)
             work_end = min(datetime.combine(day, time(10, 0), tzinfo=UTC), end_at)
-            cursor = work_start
-            busy_for_day = sorted(
+            cursor = work_start # 当前扫描到的位置
+            busy_for_day = sorted( # 筛选并排序当天工作时间内的忙碌日程
                 ((max(event.start_at, work_start), min(event.end_at, work_end)) for event in busy_events if event.start_at < work_end and event.end_at > work_start),
                 key=lambda item: item[0],
-            )
+            )# 最后按开始时间排序，确保后面的扫描按时间顺序进行
             for busy_start, busy_end in busy_for_day:
-                self._append_slot(slots, cursor, busy_start, param.duration_minutes)
+                self._append_slot(slots, cursor, busy_start, param.duration_minutes) # 检查该候选时间是否至少有用户要求的时长
                 cursor = max(cursor, busy_end)
             self._append_slot(slots, cursor, work_end, param.duration_minutes)
             day += timedelta(days=1)

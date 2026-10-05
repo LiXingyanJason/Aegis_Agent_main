@@ -25,6 +25,42 @@ D:\anaconda\envs\Aegis\python.exe -m pytest tests/config -q
 D:\anaconda\envs\Aegis\python.exe -m pytest tests -q
 ```
 
+## 数据库迁移（Alembic）
+
+数据库结构从当前版本起由 Alembic 管理。历史初始化脚本已固化为两个迁移版本：
+
+```text
+001_initial_schema
+002_msg_client_id_uq
+```
+
+新建的空数据库使用以下命令初始化：
+
+```powershell
+D:\anaconda\envs\Aegis\python.exe -m alembic upgrade head
+```
+
+已按旧版 `scripts/001_initial_schema.sql` 和 `scripts/002_fix_message_client_id_unique_constraint.sql` 初始化的数据库，**不要**再次执行 `upgrade head`，否则会重复建表。确认数据库结构已处于旧脚本对应状态后，使用：
+
+```powershell
+D:\anaconda\envs\Aegis\python.exe -m alembic stamp 002_msg_client_id_uq
+```
+
+`stamp` 只写入 Alembic 的版本记录，不会修改已有业务表或数据。之后的数据库变更应新增 `migrations/versions/` 下的迁移文件，不再新增手工建表 SQL。
+
+常用命令：
+
+```powershell
+# 查看当前数据库迁移版本
+D:\anaconda\envs\Aegis\python.exe -m alembic current
+
+# 查看本代码版本的最新迁移
+D:\anaconda\envs\Aegis\python.exe -m alembic heads
+
+# 创建后续迁移骨架；实际 DDL 需人工审核，尤其是 RLS、触发器和分区表
+D:\anaconda\envs\Aegis\python.exe -m alembic revision -m "add calendar draft approval"
+```
+
 ## 当前已实现的会话与任务接口
 
 启动服务后可访问 Swagger：`http://127.0.0.1:8000/docs`。下列接口都要求请求头包含 `Authorization: Bearer <access_token>`；后端验证 Keycloak token 并按本地 `tenant_id + user_id` 限制数据范围。
