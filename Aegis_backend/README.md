@@ -25,6 +25,20 @@ D:\anaconda\envs\Aegis\python.exe -m pytest tests/config -q
 D:\anaconda\envs\Aegis\python.exe -m pytest tests -q
 ```
 
+## 最小可观测性
+
+API 与 Agent Worker 已接入 OpenTelemetry 自动埋点（FastAPI、HTTPX、SQLAlchemy、Redis）和 JSON 结构化日志。请求的 W3C `traceparent` 会随 Redis Agent 队列传到 Worker，因此同一任务的 API、Worker、模型请求和 Calendar MCP 请求可通过日志中的 `trace_id` 关联。
+
+默认只生成 Trace Context 与 JSON 日志，不向外部追踪平台导出数据。若本地需要直接在两个终端查看完整 Span，请在 `.env` 中设置并重启 API 与 Worker：
+
+```dotenv
+OTEL_ENABLED=true
+OTEL_SERVICE_NAME=aegis-pa-api
+OTEL_CONSOLE_EXPORTER=true
+```
+
+日志仅输出任务和工具关联标识、状态、错误码和耗时；不应记录 access token、API Key、模型提示词、邮件正文或第三方凭据。
+
 ## 数据库迁移（Alembic）
 
 数据库结构从当前版本起由 Alembic 管理。历史初始化脚本已固化为两个迁移版本：
@@ -83,8 +97,8 @@ D:\anaconda\envs\Aegis\python.exe -m alembic revision -m "add calendar draft app
 ```text
 POST /conversations/{conversation_id}/messages
 → PostgreSQL：写入用户消息和 queued agent_run
-→ 数据库事务提交后：将 run_id 写入 Redis 列表队列
-→ Agent Worker：取出 run_id，将任务更新为 running
+→ 数据库事务提交后：将 run_id 和 W3C traceparent 写入 Redis 列表队列
+→ Agent Worker：取出任务并恢复 Trace Context，将任务更新为 running
 → 命中日历意图时：调用 Calendar MCP 的只读日程/可用时间工具，保存 tool_calls
 → 读取该会话最近 20 条消息，调用 OpenAI 兼容 Chat Completions 接口
 → PostgreSQL：保存 run_events、assistant 消息、run_steps，并将任务更新为 completed 或 failed

@@ -7,6 +7,12 @@ pydantic-settings<3.0,>=2.6
 httpx<1.0,>=0.27
 PyJWT[crypto]<3.0,>=2.8
 alembic<2.0,>=1.14
+opentelemetry-api<2.0,>=1.28
+opentelemetry-sdk<2.0,>=1.28
+opentelemetry-instrumentation-fastapi<1.0,>=0.49b0
+opentelemetry-instrumentation-httpx<1.0,>=0.49b0
+opentelemetry-instrumentation-sqlalchemy<1.0,>=0.49b0
+opentelemetry-instrumentation-redis<1.0,>=0.49b0
 
 [dev]
 pytest<9.0,>=8.0

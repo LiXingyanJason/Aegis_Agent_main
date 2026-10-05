@@ -7,6 +7,7 @@ from redis.asyncio import Redis
 
 from app.config.database import register_after_commit
 from app.config.settings import Settings
+from app.observability.trace_context import serialize_run_message
 
 
 class RunDispatchService:
@@ -29,7 +30,8 @@ class RunDispatchService:
         """登记入队动作，确保 Worker 不会读到尚未提交的数据库任务。"""
 
         async def enqueue() -> None:
-            await self._redis.rpush(self._queue_name, str(run_id))
+            # Redis 负载同时携带 traceparent，使独立 Worker 的子 Span 能关联到本次 HTTP 请求。
+            await self._redis.rpush(self._queue_name, serialize_run_message(run_id))
 
         register_after_commit(enqueue) # 写入数据库回调函数，等待数据库提交完毕再执行这些函数
 

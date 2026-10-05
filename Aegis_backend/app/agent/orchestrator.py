@@ -11,6 +11,8 @@ from app.agent.tool_router import AgentToolRouter
 from app.config.database import Database, TenantContext, tenant_transaction
 from app.event.run_event import RunEventPublisher
 from app.llm.client import LLMError, LLMMessage, OpenAICompatibleClient
+from app.observability.structured_logging import log_event
+from app.observability.telemetry import get_tracer
 from app.repository.run_repository import AgentRunRepository
 from app.repository.tool_repository import ToolCallRepository
 from app.tool.contracts import ToolError, ToolInvocation
@@ -129,7 +131,12 @@ class AgentOrchestrator:
                 messages.append(LLMMessage(role="system", content=tool_context))
             messages.extend(LLMMessage(role=item["role"], content=item["content"]) for item in history)
             # 调用模型服务，并等待模型返回文本
-            reply = await self._llm_client.complete(messages)
+            tracer = get_tracer(__name__)
+            with tracer.start_as_current_span("llm.complete") as span:
+                span.set_attribute("aegis.run_id", str(run.id))
+                span.set_attribute("gen_ai.provider.name", self._llm_client.provider_name)
+                span.set_attribute("gen_ai.request.model", self._llm_client.model_name)
+                reply = await self._llm_client.complete(messages)
 
             # 数据库保存最终结果、完成任务、发布完成事件
             async with self._database.session() as session:
@@ -295,7 +302,12 @@ class AgentOrchestrator:
 
             assert prepared is not None and step_id is not None and tool_call_id is not None
             # 调用工具，返回结果
-            result = await self._tools.invoke(prepared)
+            tracer = get_tracer(__name__)
+            with tracer.start_as_current_span("tool.invoke") as span:
+                span.set_attribute("aegis.run_id", str(run.id))
+                span.set_attribute("aegis.tool_call_id", str(tool_call_id))
+                span.set_attribute("aegis.tool.name", definition.name)
+                result = await self._tools.invoke(prepared)
         except ToolError as error:
             await self._finish_tool_failure(
                 run, context, step_id, tool_call_id, definition, error, int((monotonic() - started_at) * 1000)
@@ -303,6 +315,16 @@ class AgentOrchestrator:
             return f"日历工具调用失败：{error.message}。请说明无法取得日历结果，不要编造信息。"
 
         duration_ms = int((monotonic() - started_at) * 1000)
+        log_event(
+            logger,
+            logging.INFO,
+            "tool_call_completed",
+            run_id=run.id,
+            tool_call_id=tool_call_id,
+            tool_name=definition.name,
+            status="succeeded",
+            duration_ms=duration_ms,
+        )
         async with self._database.session() as session:
             async with tenant_transaction(session, context):
                 await self._tool_calls.succeed(
@@ -368,6 +390,17 @@ class AgentOrchestrator:
         """记录远程 Calendar MCP 调用失败，并通过 SSE 显示只读工具错误。"""
         if step_id is None or tool_call_id is None:
             return
+        log_event(
+            logger,
+            logging.ERROR,
+            "tool_call_failed",
+            run_id=run.id,
+            tool_call_id=tool_call_id,
+            tool_name=definition.name,
+            status="failed",
+            error_code=error.code,
+            duration_ms=duration_ms,
+        )
         async with self._database.session() as session:
             async with tenant_transaction(session, context):
                 await self._tool_calls.fail(

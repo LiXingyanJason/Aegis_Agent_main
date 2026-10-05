@@ -9,6 +9,8 @@ from uuid import UUID, uuid4
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.observability.structured_logging import get_current_trace_id
+
 
 @dataclass(frozen=True, slots=True)
 class Conversation:
@@ -305,12 +307,13 @@ class ConversationRepository:
         )
         message_id = message_result.mappings().one()["id"]
         request_id = uuid4().hex
+        trace_id = get_current_trace_id()
         run_result = await session.execute(
             text(
                 "INSERT INTO agent_runs "
-                "(tenant_id, user_id, conversation_id, input_message_id, run_type, status, request_id) "
+                "(tenant_id, user_id, conversation_id, input_message_id, run_type, status, request_id, trace_id) "
                 "VALUES (:tenant_id, :user_id, :conversation_id, :input_message_id, "
-                "        'conversation', 'queued', :request_id) "
+                "        'conversation', 'queued', :request_id, :trace_id) "
                 "RETURNING id, status"
             ),
             {
@@ -319,6 +322,7 @@ class ConversationRepository:
                 "conversation_id": conversation_id,
                 "input_message_id": message_id,
                 "request_id": request_id,
+                "trace_id": trace_id,
             },
         )
         run = run_result.mappings().one()

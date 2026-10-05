@@ -24,6 +24,10 @@ app/event/__init__.py
 app/event/run_event.py
 app/llm/__init__.py
 app/llm/client.py
+app/observability/__init__.py
+app/observability/structured_logging.py
+app/observability/telemetry.py
+app/observability/trace_context.py
 app/param/__init__.py
 app/param/conversation_create_param.py
 app/param/message_send_param.py

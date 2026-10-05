@@ -12,6 +12,12 @@ Requires-Dist: pydantic-settings<3.0,>=2.6
 Requires-Dist: httpx<1.0,>=0.27
 Requires-Dist: PyJWT[crypto]<3.0,>=2.8
 Requires-Dist: alembic<2.0,>=1.14
+Requires-Dist: opentelemetry-api<2.0,>=1.28
+Requires-Dist: opentelemetry-sdk<2.0,>=1.28
+Requires-Dist: opentelemetry-instrumentation-fastapi<1.0,>=0.49b0
+Requires-Dist: opentelemetry-instrumentation-httpx<1.0,>=0.49b0
+Requires-Dist: opentelemetry-instrumentation-sqlalchemy<1.0,>=0.49b0
+Requires-Dist: opentelemetry-instrumentation-redis<1.0,>=0.49b0
 Provides-Extra: dev
 Requires-Dist: pytest<9.0,>=8.0; extra == "dev"
 Requires-Dist: pytest-asyncio<1.0,>=0.24; extra == "dev"

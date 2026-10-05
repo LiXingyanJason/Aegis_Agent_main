@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     app_name: str = "Aegis PA API"
     app_env: str = "development"
 
+    # 最小可观测性配置。默认只生成 Trace ID 并写入结构化日志；需要在终端查看完整 Span 时再显式开启控制台导出。
+    otel_enabled: bool = True
+    otel_service_name: str = "aegis-pa-api"
+    otel_console_exporter: bool = False
+
     database_url: str
     database_echo: bool = False
     redis_url: str
