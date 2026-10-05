@@ -1,11 +1,12 @@
 """Calendar MCP Server 的最小 HTTP JSON-RPC 客户端。"""
 
 from datetime import datetime
-from typing import Any
-from uuid import uuid4
+from typing import Any, Callable
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-import httpx
+import httpx2
+from mcp import ClientSession
+from mcp.client.streamable_http import streamable_http_client
 
 from app.config.settings import Settings
 from app.tool.contracts import ToolContext, ToolError, ToolResult
@@ -14,9 +15,13 @@ from app.tool.contracts import ToolContext, ToolError, ToolResult
 class CalendarMCPClient:
     """调用受信任 Calendar MCP Server 的 `tools/call` 方法。"""
 
-    def __init__(self, settings: Settings, client: httpx.AsyncClient | None = None) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        http_client_factory: Callable[[dict[str, str], float], Any] | None = None,
+    ) -> None:
         self._settings = settings
-        self._client = client
+        self._http_client_factory = http_client_factory
 
     async def call(
         self, tool_name: str, context: ToolContext, arguments: dict[str, Any]
@@ -27,56 +32,53 @@ class CalendarMCPClient:
         if context.connection_id is None:
             raise ToolError("CALENDAR_CONNECTION_REQUIRED", "尚未连接可用日历")
 
-        headers = {"Accept": "application/json", "Content-Type": "application/json"}
+        headers = {"Accept": "application/json, text/event-stream"}
         if self._settings.calendar_mcp_api_key is not None:
             headers["Authorization"] = (
                 f"Bearer {self._settings.calendar_mcp_api_key.get_secret_value()}"
             )
-        request_payload = {
-            "jsonrpc": "2.0",
-            "id": str(uuid4()),
-            "method": "tools/call",
-            "params": {
-                "name": tool_name,
-                "arguments": arguments,
-                "_meta": {
-                    "aegis_connection_id": str(context.connection_id),
-                    "aegis_tenant_id": str(context.tenant_id),
-                    "aegis_user_id": str(context.user_id),
-                    "aegis_run_id": str(context.run_id),
-                },
-            },
+        request_meta = {
+            "aegis_connection_id": str(context.connection_id),
+            "aegis_tenant_id": str(context.tenant_id),
+            "aegis_user_id": str(context.user_id),
+            "aegis_run_id": str(context.run_id),
         }
-        owns_client = self._client is None
-        client = self._client or httpx.AsyncClient(timeout=self._settings.calendar_mcp_timeout_seconds)
         try:
-            response = await client.post(
-                str(self._settings.calendar_mcp_url), headers=headers, json=request_payload
+            timeout = self._settings.calendar_mcp_timeout_seconds
+            http_client = (
+                self._http_client_factory(headers, timeout)
+                if self._http_client_factory is not None
+                else httpx2.AsyncClient(headers=headers, timeout=timeout)
             )
-            response.raise_for_status()
-            payload = response.json()
-        except (httpx.HTTPError, ValueError) as error:
+            async with http_client:
+                async with streamable_http_client(
+                    str(self._settings.calendar_mcp_url), http_client=http_client
+                ) as (read_stream, write_stream):
+                    async with ClientSession(read_stream, write_stream) as session:
+                        await session.initialize()
+                        result = await session.call_tool(tool_name, arguments, meta=request_meta)
+        except Exception as error:
             raise ToolError("TOOL_UNAVAILABLE", "日历工具服务暂时不可用") from error
-        finally:
-            if owns_client:
-                await client.aclose()
 
-        if not isinstance(payload, dict):
-            raise ToolError("TOOL_INVALID_RESPONSE", "日历工具服务返回格式无效")
-        error = payload.get("error")
-        if isinstance(error, dict):
-            message = error.get("message")
-            raise ToolError("TOOL_EXECUTION_FAILED", str(message or "日历工具调用失败"))
-        result = payload.get("result")
-        if not isinstance(result, dict):
-            raise ToolError("TOOL_INVALID_RESPONSE", "日历工具服务未返回 result")
-        structured = result.get("structuredContent", result)
+        if result.is_error:
+            message = _tool_error_message(result)
+            raise ToolError("TOOL_EXECUTION_FAILED", message)
+        structured = result.structured_content
         if not isinstance(structured, dict):
             raise ToolError("TOOL_INVALID_RESPONSE", "日历工具结果必须为 JSON 对象")
         return ToolResult(
             response_payload=structured,
             output_summary=_safe_summary(structured, arguments.get("timezone")),
         )
+
+
+def _tool_error_message(result) -> str:
+    """从 MCP SDK 的文本内容提取对用户安全的工具错误摘要。"""
+    for content in result.content:
+        text = getattr(content, "text", None)
+        if isinstance(text, str) and text.strip():
+            return text[:500]
+    return "日历工具调用失败"
 
 
 def _safe_summary(value: dict[str, Any], timezone_name: Any = None) -> dict[str, Any]:

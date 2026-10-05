@@ -1,13 +1,12 @@
-"""日历 MCP 工具契约、路由和 HTTP 客户端测试。"""
+"""日历 MCP 工具契约、路由和 SDK Client 适配测试。"""
 
-import json
+from contextlib import asynccontextmanager
 from types import SimpleNamespace
 from uuid import UUID
 
-import httpx
 import pytest
-
 from app.agent.tool_router import AgentToolRouter
+from app.tool.calendar import mcp_client as client_module
 from app.tool.calendar.mcp_client import CalendarMCPClient
 from app.tool.contracts import ToolContext
 
@@ -33,31 +32,66 @@ def test_tool_router_selects_event_list_for_calendar_request() -> None:
 
 
 @pytest.mark.asyncio
-async def test_calendar_mcp_client_uses_tools_call_and_returns_structured_content() -> None:
-    """测试客户端以 MCP JSON-RPC tools/call 调用并读取 structuredContent。"""
+async def test_calendar_mcp_client_uses_sdk_session_and_returns_structured_content(monkeypatch) -> None:
+    """测试客户端通过 MCP SDK 初始化 Session、传递 _meta 并读取 structuredContent。"""
     captured: dict = {}
 
-    def handler(request: httpx.Request) -> httpx.Response:
-        captured.update(json.loads(request.content))
-        return httpx.Response(
-            200,
-            json={
-                "jsonrpc": "2.0",
-                "id": captured["id"],
-                "result": {
-                    "structuredContent": {
-                        "events": [{"title": "项目同步", "start_at": "2026-10-05T07:00:00+00:00"}]
-                    }
-                },
-            },
-        )
+    class FakeHTTPClient:
+        """模拟由主服务控制超时和鉴权头的 HTTP 客户端。"""
 
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, _exc_type, _exc, _traceback) -> None:
+            return None
+
+    def fake_http_client_factory(headers, timeout):
+        captured["headers"] = headers
+        captured["timeout"] = timeout
+        return FakeHTTPClient()
+
+    @asynccontextmanager
+    async def fake_transport(url, *, http_client):
+        """模拟 SDK Streamable HTTP 传输，不依赖真实网络服务。"""
+        captured["url"] = url
+        captured["http_client"] = http_client
+        yield object(), object()
+
+    class FakeClientSession:
+        """模拟 MCP SDK ClientSession 的最小交互。"""
+
+        def __init__(self, _read_stream, _write_stream) -> None:
+            self.initialized = False
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, _exc_type, _exc, _traceback) -> None:
+            return None
+
+        async def initialize(self) -> None:
+            self.initialized = True
+
+        async def call_tool(self, tool_name, arguments, *, meta):
+            assert self.initialized is True
+            captured["tool_name"] = tool_name
+            captured["arguments"] = arguments
+            captured["meta"] = meta
+            return SimpleNamespace(
+                is_error=False,
+                structured_content={
+                    "events": [{"title": "项目同步", "start_at": "2026-10-05T07:00:00+00:00"}]
+                },
+            )
+
+    monkeypatch.setattr(client_module, "streamable_http_client", fake_transport)
+    monkeypatch.setattr(client_module, "ClientSession", FakeClientSession)
     settings = SimpleNamespace(
         calendar_mcp_url="http://calendar-mcp.test/mcp",
         calendar_mcp_api_key=None,
         calendar_mcp_timeout_seconds=5,
     )
-    client = CalendarMCPClient(settings, httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+    client = CalendarMCPClient(settings, http_client_factory=fake_http_client_factory)
     context = ToolContext(
         tenant_id=UUID("2f744d3e-2a54-4e4f-aec3-bc9f0e2b6966"),
         user_id=UUID("b0071771-d192-4c32-a4e0-7b214eec2be6"),
@@ -75,8 +109,8 @@ async def test_calendar_mcp_client_uses_tools_call_and_returns_structured_conten
         },
     )
 
-    assert captured["method"] == "tools/call"
-    assert captured["params"]["name"] == "calendar.list_events"
-    assert captured["params"]["_meta"]["aegis_connection_id"] == str(context.connection_id)
+    assert captured["tool_name"] == "calendar.list_events"
+    assert captured["headers"]["Accept"] == "application/json, text/event-stream"
+    assert captured["meta"]["aegis_connection_id"] == str(context.connection_id)
     assert result.output_summary["events"][0]["start_at_local"] == "2026-10-05 15:00"
     assert result.output_summary["events"][0]["display_timezone"] == "Asia/Shanghai"

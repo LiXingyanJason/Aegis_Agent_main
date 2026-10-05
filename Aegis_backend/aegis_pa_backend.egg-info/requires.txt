@@ -1,6 +1,6 @@
 fastapi<1.0,>=0.115
 uvicorn[standard]<1.0,>=0.30
-sqlalchemy[asyncio]<3.0,>=2.0
+sqlalchemy[asyncio]<2.1,>=2.0
 asyncpg<1.0,>=0.29
 redis<6.0,>=5.0
 pydantic-settings<3.0,>=2.6
@@ -13,6 +13,7 @@ opentelemetry-instrumentation-fastapi<1.0,>=0.49b0
 opentelemetry-instrumentation-httpx<1.0,>=0.49b0
 opentelemetry-instrumentation-sqlalchemy<1.0,>=0.49b0
 opentelemetry-instrumentation-redis<1.0,>=0.49b0
+mcp==2.3.0
 
 [dev]
 pytest<9.0,>=8.0
