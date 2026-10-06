@@ -5,7 +5,7 @@ from uuid import UUID
 
 import pytest
 
-from aegis_agent_worker.persistence.run_repository import AgentRunRepository
+from aegis_agent_worker.repository.run_repository import AgentRunRepository
 
 
 class _Mappings:

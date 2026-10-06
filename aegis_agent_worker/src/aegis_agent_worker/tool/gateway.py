@@ -5,7 +5,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aegis_agent_worker.persistence.tool_repository import CalendarConnectionRepository
+from aegis_agent_worker.repository.tool_repository import CalendarConnectionRepository
 from aegis_agent_worker.tool.contracts import ToolContext, ToolError, ToolInvocation, ToolResult
 from aegis_agent_worker.tool.registry import RegisteredTool, ToolRegistry
 

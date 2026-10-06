@@ -8,7 +8,7 @@ import pytest
 
 from aegis_agent_worker.agent.orchestrator import AgentOrchestrator
 from aegis_agent_worker.llm.client import LLMMessage
-from aegis_agent_worker.persistence.run_repository import ClaimedRun
+from aegis_agent_worker.repository.run_repository import ClaimedRun
 from aegis_agent_worker.tool.contracts import ToolContext, ToolResult
 
 
