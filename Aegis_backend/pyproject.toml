@@ -21,6 +21,7 @@ dependencies = [
   "opentelemetry-instrumentation-sqlalchemy>=0.49b0,<1.0",
   "opentelemetry-instrumentation-redis>=0.49b0,<1.0",
   "mcp==2.3.0",
+  "langgraph>=0.2,<1.0",
 ]
 
 [build-system]

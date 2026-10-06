@@ -15,6 +15,9 @@ def create_server(settings: Settings) -> MCPServer:
         raise ValueError(f"当前未支持的日历 Provider：{settings.provider}")
     calendar_service = CalendarService(MockCalendarProvider())
     mcp = MCPServer("aegis-calendar-mcp", instructions="Aegis 内部只读日历工具服务；身份、权限和审批由主后端处理。", version="0.1.0")
-    register_event_tools(mcp, calendar_service)
-    register_availability_tools(mcp, calendar_service)
+
+
+    register_event_tools(mcp, calendar_service) # 将 list_events 工具注册进入 mcp
+    register_availability_tools(mcp, calendar_service) # 将 find_free_time 工具注册进入 mcp
+
     return mcp

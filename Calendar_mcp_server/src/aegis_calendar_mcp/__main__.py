@@ -13,7 +13,9 @@ def main() -> None:
     """按配置启动 stdio 或 Streamable HTTP 传输。"""
     configure_logging()
     settings = get_settings()
+
     mcp = create_server(settings)
+
     logger = logging.getLogger(__name__)
     if settings.transport == "stdio":
         logger.info("启动 Calendar MCP Server：transport=stdio provider=%s", settings.provider)

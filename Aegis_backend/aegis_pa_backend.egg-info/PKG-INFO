@@ -19,6 +19,7 @@ Requires-Dist: opentelemetry-instrumentation-httpx<1.0,>=0.49b0
 Requires-Dist: opentelemetry-instrumentation-sqlalchemy<1.0,>=0.49b0
 Requires-Dist: opentelemetry-instrumentation-redis<1.0,>=0.49b0
 Requires-Dist: mcp==2.3.0
+Requires-Dist: langgraph<1.0,>=0.2
 Provides-Extra: dev
 Requires-Dist: pytest<9.0,>=8.0; extra == "dev"
 Requires-Dist: pytest-asyncio<1.0,>=0.24; extra == "dev"
