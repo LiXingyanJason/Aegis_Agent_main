@@ -11,7 +11,7 @@ cd D:\AI\Aegis_Agent_main\Aegis_backend
 D:\anaconda\envs\Aegis\python.exe -m pip install -e ".[dev]"
 ```
 
-从 `.env.example` 复制一份 `.env`，填写数据库、Redis、OIDC 和模型服务配置。`.env` 不得提交到 Git。
+从 `.env.example` 复制一份 `.env`，填写数据库、Redis 与 OIDC 配置。`.env` 不得提交到 Git。模型与 MCP 配置位于独立的 `aegis_agent_worker/.env`。
 
 运行基础设施测试：
 
@@ -27,13 +27,23 @@ D:\anaconda\envs\Aegis\python.exe -m pytest tests -q
 
 ## 最小可观测性
 
-API 与 Agent Worker 已接入 OpenTelemetry 自动埋点（FastAPI、HTTPX、SQLAlchemy、Redis）和 JSON 结构化日志。请求的 W3C `traceparent` 会随 Redis Agent 队列传到 Worker，因此同一任务的 API、Worker、模型请求和 Calendar MCP 请求可通过日志中的 `trace_id` 关联。
+API 与独立 Agent Worker 均接入 OpenTelemetry 自动埋点和 JSON 结构化日志。请求的 W3C `traceparent` 会随 Redis Agent 队列传到 Worker，因此同一任务的 API、Worker、模型请求和 Calendar MCP 请求可通过日志中的 `trace_id` 关联。
 
-默认只生成 Trace Context 与 JSON 日志，不向外部追踪平台导出数据。若本地需要直接在两个终端查看完整 Span，请在 `.env` 中设置并重启 API 与 Worker：
+默认只生成 Trace Context 与 JSON 日志，不向外部追踪平台导出数据。若本地需要直接在两个终端查看完整 Span，请在 `Aegis_backend/.env` 与 `aegis_agent_worker/.env` 中设置并分别重启 API 与 Worker：
+
+API 的 `.env`：
 
 ```dotenv
 OTEL_ENABLED=true
 OTEL_SERVICE_NAME=aegis-pa-api
+OTEL_CONSOLE_EXPORTER=true
+```
+
+Worker 的 `.env`：
+
+```dotenv
+OTEL_ENABLED=true
+OTEL_SERVICE_NAME=aegis-agent-worker
 OTEL_CONSOLE_EXPORTER=true
 ```
 
@@ -108,11 +118,11 @@ POST /conversations/{conversation_id}/messages
 除启动 API 外，另开一个终端启动 Worker：
 
 ```powershell
-cd D:\AI\Aegis_Agent_main\Aegis_backend
-D:\anaconda\envs\Aegis\python.exe -m app.worker.agent_worker
+cd D:\AI\Aegis_Agent_main\aegis_agent_worker
+D:\anaconda\envs\Aegis\python.exe -m aegis_agent_worker
 ```
 
-确保 `.env` 中的 Redis 与模型配置可用：
+确保 `aegis_agent_worker/.env` 中的 Redis 与模型配置可用：
 
 ```dotenv
 REDIS_URL=redis://127.0.0.1:6379/0

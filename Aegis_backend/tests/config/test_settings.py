@@ -11,19 +11,14 @@ def valid_settings() -> dict[str, str]:
         "oidc_issuer_url": "https://id.example.com/realms/aegis",
         "oidc_audience": "aegis-pa-api",
         "oidc_client_id": "aegis-pa-web",
-        "model_provider": "openai",
-        "model_api_base": "https://api.openai.com/v1",
-        "model_api_key": "test-key",
-        "model_default_name": "test-model",
     }
 
 
 def test_settings_normalizes_postgresql_url() -> None:
-    """测试普通 PostgreSQL 地址会被转换为 SQLAlchemy 所需的 asyncpg 异步地址，且模型密钥可被正确读取。"""
+    """测试普通 PostgreSQL 地址会被转换为 SQLAlchemy 所需的 asyncpg 异步地址。"""
     settings = Settings(_env_file=None, **valid_settings())
     assert settings.database_async_url == "postgresql+asyncpg://aegis:secret@localhost:5432/aegis_pa"
-    assert settings.model_api_key.get_secret_value() == "test-key"
-    assert settings.agent_worker_poll_timeout_seconds == 5
+    assert settings.agent_queue_name == "aegis:agent-runs"
 
 
 def test_settings_rejects_non_postgresql_database_url() -> None:

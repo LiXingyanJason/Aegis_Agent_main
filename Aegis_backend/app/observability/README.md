@@ -102,7 +102,7 @@ API 与 Worker 是不同进程，Worker 不能天然知道它正在继续哪一�
 
 ## 配置
 
-配置由 `app.config.settings.Settings` 统一读取，环境变量示例见项目根目录 `.env.example`：
+API 配置由 `app.config.settings.Settings` 读取；Worker 配置由独立的 `aegis_agent_worker` 服务读取。两个服务各自维护 `.env`，但必须指向相同的 PostgreSQL 与 Redis：
 
 ```dotenv
 OTEL_ENABLED=true
@@ -125,9 +125,9 @@ Worker 自动使用 `<OTEL_SERVICE_NAME>-worker` 作为服务名，例如 `aegis
 cd D:\AI\Aegis_Agent_main\Aegis_backend
 D:\anaconda\envs\Aegis\python.exe -m uvicorn app.main:app --reload --port 8000
 
-# 终端 2：Agent Worker
-cd D:\AI\Aegis_Agent_main\Aegis_backend
-D:\anaconda\envs\Aegis\python.exe -m app.worker.agent_worker
+# 终端 2：独立 Agent Worker
+cd D:\AI\Aegis_Agent_main\aegis_agent_worker
+D:\anaconda\envs\Aegis\python.exe -m aegis_agent_worker
 ```
 
 ## JSON 日志
@@ -138,7 +138,7 @@ API 生命周期与 Worker 会调用 `configure_structured_logging()`，将根�
 {
   "timestamp": "2026-10-05T01:23:45.678901+00:00",
   "level": "INFO",
-  "logger": "app.worker.agent_worker",
+  "logger": "aegis_agent_worker.worker.agent_worker",
   "message": "agent_run_finished",
   "event": "agent_run_finished",
   "run_id": "d99ce16b-7970-46b7-8d18-6b953fdfb5fa",

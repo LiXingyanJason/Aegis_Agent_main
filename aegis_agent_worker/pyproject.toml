@@ -1,40 +1,37 @@
 [project]
-name = "aegis-pa-backend"
+name = "aegis-agent-worker"
 version = "0.1.0"
-description = "Aegis PA backend service"
+description = "Aegis independent Agent Worker service"
 requires-python = ">=3.12"
 dependencies = [
-  "fastapi>=0.115,<1.0",
-  "uvicorn[standard]>=0.30,<1.0",
-  # OpenTelemetry SQLAlchemy 自动埋点当前仅支持 SQLAlchemy < 2.1。
   "sqlalchemy[asyncio]>=2.0,<2.1",
   "asyncpg>=0.29,<1.0",
   "redis>=5.0,<6.0",
   "pydantic-settings>=2.6,<3.0",
   "httpx>=0.27,<1.0",
-  "PyJWT[crypto]>=2.8,<3.0",
-  "alembic>=1.14,<2.0",
   "opentelemetry-api>=1.28,<2.0",
   "opentelemetry-sdk>=1.28,<2.0",
-  "opentelemetry-instrumentation-fastapi>=0.49b0,<1.0",
   "opentelemetry-instrumentation-httpx>=0.49b0,<1.0",
   "opentelemetry-instrumentation-sqlalchemy>=0.49b0,<1.0",
   "opentelemetry-instrumentation-redis>=0.49b0,<1.0",
+  "mcp==2.3.0",
+  "langgraph>=0.2,<1.0",
 ]
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+
 [tool.setuptools.packages.find]
-include = ["app*"]
-exclude = ["migrations*", "tests*"]
+where = ["src"]
 
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0,<9.0",
   "pytest-asyncio>=0.24,<1.0",
-  "httpx>=0.27,<1.0",
 ]
 
 [tool.pytest.ini_options]
@@ -44,4 +41,3 @@ asyncio_mode = "auto"
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-

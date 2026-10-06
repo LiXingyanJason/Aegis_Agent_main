@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 
-from pydantic import AnyHttpUrl, SecretStr
+from pydantic import AnyHttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -34,23 +34,7 @@ class Settings(BaseSettings):
     auto_provision_users: bool = False
     default_tenant_name: str | None = None
 
-    model_provider: str
-    model_api_base: AnyHttpUrl
-    model_api_key: SecretStr
-    model_default_name: str
-    model_request_timeout_seconds: float = 60.0
-
     agent_queue_name: str = "aegis:agent-runs"
-    # Redis BLPOP 协议只接受整数秒，不能使用 5.0 这类浮点数。
-    agent_worker_poll_timeout_seconds: int = 5
-
-    # 用户相对日期（今天、明天等）的解释时区。后续可迁移为租户或用户级偏好。
-    app_timezone: str = "Asia/Shanghai"
-
-    # Calendar MCP Server 为内部受信任服务；未配置时仅影响日历意图，不影响普通对话。
-    calendar_mcp_url: AnyHttpUrl | None = None
-    calendar_mcp_api_key: SecretStr | None = None
-    calendar_mcp_timeout_seconds: float = 20.0
 
     @property
     def oidc_issuer(self) -> str:
