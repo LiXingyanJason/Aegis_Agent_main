@@ -7,7 +7,7 @@ from uuid import UUID
 import pytest
 
 from aegis_agent_worker.agent.orchestrator import AgentOrchestrator
-from aegis_agent_worker.llm.client import LLMMessage
+from aegis_agent_worker.llm.client import LLMError, LLMMessage
 from aegis_agent_worker.repository.run_repository import ClaimedRun
 from aegis_agent_worker.tool.contracts import ToolContext, ToolResult
 
@@ -36,8 +36,9 @@ class _FakeDatabase:
 class _FakeLLMClient:
     """记录模型输入并返回固定回复。"""
 
-    def __init__(self) -> None:
+    def __init__(self, error: LLMError | None = None) -> None:
         self.messages: list[LLMMessage] = []
+        self._error = error
 
     @property
     def provider_name(self) -> str:
@@ -52,6 +53,8 @@ class _FakeLLMClient:
     async def complete(self, messages: list[LLMMessage]) -> str:
         """记录上下文并返回模拟 LLM 回复。"""
         self.messages = messages
+        if self._error is not None:
+            raise self._error
         return "这是模型生成的回复。"
 
 
@@ -61,6 +64,7 @@ class _FakeRunRepository:
     def __init__(self, run: ClaimedRun) -> None:
         self.run = run
         self.completed: dict[str, object] | None = None
+        self.failed: dict[str, object] | None = None
 
     async def claim_queued_run(self, _session, run_id: UUID, **_kwargs) -> ClaimedRun | None:
         """模拟成功领取 queued 任务。"""
@@ -84,6 +88,10 @@ class _FakeRunRepository:
 
     async def finish_step(self, _session, **_kwargs) -> None:
         """模拟结束日历工具步骤。"""
+
+    async def fail_run(self, _session, **kwargs) -> None:
+        """记录任务失败时传入的 LLM 步骤标识。"""
+        self.failed = kwargs
 
 
 class _FakeToolGateway:
@@ -185,3 +193,26 @@ async def test_orchestrator_routes_calendar_request_calls_tool_and_injects_resul
 
     assert gateway.invoked_tool_name == "calendar.list_events"
     assert any("Calendar MCP 工具返回" in message.content for message in llm_client.messages)
+
+
+@pytest.mark.asyncio
+async def test_orchestrator_marks_graph_llm_step_failed_when_model_fails() -> None:
+    """测试根图内模型节点失败时，已创建的 LLM 步骤会被任务生命周期服务收尾。"""
+    run = ClaimedRun(
+        id=UUID("2dde4c59-6667-4af5-b12d-0f0c5cbcc2a6"),
+        tenant_id=UUID("2f744d3e-2a54-4e4f-aec3-bc9f0e2b6966"),
+        user_id=UUID("b0071771-d192-4c32-a4e0-7b214eec2be6"),
+        conversation_id=UUID("8bfc8088-26d5-4c19-8876-7caa364b59c0"),
+    )
+    repository = _FakeRunRepository(run)
+    orchestrator = AgentOrchestrator(
+        _FakeDatabase(),
+        _FakeLLMClient(LLMError("模型服务调用失败")),
+        repository,
+    )
+
+    result = await orchestrator.execute(run.id)
+
+    assert result.status == "failed"
+    assert repository.failed is not None
+    assert repository.failed["step_id"] == UUID("734977f1-0a41-4b4f-b9bd-0e960de6f9d2")

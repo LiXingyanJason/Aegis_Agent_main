@@ -3,7 +3,7 @@
 Graph 只保存流程恢复状态；日历草稿、审批项、工具调用和事件仍由业务表保存。
 """
 
-from typing import Annotated, Any, Awaitable, Callable, TypedDict
+from typing import Any, Awaitable, Callable, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt

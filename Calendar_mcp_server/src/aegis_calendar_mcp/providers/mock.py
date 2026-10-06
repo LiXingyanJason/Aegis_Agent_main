@@ -9,9 +9,9 @@ class MockCalendarProvider:
     """不持久化用户数据的固定开发数据源。"""
 
     _events = (
-        CalendarEvent("项目同步", datetime(2026, 10, 5, 7, 0, tzinfo=UTC), datetime(2026, 10, 5, 7, 30, tzinfo=UTC), ("jason@example.com", "wangmin@example.com")),
-        CalendarEvent("产品评审", datetime(2026, 10, 5, 9, 0, tzinfo=UTC), datetime(2026, 10, 5, 10, 0, tzinfo=UTC), ("jason@example.com",)),
-        CalendarEvent("周报整理", datetime(2026, 10, 6, 2, 0, tzinfo=UTC), datetime(2026, 10, 6, 3, 0, tzinfo=UTC), ("jason@example.com",)),
+        CalendarEvent("项目同步", datetime(2026, 10, 8, 7, 0, tzinfo=UTC), datetime(2026, 10, 8, 7, 30, tzinfo=UTC), ("jason@example.com", "wangmin@example.com")),
+        CalendarEvent("产品评审", datetime(2026, 10, 9, 9, 0, tzinfo=UTC), datetime(2026, 10, 9, 10, 0, tzinfo=UTC), ("jason@example.com",)),
+        CalendarEvent("周报整理", datetime(2026, 10, 10, 2, 0, tzinfo=UTC), datetime(2026, 10, 10, 3, 0, tzinfo=UTC), ("jason@example.com",)),
     )
 
     async def list_events(self, context: CalendarRequestContext, start_at: datetime, end_at: datetime) -> list[CalendarEvent]:

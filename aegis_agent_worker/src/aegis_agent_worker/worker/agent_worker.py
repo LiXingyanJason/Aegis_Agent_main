@@ -5,7 +5,7 @@ import logging
 from time import monotonic
 
 from aegis_agent_worker.agent.orchestrator import AgentOrchestrator
-from aegis_agent_worker.agent.tool_router import AgentToolRouter
+from aegis_agent_worker.agent.specialists.scheduler_agent import SchedulerAgent
 from aegis_agent_worker.config.database import Database
 from aegis_agent_worker.config.redis import create_redis_client
 from aegis_agent_worker.config.settings import get_settings
@@ -32,7 +32,7 @@ async def run_worker() -> None:
         OpenAICompatibleClient(settings),
         events=RunEventPublisher(redis),
         tools=create_default_tool_gateway(settings), # 创建 CalendarMCPToolHandler实例
-        tool_router=AgentToolRouter(settings.app_timezone),
+        scheduler_agent=SchedulerAgent(settings.app_timezone),
     )
     log_event(
         logger,

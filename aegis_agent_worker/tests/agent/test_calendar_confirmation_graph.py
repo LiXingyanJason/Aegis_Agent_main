@@ -4,7 +4,9 @@ import pytest
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.types import Command
 
-from aegis_agent_worker.agent.calendar_confirmation_graph import build_calendar_confirmation_graph
+from aegis_agent_worker.agent.workflows.calendar.confirmation_graph import (
+    build_calendar_confirmation_graph,
+)
 
 
 @pytest.mark.asyncio

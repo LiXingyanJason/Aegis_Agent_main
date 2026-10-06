@@ -1,4 +1,4 @@
-"""第一版日历任务的确定性工具选择规则。"""
+"""日程专职 Agent：以确定性规则选择一期只读日历工具。"""
 
 import re
 from datetime import datetime, timedelta
@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from aegis_agent_worker.tool.contracts import ToolInvocation
 
 
-class AgentToolRouter:
+class SchedulerAgent:
     """根据最新用户消息选择受限的只读日历工具，不允许模型任意调用工具。"""
 
     _free_time_keywords = ("空闲", "可用时间", "方便", "找时间", "约", "会议", "安排")
@@ -22,7 +22,7 @@ class AgentToolRouter:
             # 配置不正确时仍使用中国项目本地开发的默认时区，避免相对日期悄悄退回 UTC。
             self._timezone = ZoneInfo("Asia/Shanghai")
 
-    def select(self, user_content: str) -> ToolInvocation | None:
+    def select_read_tool(self, user_content: str) -> ToolInvocation | None:
         """为明确日历意图返回结构化调用；无匹配时返回 None。"""
         normalized = user_content.strip()
         if not normalized or not any(keyword in normalized for keyword in self._calendar_keywords):
