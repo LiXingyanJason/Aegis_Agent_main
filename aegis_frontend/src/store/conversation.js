@@ -84,6 +84,9 @@ export const useConversationStore = defineStore('conversation', {
             run_id: result.run_id,
             status: result.status,
             current_stage: '等待处理',
+            steps: [],
+            tool_previews: [],
+            approval_items: [],
           })
         }
         this.latestSubmission = result
@@ -137,6 +140,9 @@ export const useConversationStore = defineStore('conversation', {
       const run = {
         ...this.runs[runIndex],
         steps: [...(this.runs[runIndex].steps ?? [])],
+        tool_previews: [...(this.runs[runIndex].tool_previews ?? [])],
+        approval_items: [...(this.runs[runIndex].approval_items ?? [])],
+        plan_previews: [...(this.runs[runIndex].plan_previews ?? [])],
       }
 
       if (event.event_type === 'run_started') {
@@ -184,7 +190,65 @@ export const useConversationStore = defineStore('conversation', {
         run.current_stage = '需要连接日历'
         run.connection_required = {
           provider: payload.provider,
+          required_scopes: payload.required_scopes ?? [],
           message: payload.message,
+        }
+      }
+
+      if (event.event_type === 'plan_preview' && payload.preview) {
+        const previewIndex = run.plan_previews.findIndex(
+          (preview) => preview.approval_item_id === payload.approval_item_id,
+        )
+        const preview = {
+          ...(previewIndex === -1 ? {} : run.plan_previews[previewIndex]),
+          ...payload,
+        }
+        if (previewIndex === -1) run.plan_previews.push(preview)
+        else run.plan_previews.splice(previewIndex, 1, preview)
+      }
+
+      if (event.event_type === 'approval_required') {
+        const approvalItemIds = payload.approval_item_ids
+          ?? (payload.approval_item_id ? [payload.approval_item_id] : [])
+        for (const approvalItemId of approvalItemIds) {
+          if (!run.approval_items.some((item) => item.approval_item_id === approvalItemId)) {
+            run.approval_items.push({
+              approval_item_id: approvalItemId,
+              action: payload.action ?? 'calendar.create_event',
+              risk_level: payload.risk_level ?? 'write',
+              title: payload.title ?? '待确认的日历操作',
+              status: 'pending',
+              resource_type: payload.resource_type ?? null,
+              resource_id: payload.resource_id ?? null,
+              preview_snapshot: payload.preview ?? null,
+            })
+          }
+        }
+        run.approval_required = {
+          ...payload,
+          approval_item_ids: approvalItemIds,
+        }
+        run.current_stage = '等待逐项确认'
+        // payload.status 描述的是 approval_item（通常为 pending），不能覆盖任务运行状态。
+        run.status = 'waiting_confirmation'
+      }
+
+      if (event.event_type === 'approval_executed') {
+        const approvalIndex = run.approval_items.findIndex(
+          (item) => item.approval_item_id === payload.approval_item_id,
+        )
+        if (approvalIndex !== -1) {
+          run.approval_items.splice(approvalIndex, 1, {
+            ...run.approval_items[approvalIndex],
+            status: payload.status ?? 'executed',
+            provider_resource_id: payload.provider_resource_id ?? null,
+          })
+        }
+        run.current_stage = '日历事件已创建'
+        run.approval_execution = {
+          approval_item_id: payload.approval_item_id,
+          provider_resource_id: payload.provider_resource_id ?? null,
+          status: payload.status ?? 'executed',
         }
       }
 

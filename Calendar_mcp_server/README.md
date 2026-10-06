@@ -54,6 +54,7 @@ D:\anaconda\envs\Aegis\python.exe -m aegis_calendar_mcp
 | `CALENDAR_MCP_PORT` | `9001` | HTTP 监听端口。 |
 | `CALENDAR_MCP_PATH` | `/mcp` | MCP HTTP 路径。 |
 | `CALENDAR_MCP_ALLOWED_HOSTS` | 本机地址 | MCP SDK 校验的 Host 白名单；容器中加入实际服务域名。 |
+| `CALENDAR_MOCK_DATA_PATH` | `data/mock_calendar.json` | Mock 日历固定 JSON 数据文件路径。 |
 
 stdio 模式：
 
@@ -71,7 +72,7 @@ CALENDAR_MCP_URL=http://127.0.0.1:9001/mcp
 CALENDAR_MCP_TIMEOUT_SECONDS=20
 ```
 
-主后端负责身份、权限、日历连接和审计，并在工具调用 `_meta` 中传递受控标识。当前服务只校验其格式，不自行认证或持久化用户数据。
+主后端负责身份、权限、日历连接和审计，并在工具调用 `_meta` 中传递受控标识。当前服务只校验其格式，不自行认证或连接业务数据库。Mock 开发数据保存于 `data/mock_calendar.json`；创建 Mock 会议后会写回该文件，因此重启服务后仍可查询。
 
 ## 测试
 
@@ -82,6 +83,6 @@ D:\anaconda\envs\Aegis\python.exe -m pytest -q
 ## 当前边界
 
 - 工具：`calendar.list_events`、`calendar.find_free_time`；
-- Provider：仅固定数据的 Mock 实现；
+- Provider：仅 JSON 文件持久化的 Mock 实现；
 - 未提供 `/health`、OpenAPI、管理接口和服务间 API Key；
 - 独立部署时，应通过私有网络、服务网格或网关限制仅由主后端访问。

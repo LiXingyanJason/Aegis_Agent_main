@@ -49,6 +49,27 @@ class SchedulerAgent:
             arguments=time_arguments,
         )
 
+    def select_meeting_availability_tool(self, user_content: str) -> ToolInvocation:
+        """为会议安排固定选择空闲时间查询，禁止在确认前调用写工具。"""
+        start_at, end_at, requested_date = _resolve_time_range(user_content, self._timezone)
+        return ToolInvocation(
+            tool_name="calendar.find_free_time",
+            arguments={
+                "start_at": start_at,
+                "end_at": end_at,
+                "requested_date": requested_date,
+                "timezone": self._timezone.key,
+                "duration_minutes": _resolve_duration(user_content),
+                "participants": re.findall(r"[\w.+-]+@[\w.-]+", user_content)[:10],
+            },
+        )
+
+    @staticmethod
+    def meeting_title(user_content: str) -> str:
+        """一期使用安全默认标题，后续由受控 LLM/表单补充会议主题。"""
+        matched = re.search(r"(?:安排|创建|约)(.{1,30}?)(?:会议|开会)", user_content)
+        return matched.group(1).strip() + "会议" if matched and matched.group(1).strip() else "待确认会议"
+
 
 def _resolve_time_range(content: str, timezone: ZoneInfo) -> tuple[str, str, str | None]:
     """解析今天/明天的最小时间范围；无法识别时查询未来七天。"""

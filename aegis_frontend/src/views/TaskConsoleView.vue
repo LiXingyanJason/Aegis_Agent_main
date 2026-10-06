@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { subscribeRunEvents } from '../api/run'
 import { useAuthStore } from '../store/auth'
@@ -15,6 +15,7 @@ const pendingClientMessageId = ref(null)
 const error = ref('')
 const isPolling = ref(false)
 const isRunActive = ref(false)
+const messagesElement = ref(null)
 let pollTimer = null
 let pollingRunId = null
 let pollingInFlight = false
@@ -34,6 +35,81 @@ function formatTime(value) {
   }).format(new Date(value))
 }
 
+function formatCalendarData(value) {
+  if (value === null || value === undefined) return '—'
+  if (typeof value === 'string') return value
+  if (Array.isArray(value)) return value.join('、')
+  if (typeof value !== 'object') return String(value)
+  return Object.entries(value)
+    .map(([key, item]) => key + '：' + formatCalendarData(item))
+    .join('；')
+}
+
+function formatDateTime(value) {
+  if (!value) return '—'
+  return new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Asia/Shanghai',
+  }).format(new Date(value))
+}
+
+function meetingPreview(run) {
+  return run.plan_previews?.[0]?.preview
+    ?? run.approval_items?.find((item) => item.action === 'calendar.create_event')?.preview_snapshot
+    ?? run.approval_required?.preview
+    ?? null
+}
+
+function meetingApproval(run) {
+  return run.approval_items?.find((item) => item.action === 'calendar.create_event')
+    ?? run.approval_required
+    ?? null
+}
+
+function canConfirmMeeting(run) {
+  return meetingApproval(run)?.status === 'pending'
+}
+
+function meetingPlanHeading(run) {
+  const status = meetingApproval(run)?.status
+  if (status === 'rejected') return '会议计划已拒绝'
+  if (status === 'approved_executing') return '正在创建日历事件'
+  if (status === 'executed') return '日历事件已创建'
+  if (status === 'failed') return '日历事件创建失败'
+  return '待执行会议计划'
+}
+
+function meetingPlanOutcome(run) {
+  const approval = meetingApproval(run)
+  if (approval?.status === 'rejected') return '你已拒绝此会议计划，日历不会发生变更。'
+  if (approval?.status === 'approved_executing') return '已批准，正在创建日历事件。'
+  if (approval?.status === 'executed') return approval.provider_resource_id
+    ? '日历事件已创建，事件 ID：' + approval.provider_resource_id
+    : '日历事件已创建。'
+  if (approval?.status === 'failed') return '日历事件创建失败，请查看执行进度中的错误信息。'
+  return ''
+}
+
+function meetingRunForMessage(message) {
+  if (!message.run_id) return null
+  return conversations.runs.find((run) => run.run_id === message.run_id) ?? null
+}
+
+function isTrackableRun(run) {
+  return !['completed', 'failed', 'cancelled', 'waiting_confirmation', 'waiting_approval']
+    .includes(run.status)
+}
+
+async function scrollMessagesToBottom() {
+  await nextTick()
+  const element = messagesElement.value
+  if (element) element.scrollTop = element.scrollHeight
+}
+
 async function loadHistory() {
   error.value = ''
   try {
@@ -48,11 +124,10 @@ async function restoreConversation(conversationId, syncUrl = true) {
   error.value = ''
   try {
     const detail = await conversations.loadConversation(conversationId)
+    await scrollMessagesToBottom()
     draftMessage.value = ''
     pendingClientMessageId.value = null
-    const activeRun = detail.runs?.find(
-      (run) => run.status !== 'completed' && run.status !== 'failed' && run.status !== 'cancelled',
-    )
+    const activeRun = detail.runs?.find(isTrackableRun)
     if (activeRun) {
       isRunActive.value = true
       startRunPolling(activeRun.run_id, conversationId)
@@ -186,7 +261,7 @@ async function startRunStream(runId, conversationId) {
         })
         if (!handled) return
         error.value = ''
-        if (sseEvent.event === 'run_completed' || sseEvent.event === 'run_failed') {
+        if (['run_completed', 'run_failed', 'approval_required'].includes(sseEvent.event)) {
           await finishRunTracking(runId, conversationId)
         }
       },
@@ -232,7 +307,7 @@ onBeforeUnmount(() => stopRunTracking())
       <div class="brand"><span class="mark">⌾</span>Aegis PA</div>
       <p class="nav-label app-nav-label">工作空间</p>
       <a class="nav active" href="#task-console">◌ 任务对话</a>
-      <span class="nav disabled">✓ 操作确认（待接入）</span>
+      <router-link class="nav" :to="{ name: 'confirmations' }">✓ 操作确认</router-link>
       <span class="nav disabled">◇ 长期记忆（待接入）</span>
       <span class="nav disabled">◫ 连接与审计（待接入）</span>
 
@@ -289,15 +364,34 @@ onBeforeUnmount(() => stopRunTracking())
             </div>
 
             <el-alert v-if="error" class="conversation-error" :title="error" type="error" :closable="false" show-icon />
-            <div v-if="activeConversation" class="messages">
-              <div v-for="item in conversations.messages" :key="item.message_id" class="message" :class="item.role">
-                <div class="avatar">{{ item.role === 'user' ? '你' : 'A' }}</div>
-                <div>
-                  <div class="message-bubble">{{ item.content }}</div>
-                  <div class="message-meta">{{ item.role === 'user' ? '你' : 'Aegis' }} · {{ formatTime(item.created_at) }}</div>
+            <div v-if="activeConversation" ref="messagesElement" class="messages">
+              <template v-for="item in conversations.messages" :key="item.message_id">
+                <div class="message" :class="item.role">
+                  <div class="avatar">{{ item.role === 'user' ? '你' : 'A' }}</div>
+                  <div>
+                    <div class="message-bubble">{{ item.content }}</div>
+                    <div class="message-meta">{{ item.role === 'user' ? '你' : 'Aegis' }} · {{ formatTime(item.created_at) }}</div>
+                  </div>
                 </div>
-              </div>
-              <div v-if="conversations.messages.length === 0" class="empty-messages">此会话暂无可见消息。</div>
+                <template v-if="item.role === 'user' && meetingRunForMessage(item) && meetingPreview(meetingRunForMessage(item))">
+                  <div v-for="run in [meetingRunForMessage(item)]" :key="'meeting-plan-' + run.run_id" class="message meeting-plan-message">
+                    <div class="avatar">A</div>
+                    <div class="meeting-plan-card">
+                      <b>{{ meetingPlanHeading(run) }}</b>
+                      <p>{{ meetingPreview(run).title || '创建日历事件' }}</p>
+                      <dl>
+                        <div><dt>开始</dt><dd>{{ formatDateTime(meetingPreview(run).start_at) }}</dd></div>
+                        <div><dt>结束</dt><dd>{{ formatDateTime(meetingPreview(run).end_at) }}</dd></div>
+                        <div v-if="meetingPreview(run).attendees?.length"><dt>参与者</dt><dd>{{ formatCalendarData(meetingPreview(run).attendees) }}</dd></div>
+                        <div v-if="meetingPreview(run).calendar_name"><dt>日历</dt><dd>{{ meetingPreview(run).calendar_name }}</dd></div>
+                      </dl>
+                      <router-link v-if="canConfirmMeeting(run)" class="run-approval-link" :to="{ name: 'confirmations', query: { run_id: run.run_id } }">核对并逐项确认</router-link>
+                      <span v-else-if="meetingPlanOutcome(run)" class="meeting-plan-outcome">{{ meetingPlanOutcome(run) }}</span>
+                    </div>
+                  </div>
+                </template>
+              </template>
+              <div v-if="conversations.messages.length === 0 && !conversations.runs.some(meetingPreview)" class="empty-messages">此会话暂无可见消息。</div>
               <div v-if="conversations.latestSubmission" class="queued-notice">
                 <b>{{ isRunActive ? '任务已提交，正在处理' : '任务状态：' + conversations.latestSubmission.status }}</b>
                 <span>任务 ID：{{ conversations.latestSubmission.run_id }}</span>
@@ -335,11 +429,11 @@ onBeforeUnmount(() => stopRunTracking())
                     </li>
                   </ol>
                   <div v-if="run.tool_previews?.length" class="run-section">
-                    <b>工具预览</b>
+                    <b>日历查询结果</b>
                     <div v-for="tool in run.tool_previews" :key="tool.tool_call_id" class="tool-preview">
                       <p><b>{{ tool.tool_name }}</b> · {{ tool.status }} · {{ tool.risk_level }}</p>
-                      <p v-if="tool.input_summary">查询条件：{{ JSON.stringify(tool.input_summary) }}</p>
-                      <p v-if="tool.output_summary">查询结果：{{ JSON.stringify(tool.output_summary) }}</p>
+                      <p v-if="tool.input_summary">查询条件：{{ formatCalendarData(tool.input_summary) }}</p>
+                      <p v-if="tool.output_summary">查询结果：{{ formatCalendarData(tool.output_summary) }}</p>
                       <p v-if="tool.error_message" class="run-error">{{ tool.error_message }}</p>
                     </div>
                   </div>
@@ -350,9 +444,25 @@ onBeforeUnmount(() => stopRunTracking())
                     :closable="false"
                     show-icon
                   />
+                  <div v-if="run.plan_previews?.length" class="run-section calendar-plans">
+                    <b>待执行会议计划</b>
+                    <div v-for="plan in run.plan_previews" :key="plan.approval_item_id" class="tool-preview">
+                      <p><b>{{ plan.preview?.title || '创建日历事件' }}</b> · {{ plan.risk_level || 'write' }}</p>
+                      <p>开始：{{ formatDateTime(plan.preview?.start_at) }}</p>
+                      <p>结束：{{ formatDateTime(plan.preview?.end_at) }}</p>
+                      <p v-if="plan.preview?.attendees?.length">参与者：{{ formatCalendarData(plan.preview.attendees) }}</p>
+                      <p v-if="plan.preview?.calendar_name">日历：{{ plan.preview.calendar_name }}</p>
+                    </div>
+                  </div>
                   <div v-if="run.approval_items?.length" class="run-section">
                     <b>待确认项目</b>
                     <p v-for="approval in run.approval_items" :key="approval.approval_item_id">{{ approval.title }} · {{ approval.status }}</p>
+                    <router-link v-if="run.approval_items.some((approval) => approval.status === 'pending')" class="run-approval-link" :to="{ name: 'confirmations', query: { run_id: run.run_id } }">进入逐项确认</router-link>
+                  </div>
+                  <div v-else-if="run.approval_required" class="run-section">
+                    <b>待确认项目已生成</b>
+                    <p>{{ run.approval_required.summary || '请核对会议计划后逐项确认。' }}</p>
+                    <router-link class="run-approval-link" :to="{ name: 'confirmations', query: { run_id: run.run_id } }">进入逐项确认</router-link>
                   </div>
                 </section>
               </div>

@@ -55,6 +55,26 @@ class AgentRunRepository:
             conversation_id=row["conversation_id"],
         )
 
+    async def claim_waiting_confirmation_run(
+        self, session: AsyncSession, run_id: UUID, *, decision: str
+    ) -> ClaimedRun | None:
+        """确认项已由 API 提交后，原子恢复对应 waiting_confirmation 任务。"""
+        result = await session.execute(
+            text(
+                "UPDATE agent_runs ar SET status = 'running', current_stage = '正在处理确认决定', "
+                "updated_at = now() WHERE ar.id = :run_id AND ar.status = 'waiting_confirmation' "
+                "AND EXISTS (SELECT 1 FROM approval_items ai JOIN approval_decisions ad "
+                "ON ad.approval_item_id = ai.id WHERE ai.run_id = ar.id "
+                "AND ai.tenant_id = ar.tenant_id AND ad.decision = :decision) "
+                "RETURNING ar.id, ar.tenant_id, ar.user_id, ar.conversation_id"
+            ),
+            {"run_id": run_id, "decision": decision},
+        )
+        row = result.mappings().first()
+        if row is None:
+            return None
+        return ClaimedRun(id=row["id"], tenant_id=row["tenant_id"], user_id=row["user_id"], conversation_id=row["conversation_id"])
+
     async def load_conversation_history(
         self,
         session: AsyncSession,

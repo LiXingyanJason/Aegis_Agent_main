@@ -32,7 +32,7 @@ def test_tools_list_exposes_two_read_only_tools() -> None:
     """测试 MCP SDK 直接发现两个日历工具。"""
     with _client() as client:
         response = _request(client, 1, "tools/list", {})
-    assert [tool["name"] for tool in response["result"]["tools"]] == ["calendar.list_events", "calendar.find_free_time"]
+    assert [tool["name"] for tool in response["result"]["tools"]] == ["calendar.list_events", "calendar.find_free_time", "calendar.create_event"]
 
 
 def test_list_events_returns_mock_events() -> None:

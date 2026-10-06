@@ -77,6 +77,22 @@ class FindFreeTimeParam(TimeRangeParam):
     participants: list[str] = Field(default_factory=list, max_length=10)
 
 
+class CreateEventParam(TimeRangeParam):
+    """calendar.create_event 的受控写入参数。"""
+
+    title: str = Field(min_length=1, max_length=500)
+    description: str | None = Field(default=None, max_length=4000)
+    attendees: list[str] = Field(default_factory=list, max_length=20)
+    idempotency_key: str = Field(min_length=1, max_length=255)
+
+
+class CreateEventVO(BaseModel):
+    """创建日历事件后的最小安全返回。"""
+
+    source: str = "mock_calendar"
+    external_event_id: str
+
+
 class CalendarEventVO(BaseModel):
     title: str
     start_at: datetime

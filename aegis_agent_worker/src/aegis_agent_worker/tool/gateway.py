@@ -42,10 +42,13 @@ class ToolGateway:
         user_id: UUID,
         run_id: UUID,
         invocation: ToolInvocation,
+        allow_confirmed_write: bool = False,
     ) -> PreparedToolInvocation:
         """校验工具白名单，并在需要时解析当前用户的有效日历连接。"""
         registered = self._registry.get(invocation.tool_name)
-        if registered.definition.risk_level != "read":
+        if registered.definition.risk_level != "read" and not (
+            allow_confirmed_write and registered.definition.risk_level == "write"
+        ):
             raise ToolError("TOOL_POLICY_BLOCKED", "当前版本只允许调用只读工具")
         connection_id = None
         if registered.definition.requires_calendar_connection:

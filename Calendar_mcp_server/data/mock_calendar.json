@@ -1,0 +1,38 @@
+[
+  {
+    "external_event_id": "mock-seed-1",
+    "title": "项目同步",
+    "start_at": "2026-10-05T07:00:00+00:00",
+    "end_at": "2026-10-05T07:30:00+00:00",
+    "attendees": [
+      "jason@example.com",
+      "wangmin@example.com"
+    ]
+  },
+  {
+    "external_event_id": "mock-seed-2",
+    "title": "产品评审",
+    "start_at": "2026-10-09T09:00:00+00:00",
+    "end_at": "2026-10-09T10:00:00+00:00",
+    "attendees": [
+      "jason@example.com"
+    ]
+  },
+  {
+    "external_event_id": "mock-seed-3",
+    "title": "周报整理",
+    "start_at": "2026-10-10T02:00:00+00:00",
+    "end_at": "2026-10-10T03:00:00+00:00",
+    "attendees": [
+      "jason@example.com"
+    ]
+  },
+  {
+    "external_event_id": "mock-event-f5e69a6c-27ed-59c8-a651-b0ff9ddd9929",
+    "idempotency_key": "calendar:83c264d4-6412-4dca-b5ac-a175c126587c:1",
+    "title": "待确认会议",
+    "start_at": "2026-10-07T01:00:00+00:00",
+    "end_at": "2026-10-07T10:00:00+00:00",
+    "attendees": []
+  }
+]

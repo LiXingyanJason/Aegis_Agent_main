@@ -17,5 +17,10 @@ class TaskGraphState(TypedDict, total=False):
     selected_tool_name: str
     selected_tool_arguments: dict[str, Any]
     tool_context: str
+    awaiting_confirmation: bool
+    draft_id: str
+    approval_item_id: str
+    approval_decision: str
+    confirmation_error: str
     llm_step_id: str
     assistant_content: str

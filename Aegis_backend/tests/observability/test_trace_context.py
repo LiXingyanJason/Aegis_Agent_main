@@ -43,3 +43,13 @@ def test_queue_message_accepts_legacy_plain_run_id() -> None:
 
     assert restored.run_id == run_id
     assert trace.get_current_span(restored.context).get_span_context().is_valid is False
+
+
+def test_queue_message_carries_approval_resume_decision() -> None:
+    """测试批准接口可将决定与 run_id 一起投递给独立 Worker。"""
+    run_id = UUID("d99ce16b-7970-46b7-8d18-6b953fdfb5fa")
+
+    restored = deserialize_run_message(serialize_run_message(run_id, resume_decision="approved"))
+
+    assert restored.run_id == run_id
+    assert restored.resume_decision == "approved"

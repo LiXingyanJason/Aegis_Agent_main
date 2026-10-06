@@ -9,7 +9,7 @@ from aegis_agent_worker.tool.registry import ToolRegistry
 
 
 def create_default_tool_gateway(settings: Settings) -> ToolGateway:
-    """注册一期允许的两个只读 Calendar MCP 工具。"""
+    """注册日历读工具及只能由已批准流程调用的创建工具。"""
     registry = ToolRegistry()
     handler = CalendarMCPToolHandler(CalendarMCPClient(settings))
     registry.register(
@@ -30,6 +30,17 @@ def create_default_tool_gateway(settings: Settings) -> ToolGateway:
             risk_level="read",
             mcp_server="calendar-mcp",
             description="查询当前用户在指定范围内的可用时间。",
+            requires_calendar_connection=True,
+        ),
+        handler,
+    )
+    registry.register(
+        ToolDefinition(
+            name="calendar.create_event",
+            version="1.0",
+            risk_level="write",
+            mcp_server="calendar-mcp",
+            description="在用户批准的会议草稿基础上创建日历事件。",
             requires_calendar_connection=True,
         ),
         handler,

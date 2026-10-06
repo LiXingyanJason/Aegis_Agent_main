@@ -48,6 +48,13 @@ class Settings(BaseSettings):
             raise ValueError("DATABASE_URL must use postgresql:// or postgresql+asyncpg://")
         return self.database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
+    @property
+    def database_psycopg_url(self) -> str:
+        """将 SQLAlchemy URL 转为 LangGraph Checkpoint/psycopg 可识别的标准 URL。"""
+        if not self.database_url.startswith(("postgresql+asyncpg://", "postgresql://")):
+            raise ValueError("DATABASE_URL must use postgresql:// or postgresql+asyncpg://")
+        return self.database_url.replace("postgresql+asyncpg://", "postgresql://", 1)
+
 
 @lru_cache
 def get_settings() -> Settings:

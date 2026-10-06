@@ -3,6 +3,7 @@
 import os
 from dataclasses import dataclass
 from functools import lru_cache
+from pathlib import Path
 
 
 @dataclass(frozen=True, slots=True)
@@ -15,6 +16,7 @@ class Settings:
     port: int
     streamable_http_path: str
     allowed_hosts: tuple[str, ...]
+    mock_data_path: Path = Path("data/mock_calendar.json")
 
 
 @lru_cache
@@ -40,4 +42,5 @@ def get_settings() -> Settings:
             ).split(",")
             if host.strip()
         ),
+        mock_data_path=Path(os.getenv("CALENDAR_MOCK_DATA_PATH", "data/mock_calendar.json")),
     )

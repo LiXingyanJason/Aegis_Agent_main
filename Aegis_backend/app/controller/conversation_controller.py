@@ -174,7 +174,7 @@ async def get_conversation_detail(
                         action=approval["action"],
                         risk_level=approval["risk_level"],
                         resource_type=approval["resource_type"],
-                        resource_id=approval["resource_id"],
+                        resource_id=str(approval["resource_id"]) if approval["resource_id"] is not None else None,
                         title=approval["title"],
                         preview_snapshot=approval["preview_snapshot"],
                         draft_version=approval["draft_version"],

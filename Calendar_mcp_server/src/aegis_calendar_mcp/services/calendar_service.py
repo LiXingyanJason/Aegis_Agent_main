@@ -3,7 +3,7 @@
 from datetime import UTC, datetime, time, timedelta
 
 from aegis_calendar_mcp.providers.base import CalendarProvider
-from aegis_calendar_mcp.schemas.calendar import CalendarEventVO, CalendarEventsVO, CalendarRequestContext, FindFreeTimeParam, FreeTimeSlot, FreeTimeSlotVO, FreeTimeVO, ListEventsParam
+from aegis_calendar_mcp.schemas.calendar import CalendarEvent, CalendarEventVO, CalendarEventsVO, CalendarRequestContext, CreateEventParam, CreateEventVO, FindFreeTimeParam, FreeTimeSlot, FreeTimeSlotVO, FreeTimeVO, ListEventsParam
 
 
 class CalendarService:
@@ -31,6 +31,12 @@ class CalendarService:
             self._append_slot(slots, cursor, work_end, param.duration_minutes)
             day += timedelta(days=1)
         return FreeTimeVO(query_range={"start_at": param.start_at, "end_at": param.end_at}, duration_minutes=param.duration_minutes, participants=param.participants, available_slots=[FreeTimeSlotVO.from_entity(slot) for slot in slots[:10]])
+
+    async def create_event(self, context: CalendarRequestContext, param: CreateEventParam) -> CreateEventVO:
+        """将已由主服务批准的会议写入 Provider。"""
+        event = CalendarEvent(param.title, param.start_at, param.end_at, tuple(param.attendees))
+        external_event_id = await self._provider.create_event(context, event, param.idempotency_key)
+        return CreateEventVO(external_event_id=external_event_id)
 
     @staticmethod
     def _append_slot(slots: list[FreeTimeSlot], start_at: datetime, end_at: datetime, duration_minutes: int) -> None:

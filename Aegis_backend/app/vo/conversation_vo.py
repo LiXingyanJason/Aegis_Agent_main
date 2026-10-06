@@ -75,6 +75,7 @@ class ApprovalItemVO(BaseModel):
     action: str
     risk_level: str
     resource_type: str | None
+    # 会话详情兼容不同可确认资源的标识形式；控制器统一序列化为字符串。
     resource_id: str | None
     title: str
     preview_snapshot: dict[str, Any] | None

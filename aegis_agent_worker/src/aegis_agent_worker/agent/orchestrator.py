@@ -15,6 +15,7 @@ from aegis_agent_worker.llm.client import LLMError, OpenAICompatibleClient
 from aegis_agent_worker.repository.run_repository import AgentRunRepository
 from aegis_agent_worker.repository.tool_repository import ToolCallRepository
 from aegis_agent_worker.service.conversation_context_service import ConversationContextService
+from aegis_agent_worker.service.calendar_confirmation_service import CalendarConfirmationService
 from aegis_agent_worker.service.run_lifecycle_service import RunLifecycleService
 from aegis_agent_worker.service.tool_execution_service import ToolExecutionService
 from aegis_agent_worker.tool.gateway import ToolGateway
@@ -49,6 +50,7 @@ class AgentOrchestrator:
         context_service: ConversationContextService | None = None, # 会话上下文服务。它从数据库读取当前任务对应会话的历史消息，供根图和 LLM 组织上下文。
         tool_execution: ToolExecutionService | None = None, # 工具调用用例服务，负责把一次工具调用组织成完整业务动作 创建 run_step 创建 tool_call 审计记录校验并调用 ToolGateway保存结果或错误 写入 tool_preview / progress_updated 事件
         graph_runner: GraphRunner | None = None, # LangGraph 根图的执行器 执行或未来恢复同一任务图
+        checkpointer=None,
     ) -> None:
         """组装根图及其依赖；允许测试注入服务或预构建运行器。"""
         run_repository = runs or AgentRunRepository()
@@ -64,6 +66,18 @@ class AgentOrchestrator:
                 tool_calls or ToolCallRepository(),
                 events,
             )
+        calendar_confirmation = (
+            CalendarConfirmationService(
+                database,
+                run_repository,
+                self._tool_execution,
+                events,
+                tools,
+                tool_calls,
+            )
+            if self._tool_execution is not None
+            else None
+        )
         self._graph_runner = graph_runner or GraphRunner(
             TaskGraph(
                 TaskGraphDependencies(
@@ -72,25 +86,37 @@ class AgentOrchestrator:
                     llm_client=llm_client,
                     scheduler_agent=scheduler_agent or SchedulerAgent(),
                     tool_execution=self._tool_execution,
+                    calendar_confirmation=calendar_confirmation,
                     system_prompt=self._system_prompt,
                     router=TaskGraphRouter(),
                 )
-            ).build()
+            ).build(checkpointer=checkpointer)
         )
 
-    async def execute(self, run_id: UUID) -> AgentExecutionResult:
+    async def execute(self, run_id: UUID, *, resume_decision: str | None = None) -> AgentExecutionResult:
         """领取任务、执行根图，并返回 Worker 所需的最终状态。"""
-        run = await self._lifecycle.claim_queued_run(
-            run_id,
-            model_provider=self._llm_client.provider_name,
-            model_name=self._llm_client.model_name,
-        ) # “原子领取”一个等待执行的任务 若为空则是被其他worker抢走了，直接返回AgentExecutionResult(status="ignored")
+        if resume_decision is None:
+            run = await self._lifecycle.claim_queued_run(
+                run_id,
+                model_provider=self._llm_client.provider_name,
+                model_name=self._llm_client.model_name,
+            )
+        else:
+            run = await self._lifecycle.resume_waiting_confirmation_run(
+                run_id, decision=resume_decision
+            )
         if run is None:
             return AgentExecutionResult(status="ignored")
 
         step_id: UUID | None = None
         try:
-            state = await self._graph_runner.invoke(run)
+            state = (
+                await self._graph_runner.resume(str(run.id), resume_decision)
+                if resume_decision is not None
+                else await self._graph_runner.invoke(run)
+            )
+            if state.get("__interrupt__"):
+                return AgentExecutionResult(status="waiting_confirmation")
             assistant_content = state.get("assistant_content")
             if not isinstance(assistant_content, str) or not assistant_content:
                 raise RuntimeError("根图未生成助手回复")

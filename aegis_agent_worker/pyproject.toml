@@ -16,6 +16,8 @@ dependencies = [
   "opentelemetry-instrumentation-redis>=0.49b0,<1.0",
   "mcp==2.3.0",
   "langgraph>=0.2,<1.0",
+  "langgraph-checkpoint-postgres>=2.0.25,<3.0",
+  "psycopg[binary]>=3.2,<4.0",
 ]
 
 [build-system]

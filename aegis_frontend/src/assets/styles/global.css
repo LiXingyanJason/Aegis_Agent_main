@@ -48,3 +48,56 @@ h1, h2, h3, p { margin-top: 0; }
 .run-section { margin-top: 12px; padding: 10px; border-radius: 8px; background: #f7f9fc; font-size: 12px; }
 .run-section p { margin: 5px 0 0; color: #475467; line-height: 1.45; }
 .run-empty { color: #667085; line-height: 1.55; }
+.tool-preview { padding: 9px 0; border-bottom: 1px solid #e7edf5; }
+.tool-preview:last-child { padding-bottom: 0; border-bottom: 0; }
+.tool-preview p { overflow-wrap: anywhere; }
+.run-approval-link { display: inline-block; margin-top: 9px; color: #266dcc; font-size: 12px; font-weight: 700; text-decoration: none; }
+.run-approval-link:hover { text-decoration: underline; }
+.meeting-plan-message { align-self: flex-start; max-width: 94%; }
+.meeting-plan-card { min-width: min(430px, 72vw); padding: 13px 15px; border: 1px solid #c9dcf8; border-radius: 6px 12px 12px; background: #f7fbff; line-height: 1.5; }
+.meeting-plan-card > p { margin: 5px 0 9px; color: #344054; font-weight: 700; }
+.meeting-plan-card dl { margin: 0; }
+.meeting-plan-card dl div { display: grid; grid-template-columns: 58px 1fr; gap: 8px; padding: 4px 0; }
+.meeting-plan-card dt { color: #667085; }
+.meeting-plan-card dd { margin: 0; color: #344054; overflow-wrap: anywhere; }
+.meeting-plan-outcome { display: block; margin-top: 10px; color: #526176; font-size: 12px; line-height: 1.5; }
+
+/* 逐项确认页：仅列表区域滚动，避免页面和侧栏随确认项一起滚动。 */
+.badge.write { background: #fff4e4; color: #9a5b10; }
+.badge.sensitive { background: #fff0f7; color: #a22d68; }
+.confirmation-content { gap: 0; }
+.approval-notice { flex: none; padding: 14px 16px; margin-bottom: 20px; border: 1px solid #f4d5a4; border-radius: 10px; background: #fff4e4; color: #76470c; line-height: 1.55; }
+.approval-card { display: flex; min-height: 0; flex: 1; flex-direction: column; overflow: hidden; }
+.approval-scroll { min-height: 0; flex: 1; padding: 16px; overflow-y: auto; background: #f7f9fc; }
+.approval-item { padding: 18px; margin-bottom: 14px; border: 1px solid #dfe5ee; border-radius: 10px; background: #fff; }
+.approval-item:last-child { margin-bottom: 0; }
+.approval-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 15px; }
+.approval-head h2 { display: inline; margin-left: 9px; }
+.approval-head .muted { margin: 5px 0 0 35px; }
+.approval-index { display: inline-grid; width: 26px; height: 26px; place-items: center; border-radius: 50%; background: #eaf3ff; color: #1c5ba7; font-weight: 800; }
+.approval-params { margin: 0; }
+.approval-params div { display: grid; grid-template-columns: 145px 1fr; gap: 15px; padding: 13px 0; border-bottom: 1px solid #dfe5ee; }
+.approval-params dt { color: #667085; }
+.approval-params dd { margin: 0; line-height: 1.55; }
+.approval-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 15px; }
+.approval-actions .el-checkbox { height: auto; line-height: 1.5; }
+.approval-buttons { display: flex; gap: 10px; flex: none; flex-wrap: wrap; }
+.approval-draft-notice { margin: 0; }
+.approval-link { padding: 3px; border: 0; background: none; color: #266dcc; font-weight: 700; }
+.approval-summary { background: #fbfcff; }
+.approval-summary > .muted { margin: 0; }
+.approval-result { margin: 15px 0 0; color: #526176; font-size: 13px; }
+.approval-result span { display: block; margin-top: 4px; color: #667085; overflow-wrap: anywhere; }
+.approval-empty { display: grid; min-height: 180px; place-content: center; gap: 8px; color: #667085; text-align: center; }
+.approval-empty b { color: #344054; }
+
+@media (max-width: 800px) {
+  .confirmation-content { height: auto; overflow: visible; }
+  .approval-card { display: block; flex: none; overflow: visible; }
+  .approval-scroll { max-height: 560px; }
+  .approval-actions { align-items: flex-start; flex-direction: column; }
+}
+
+@media (max-width: 600px) {
+  .approval-params div { grid-template-columns: 1fr; gap: 4px; }
+}

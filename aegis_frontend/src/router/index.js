@@ -8,6 +8,7 @@ const router = createRouter({
     { path: '/login', name: 'login', component: () => import('../views/LoginView.vue'), meta: { public: true } },
     { path: '/auth/callback', name: 'auth-callback', component: () => import('../views/AuthCallbackView.vue'), meta: { public: true } },
     { path: '/tasks', name: 'tasks', component: () => import('../views/TaskConsoleView.vue') },
+    { path: '/confirmations', name: 'confirmations', component: () => import('../views/ConfirmationView.vue') },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('../views/NotFoundView.vue'), meta: { public: true } },
   ],
 })

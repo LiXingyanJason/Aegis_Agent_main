@@ -76,6 +76,18 @@ class RunLifecycleService:
                     self._events.publish_after_commit(event)
         return step_id
 
+    async def resume_waiting_confirmation_run(
+        self, run_id: UUID, *, decision: str
+    ) -> ClaimedRun | None:
+        """仅恢复数据库中已有相同确认决定的等待任务。"""
+        if decision not in {"approved", "rejected"}:
+            return None
+        async with self._database.session() as session:
+            async with session.begin():
+                return await self._runs.claim_waiting_confirmation_run(
+                    session, run_id, decision=decision
+                )
+
     async def complete_run(
         self,
         run: ClaimedRun,

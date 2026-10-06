@@ -5,6 +5,7 @@ from typing import Any
 from uuid import UUID
 
 from langgraph.graph import END, START, StateGraph
+from langgraph.types import interrupt
 
 from aegis_agent_worker.agent.graph.graph_registry import GraphRegistry
 from aegis_agent_worker.agent.graph.router import TaskGraphRouter
@@ -16,6 +17,7 @@ from aegis_agent_worker.llm.client import LLMError, LLMMessage, OpenAICompatible
 from aegis_agent_worker.observability.telemetry import get_tracer
 from aegis_agent_worker.repository.run_repository import ClaimedRun
 from aegis_agent_worker.service.conversation_context_service import ConversationContextService
+from aegis_agent_worker.service.calendar_confirmation_service import CalendarConfirmationService
 from aegis_agent_worker.service.run_lifecycle_service import RunLifecycleService
 from aegis_agent_worker.service.tool_execution_service import ToolExecutionService
 
@@ -29,6 +31,7 @@ class TaskGraphDependencies:
     llm_client: OpenAICompatibleClient
     scheduler_agent: SchedulerAgent
     tool_execution: ToolExecutionService | None
+    calendar_confirmation: CalendarConfirmationService | None
     system_prompt: str
     router: TaskGraphRouter
 
@@ -47,7 +50,7 @@ class TaskGraph:
     def __init__(self, dependencies: TaskGraphDependencies) -> None:
         self._dependencies = dependencies
 
-    def build(self) -> Any:
+    def build(self, *, checkpointer: Any | None = None) -> Any:
         """返回已编译的根图。"""
         registry = GraphRegistry()
         registry.register( # calendar_read 创建子图注册表
@@ -66,17 +69,27 @@ class TaskGraph:
         graph.add_node("load_context", self._load_context)
         graph.add_node("decide_workflow", self._decide_workflow)
         graph.add_node("calendar_read", registry.get("calendar_read"))
+        graph.add_node("calendar_confirmation", self._prepare_calendar_confirmation)
+        graph.add_node("wait_for_calendar_approval", self._wait_for_calendar_approval)
+        graph.add_node("finish_calendar_approval", self._finish_calendar_approval)
         graph.add_node("generate_reply", self._generate_reply)
         graph.add_edge(START, "load_context")
         graph.add_edge("load_context", "decide_workflow")
         graph.add_conditional_edges(
             "decide_workflow",
             self._select_workflow,
-            {"calendar_read": "calendar_read", "general_reply": "generate_reply"},
+            {
+                "calendar_read": "calendar_read",
+                "calendar_confirmation": "calendar_confirmation",
+                "general_reply": "generate_reply",
+            },
         )
         graph.add_edge("calendar_read", "generate_reply")
+        graph.add_edge("calendar_confirmation", "wait_for_calendar_approval")
+        graph.add_edge("wait_for_calendar_approval", "finish_calendar_approval")
+        graph.add_edge("finish_calendar_approval", END)
         graph.add_edge("generate_reply", END)
-        return graph.compile()
+        return graph.compile(checkpointer=checkpointer)
 
     async def _load_context(self, state: TaskGraphState) -> dict[str, Any]:
         """读取租户隔离的会话消息，并提供根路由所需的最新用户消息。"""
@@ -123,6 +136,51 @@ class TaskGraph:
             except LLMError as error:
                 raise LLMGraphError(step_id, error) from error
         return {"llm_step_id": str(step_id), "assistant_content": reply}
+
+    async def _prepare_calendar_confirmation(self, state: TaskGraphState) -> dict[str, Any]:
+        """生成会议草稿并发出确认事件；此节点绝不执行日历写入。"""
+        if self._dependencies.calendar_confirmation is None:
+            return {"confirmation_error": "会议确认服务尚未配置。"}
+        run = _claimed_run_from_state(state)
+        message = state.get("latest_user_message", "")
+        invocation = self._dependencies.scheduler_agent.select_meeting_availability_tool(message)
+        return await self._dependencies.calendar_confirmation.prepare(
+            run,
+            invocation=invocation,
+            title=self._dependencies.scheduler_agent.meeting_title(message),
+            attendees=invocation.arguments.get("participants", []),
+        )
+
+    @staticmethod
+    def _wait_for_calendar_approval(state: TaskGraphState) -> dict[str, str]:
+        """暂停图并持久化 Checkpoint；恢复值只能是批准或拒绝决定。"""
+        if not state.get("awaiting_confirmation"):
+            return {"approval_decision": "unavailable"}
+        decision = interrupt(
+            {
+                "run_id": state["run_id"],
+                "draft_id": state.get("draft_id"),
+                "approval_item_id": state.get("approval_item_id"),
+                "status": "waiting_confirmation",
+            }
+        )
+        return {"approval_decision": str(decision)}
+
+    async def _finish_calendar_approval(self, state: TaskGraphState) -> dict[str, str]:
+        """批准后经确认服务执行唯一允许的日历写入；拒绝不调用工具。"""
+        if state.get("approval_decision") == "approved":
+            if self._dependencies.calendar_confirmation is None:
+                raise RuntimeError("会议确认服务尚未配置")
+            run = _claimed_run_from_state(state)
+            draft_id = state.get("draft_id")
+            approval_item_id = state.get("approval_item_id")
+            if not isinstance(draft_id, str) or not isinstance(approval_item_id, str):
+                raise RuntimeError("恢复的会议确认图缺少草稿或确认项标识")
+            external_event_id = await self._dependencies.calendar_confirmation.create_approved_event(
+                run, draft_id=UUID(draft_id), approval_item_id=UUID(approval_item_id)
+            )
+            return {"assistant_content": f"会议已创建到日历，事件标识：{external_event_id}。"}
+        return {"assistant_content": "已记录你拒绝创建该会议，日历不会发生任何变更。"}
 
 
 def _claimed_run_from_state(state: TaskGraphState) -> ClaimedRun:

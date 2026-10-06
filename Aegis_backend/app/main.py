@@ -6,6 +6,7 @@ from typing import AsyncIterator
 from fastapi import FastAPI
 
 from app.controller.conversation_controller import router as conversation_router
+from app.controller.approval_controller import router as approval_router
 from app.controller.run_controller import router as run_router
 from app.config.database import Database
 from app.config.redis import create_redis_client
@@ -43,6 +44,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(title="Aegis PA API", version="0.1.0", lifespan=lifespan)
 instrument_fastapi(app)
 app.include_router(conversation_router)
+app.include_router(approval_router)
 app.include_router(run_router)
 
 

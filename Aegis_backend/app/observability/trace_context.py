@@ -17,13 +17,18 @@ class QueuedRunMessage:
 
     run_id: UUID
     context: Context
+    resume_decision: str | None = None
 
 
-def serialize_run_message(run_id: UUID) -> str:
+def serialize_run_message(run_id: UUID, *, resume_decision: str | None = None) -> str:
     """把当前请求的 W3C traceparent 与任务标识一起写入 Redis。"""
     carrier: dict[str, str] = {}
     TraceContextTextMapPropagator().inject(carrier)
+    if resume_decision not in {None, "approved", "rejected"}:
+        raise ValueError("resume_decision 必须是 approved 或 rejected")
     payload = {"run_id": str(run_id)}
+    if resume_decision is not None:
+        payload["resume_decision"] = resume_decision
     for key in ("traceparent", "tracestate"):
         if key in carrier:
             payload[key] = carrier[key]
@@ -44,4 +49,9 @@ def deserialize_run_message(raw_message: str) -> QueuedRunMessage:
         for key in ("traceparent", "tracestate")
         if isinstance((value := payload.get(key)), str)
     }
-    return QueuedRunMessage(run_id=UUID(payload["run_id"]), context=extract(carrier))
+    resume_decision = payload.get("resume_decision")
+    if resume_decision not in {None, "approved", "rejected"}:
+        raise ValueError("Agent 队列消息包含无效 resume_decision")
+    return QueuedRunMessage(
+        run_id=UUID(payload["run_id"]), context=extract(carrier), resume_decision=resume_decision
+    )
