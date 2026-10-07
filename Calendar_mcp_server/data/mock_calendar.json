@@ -34,5 +34,13 @@
     "start_at": "2026-10-07T01:00:00+00:00",
     "end_at": "2026-10-07T10:00:00+00:00",
     "attendees": []
+  },
+  {
+    "external_event_id": "mock-event-3c212b1e-d813-5f95-a75a-614e61de2b69",
+    "idempotency_key": "calendar:aa98bf66-130a-420d-9486-138e4aa93e8b:1",
+    "title": "待确认会议",
+    "start_at": "2026-10-08T01:00:00+00:00",
+    "end_at": "2026-10-08T10:00:00+00:00",
+    "attendees": []
   }
 ]

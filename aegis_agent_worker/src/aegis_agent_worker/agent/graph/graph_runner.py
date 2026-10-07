@@ -28,6 +28,12 @@ class GraphRunner:
 
     async def resume(self, run_id: str, decision: str) -> TaskGraphState:
         """供后续人工审批工作流以同一 thread_id 恢复执行。"""
+        # 在让 LangGraph 从之前暂停的位置继续执行
+        # Command(resume=decision):表示向 LangGraph 的暂停点传入恢复值。
+        # decision = "approved" 等价于把："approved" 传回此前的：decision = interrupt({...})
+        # 于是暂停节点继续执行：return {"approval_decision": str(decision)}
+
+        # 恢复时，框架自动帮我们用run_id查询Checkpoint进行恢复，根据Command(resume=decision)继续执行
         return await self._graph.ainvoke(Command(resume=decision), self._config(run_id))
 
     @staticmethod

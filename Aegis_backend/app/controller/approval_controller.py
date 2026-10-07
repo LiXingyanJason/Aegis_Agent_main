@@ -45,7 +45,10 @@ async def get_approval_item(
     current_user: CurrentUser = Depends(get_current_user),
     session: AsyncSession = Depends(get_tenant_session),
 ) -> dict[str, ApprovalItemVO]:
-    """加载一个确认项在创建时冻结的完整预览。"""
+    """
+    加载一个确认项在创建时冻结的完整预览。
+    默认只返回待确认项，但接口能力不只限于待确认项GET /approvals?status=executed status=rejected status=failed status=approved_executing
+    """
     item = await _approval_service.get_item(session, current_user.user, approval_item_id)
     if item is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="待确认操作不存在或无权访问")
@@ -53,9 +56,15 @@ async def get_approval_item(
 
 
 @router.post("/{approval_item_id}/decision")
-async def decide_approval(approval_item_id: UUID, param: ApprovalDecisionParam, current_user: CurrentUser = Depends(get_current_user), session: AsyncSession = Depends(get_tenant_session), dispatcher: RunDispatchService = Depends(get_run_dispatcher_from_request)) -> dict[str, ApprovalDecisionVO]:
+async def decide_approval(
+        approval_item_id: UUID,
+        param: ApprovalDecisionParam,
+        current_user: CurrentUser = Depends(get_current_user),
+        session: AsyncSession = Depends(get_tenant_session),
+        dispatcher: RunDispatchService = Depends(get_run_dispatcher_from_request)
+) -> dict[str, ApprovalDecisionVO]:
     """提交决定；事务提交后才投递 Worker 恢复同一 LangGraph 任务。"""
-    result = await _approval_service.decide(session, current_user.user, approval_item_id, param)
+    result = await _approval_service.decide(session, current_user.user, approval_item_id, param) # 执行审批确认的业务逻辑 批准approved_executing拒绝时改为 rejected
     if result.outcome == "not_found":
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="待确认操作不存在或无权访问")
     if result.outcome == "expired":
@@ -63,5 +72,5 @@ async def decide_approval(approval_item_id: UUID, param: ApprovalDecisionParam, 
     if result.outcome == "not_pending":
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="待确认操作已处理，不能重复确认")
     assert result.approval_item_id is not None and result.run_id is not None and result.approval_status is not None
-    dispatcher.enqueue_after_commit(result.run_id, resume_decision=param.decision)
+    dispatcher.enqueue_after_commit(result.run_id, resume_decision=param.decision) # 先创建该入redis队列申请，等待提交数据库事务后，再真正入队
     return success(ApprovalDecisionVO(approval_item_id=result.approval_item_id, run_id=result.run_id, decision=param.decision, approval_status=result.approval_status, execution_scheduled=param.decision == "approved"))

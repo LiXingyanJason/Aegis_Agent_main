@@ -156,6 +156,7 @@ class TaskGraph:
         """暂停图并持久化 Checkpoint；恢复值只能是批准或拒绝决定。"""
         if not state.get("awaiting_confirmation"):
             return {"approval_decision": "unavailable"}
+        # 我们编写了分支路由，在需要暂停的时候路由到该节点执行该函数 框架自动帮我们用当前 runid 存Checkpointer，并返回interrupt？
         decision = interrupt(
             {
                 "run_id": state["run_id"],

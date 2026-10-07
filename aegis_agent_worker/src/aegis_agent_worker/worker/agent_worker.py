@@ -33,7 +33,7 @@ async def run_worker() -> None:
     try:
         # SQLAlchemy 使用 asyncpg URL；LangGraph 的 AsyncPostgresSaver 使用 psycopg URL。
         async with AsyncPostgresSaver.from_conn_string(settings.database_psycopg_url) as checkpointer:
-            await checkpointer.setup()
+            await checkpointer.setup() # 建立checkpointer数据库表，我们通过run_id关联每一个checkpointer
             orchestrator = AgentOrchestrator(database, OpenAICompatibleClient(settings), events=RunEventPublisher(redis), tools=create_default_tool_gateway(settings), scheduler_agent=SchedulerAgent(settings.app_timezone), checkpointer=checkpointer)
             log_event(logger, logging.INFO, "agent_worker_started", queue_name=settings.agent_queue_name)
             while True:
