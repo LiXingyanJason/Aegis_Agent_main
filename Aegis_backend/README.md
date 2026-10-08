@@ -134,6 +134,8 @@ EMAIL_MCP_TIMEOUT_SECONDS=20
 
 随后在 DataGrip 中执行一次 [004_seed_mock_email_connection.sql](scripts/004_seed_mock_email_connection.sql)，为当前 Keycloak Jason 用户创建含 `mail.read` 和 `mail.send` scope 的 Mock 连接。若未创建连接，接口返回 `409 CONNECTION_REQUIRED`；若 MCP 服务不可用，返回 `503 MAIL_TOOL_UNAVAILABLE`，不会返回虚构邮件。
 
+开发期如需为当前 Keycloak Jason 用户准备长期记忆样例，可在 DataGrip 执行 [005_seed_mock_memories.sql](scripts/005_seed_mock_memories.sql)。脚本可重复执行，会创建若干普通偏好和一条用于验证列表脱敏行为的敏感记忆；不会写入密码、密钥等高危内容。
+
 ## 第一版 Agent Worker 与 LLM 链路
 
 第一版已实现“文本任务 → 可控的只读日历 MCP 查询 → LLM 文本回复 → SSE 状态/结果通知”，以及独立的邮件摘要、待办候选、回复草稿与经逐项确认的邮件发送任务。邮件发送当前只写入 Mock 已发送箱，不会发送真实邮件。任务处理流程如下：
