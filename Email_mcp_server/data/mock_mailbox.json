@@ -1,0 +1,45 @@
+[
+  {
+    "provider_message_id": "mock-mail-renewal-001",
+    "provider_thread_id": "mock-thread-renewal-001",
+    "sender_name": "李莉",
+    "sender_email": "lili@northstar.example.com",
+    "recipients": ["jason@example.com"],
+    "subject": "2026 年服务续约确认",
+    "received_at": "2026-10-06T02:10:00+00:00",
+    "source_version": "mock-v1",
+    "list_preview": "请在本周五前确认续约方案，并回复签约联系人。",
+    "body_text": "Jason，您好：\n\n当前服务合同将于 2026-10-31 到期。请在本周五（2026-10-09）前确认是否按原方案续约，并回复签约联系人及预计完成时间。\n\n谢谢。\n李莉",
+    "attachments": [
+      {"file_name": "renewal-proposal.pdf", "content_type": "application/pdf", "size_bytes": 245760}
+    ]
+  },
+  {
+    "provider_message_id": "mock-mail-review-002",
+    "provider_thread_id": "mock-thread-review-002",
+    "sender_name": "王敏",
+    "sender_email": "wangmin@example.com",
+    "recipients": ["jason@example.com", "team@example.com"],
+    "subject": "下周产品评审材料",
+    "received_at": "2026-10-05T08:30:00+00:00",
+    "source_version": "mock-v1",
+    "list_preview": "评审材料已更新，请在周三上午前补充风险项。",
+    "body_text": "大家好：\n\n下周产品评审材料已更新。请各负责人在周三上午前补充负责模块的风险项，并在会议前阅读第 3 至第 5 页。\n\n王敏",
+    "attachments": [
+      {"file_name": "product-review-v2.pptx", "content_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation", "size_bytes": 1048576}
+    ]
+  },
+  {
+    "provider_message_id": "mock-mail-newsletter-003",
+    "provider_thread_id": "mock-thread-newsletter-003",
+    "sender_name": "Aegis 云服务",
+    "sender_email": "newsletter@aegis-cloud.example.com",
+    "recipients": ["jason@example.com"],
+    "subject": "十月产品更新",
+    "received_at": "2026-10-04T01:00:00+00:00",
+    "source_version": "mock-v1",
+    "list_preview": "本月新增了权限模板和审计报表能力。",
+    "body_text": "您好：\n\n十月产品更新已发布，包含权限模板、审计报表和连接器稳定性改进。此邮件仅供了解，无需回复。\n\nAegis 云服务团队",
+    "attachments": []
+  }
+]

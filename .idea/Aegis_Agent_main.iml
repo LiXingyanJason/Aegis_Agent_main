@@ -6,6 +6,8 @@
       <sourceFolder url="file://$MODULE_DIR$/Calendar_mcp_server/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/aegis_agent_worker" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/aegis_agent_worker/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Email_mcp_server" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Email_mcp_server/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/参考文档" />
     </content>
     <orderEntry type="jdk" jdkName="D:\anaconda\envs\Aegis" jdkType="Python SDK" />
