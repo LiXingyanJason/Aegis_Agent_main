@@ -130,7 +130,7 @@ onMounted(loadTodos)
       <router-link class="nav" :to="{ name: 'mail-management' }">✉ 邮件管理</router-link>
       <router-link class="nav active" :to="{ name: 'todo-plans' }">☷ 待办计划</router-link>
       <router-link class="nav" :to="{ name: 'confirmations' }">✓ 操作确认</router-link>
-      <span class="nav disabled">◇ 长期记忆（待接入）</span>
+      <router-link class="nav" :to="{ name: 'memories' }">◇ 长期记忆</router-link>
       <span class="nav disabled">◫ 连接与审计（待接入）</span>
 
       <div class="identity">

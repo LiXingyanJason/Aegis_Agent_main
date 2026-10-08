@@ -111,6 +111,10 @@ D:\anaconda\envs\Aegis\python.exe -m alembic revision -m "add calendar draft app
 | `POST` | `/mail/{email_id}/todo-drafts` | 将已完成摘要中的待办候选复制为站内待办草稿；不调用 LLM |
 | `GET` | `/todos` | 列出当前用户的站内待办计划；默认隐藏丢弃项 |
 | `GET` | `/todos/{todo_id}` | 读取一项待办及其邮件来源摘要 |
+| `GET` / `POST` | `/memories` | 搜索或手动新增当前用户的长期记忆 |
+| `GET` / `PATCH` | `/memories/{memory_id}` | 查看或编辑一条长期记忆 |
+| `POST` | `/memories/confirm` | 从当前用户拥有的任务明确确认并保存记忆 |
+| `POST` | `/memories/{memory_id}/deletion-requests`、`/delete` | 发起并确认软删除长期记忆 |
 | `PATCH` | `/todos/{todo_id}` | 编辑待办、标记完成或丢弃；不会创建外部日程 |
 
 当前开发版本尚未挂载 `/api/v1` 前缀。查询其他用户的会话不会暴露其存在性，统一返回 `404`。发送消息时，前端必须提交 `client_message_id`；同一会话内重复提交相同标识会复用原消息和任务，而不会重复创建任务。

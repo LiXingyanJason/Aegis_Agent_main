@@ -10,6 +10,7 @@ from app.controller.approval_controller import router as approval_router
 from app.controller.run_controller import router as run_router
 from app.controller.mail_controller import router as mail_router
 from app.controller.todo_controller import router as todo_router
+from app.controller.memory_controller import router as memory_router
 from app.config.database import Database
 from app.config.redis import create_redis_client
 from app.config.settings import get_settings
@@ -53,6 +54,7 @@ app.include_router(approval_router)
 app.include_router(run_router)
 app.include_router(mail_router)
 app.include_router(todo_router)
+app.include_router(memory_router)
 
 
 @app.get("/health", tags=["system"])

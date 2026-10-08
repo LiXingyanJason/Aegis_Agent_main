@@ -11,6 +11,7 @@ const router = createRouter({
     { path: '/mail', name: 'mail-management', component: () => import('../views/MailManagementView.vue') },
     { path: '/todos', name: 'todo-plans', component: () => import('../views/TodoPlanView.vue') },
     { path: '/confirmations', name: 'confirmations', component: () => import('../views/ConfirmationView.vue') },
+    { path: '/memory', name: 'memories', component: () => import('../views/MemoryView.vue') },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('../views/NotFoundView.vue'), meta: { public: true } },
   ],
 })

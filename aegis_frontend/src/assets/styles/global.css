@@ -157,6 +157,12 @@ h1, h2, h3, p { margin-top: 0; }
 .todo-item-actions { display: flex; flex: none; gap: 8px; }.todo-empty { display: grid; min-height: 180px; place-content: center; gap: 8px; color: #667085; text-align: center; }.todo-empty b { color: #344054; }
 .todo-source { margin: 0 0 16px; color: #667085; font-size: 13px; line-height: 1.45; }
 
+/* 长期记忆页：当前只提供与原型一致的本地演示交互，不请求记忆接口。 */
+.memory-content { min-width: 0; min-height: 0; flex: 1; }
+.memory-card { display: flex; min-height: 0; flex: 1; flex-direction: column; overflow: hidden; }
+.memory-toolbar { align-items: center; }.memory-search { display: flex; width: min(620px, 100%); gap: 12px; align-items: center; }.memory-search .el-input { flex: 1; }
+.memory-table-wrap { min-height: 0; flex: 1; overflow: auto; }.memory-table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px; }.memory-table th { padding: 12px 15px; background: #f7f9fc; color: #526176; font-size: 12px; text-align: left; }.memory-table td { padding: 14px 15px; border-top: 1px solid #dfe5ee; vertical-align: top; line-height: 1.5; }.memory-table .title { margin-bottom: 3px; font-weight: 750; }.memory-table .detail { color: #667085; font-size: 12px; }.memory-actions { white-space: nowrap; }.memory-empty { color: #667085; text-align: center; }.memory-static-note { flex: none; margin: 12px 2px 0; color: #667085; font-size: 12px; }.memory-form-help { margin: 7px 0 0; color: #667085; font-size: 12px; line-height: 1.5; }
+
 @media (max-width: 800px) {
   .confirmation-content { height: auto; overflow: visible; }
   .approval-card { display: block; flex: none; overflow: visible; }
@@ -170,6 +176,9 @@ h1, h2, h3, p { margin-top: 0; }
   .todo-content, .todo-card, .todo-card-body { min-height: auto; flex: none; overflow: visible; }
   .todo-list { max-height: 560px; }
   .todo-item { flex-direction: column; gap: 12px; }
+  .memory-content, .memory-card { min-height: auto; flex: none; overflow: visible; }
+  .memory-table-wrap { max-height: 560px; }
+  .memory-toolbar, .memory-search { align-items: stretch; flex-direction: column; }
 }
 
 @media (max-width: 600px) {
