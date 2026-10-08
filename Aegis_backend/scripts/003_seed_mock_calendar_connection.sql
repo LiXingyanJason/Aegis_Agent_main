@@ -15,7 +15,7 @@ SELECT
   'google_calendar',
   'mock-jason-calendar',
   'mock://calendar/jason',
-  '["calendar.read"]'::jsonb,
+  '["calendar.read", "calendar.write"]'::jsonb,
   'active',
   now()
 FROM users AS u

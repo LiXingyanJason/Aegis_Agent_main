@@ -6,15 +6,15 @@ from uuid import UUID
 
 import pytest
 from pydantic import SecretStr
-from aegis_agent_worker.agent.specialists.scheduler_agent import SchedulerAgent
+from aegis_agent_worker.agent.specialists.calendar_agent import CalendarAgent
 from aegis_agent_worker.tool.calendar import mcp_client as client_module
 from aegis_agent_worker.tool.calendar.mcp_client import CalendarMCPClient
 from aegis_agent_worker.tool.contracts import ToolContext
 
 
-def test_scheduler_agent_selects_free_time_for_meeting_request() -> None:
+def test_calendar_agent_selects_free_time_for_meeting_request() -> None:
     """测试日程专职 Agent 将会议可用时间请求选择为只读空闲时间工具。"""
-    invocation = SchedulerAgent().select_read_tool("明天和 wangmin@example.com 约半小时会议，看看可用时间")
+    invocation = CalendarAgent().plan_read("明天和 wangmin@example.com 约半小时会议，看看可用时间")
 
     assert invocation is not None
     assert invocation.tool_name == "calendar.find_free_time"
@@ -23,9 +23,9 @@ def test_scheduler_agent_selects_free_time_for_meeting_request() -> None:
     assert invocation.arguments["timezone"] == "Asia/Shanghai"
 
 
-def test_scheduler_agent_selects_event_list_for_calendar_request() -> None:
+def test_calendar_agent_selects_event_list_for_calendar_request() -> None:
     """测试普通日程查看请求选择日程列表工具，而非空闲时间工具。"""
-    invocation = SchedulerAgent().select_read_tool("查看我明天的日程")
+    invocation = CalendarAgent().plan_read("查看我明天的日程")
 
     assert invocation is not None
     assert invocation.tool_name == "calendar.list_events"

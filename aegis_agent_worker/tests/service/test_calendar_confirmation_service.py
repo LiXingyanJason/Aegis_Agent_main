@@ -1,6 +1,6 @@
 """会议草稿准备阶段的纯函数测试。"""
 
-from aegis_agent_worker.service.calendar_confirmation_service import _first_free_slot
+from aegis_agent_worker.service.calendar.calendar_confirmation_service import _first_free_slot
 
 
 def test_first_free_slot_only_reads_trusted_tool_summary() -> None:

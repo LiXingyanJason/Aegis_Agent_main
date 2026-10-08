@@ -1,4 +1,4 @@
-"""日历连接与工具调用审计记录的数据访问。"""
+"""外部连接与工具调用审计记录的数据访问。"""
 
 import json
 from dataclasses import dataclass
@@ -10,32 +10,56 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @dataclass(frozen=True, slots=True)
-class CalendarConnection:
-    """当前用户可用于日历只读工具的最小连接信息。"""
+class ProviderConnection:
+    """当前用户可用于某项外部工具的最小有效连接信息。"""
 
     id: UUID
     provider: str
 
 
-class CalendarConnectionRepository:
-    """只查询当前用户有效的 Google 或 Outlook 日历连接。"""
+class ProviderConnectionRepository:
+    """按工具声明查询当前用户有效的外部服务连接。"""
 
-    async def find_active_calendar_connection(
-        self, session: AsyncSession, *, tenant_id: UUID, user_id: UUID
-    ) -> CalendarConnection | None:
-        """返回一个有效日历连接；凭据仍只由连接凭据服务或 MCP Server 使用。"""
+    async def find_active_connection(
+        self,
+        session: AsyncSession,
+        *,
+        tenant_id: UUID,
+        user_id: UUID,
+        providers: tuple[str, ...],
+        required_scope: str | None,
+        required_connection_id: UUID | None = None,
+    ) -> ProviderConnection | None:
+        """返回满足提供商、scope 与可选指定连接标识的有效连接。"""
+        if not providers:
+            return None
         result = await session.execute(
             text(
                 "SELECT id, provider FROM provider_connections "
                 "WHERE tenant_id = :tenant_id AND user_id = :user_id "
-                "  AND provider IN ('google_calendar', 'outlook_calendar') "
+                "  AND provider = ANY(CAST(:providers AS varchar[])) "
                 "  AND status = 'active' "
+                "  AND (expires_at IS NULL OR expires_at > now()) "
+                "  AND (:connection_id IS NULL OR id = :connection_id) "
+                "  AND (CAST(:required_scope AS varchar) IS NULL "
+                "       OR scopes @> CAST(:scope_json AS jsonb)) "
                 "ORDER BY last_verified_at DESC NULLS LAST, created_at DESC LIMIT 1"
             ),
-            {"tenant_id": tenant_id, "user_id": user_id},
+            {
+                "tenant_id": tenant_id,
+                "user_id": user_id,
+                "providers": list(providers),
+                "connection_id": required_connection_id,
+                "required_scope": required_scope,
+                "scope_json": json.dumps([required_scope]) if required_scope else None,
+            },
         )
         row = result.mappings().first()
-        return CalendarConnection(id=row["id"], provider=row["provider"]) if row else None
+        return ProviderConnection(id=row["id"], provider=row["provider"]) if row else None
+
+
+# 兼容旧的导入名称；后续所有新工具均使用 ProviderConnectionRepository。
+CalendarConnectionRepository = ProviderConnectionRepository
 
 
 class ToolCallRepository:

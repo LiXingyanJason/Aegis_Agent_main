@@ -2,7 +2,7 @@
 
 import pytest
 
-from aegis_agent_worker.service.mail_task_service import MailTaskError, _parse_extraction, _parse_reply
+from aegis_agent_worker.service.mail.mail_task_service import MailTaskError, _parse_extraction, _parse_reply
 
 
 def test_parse_extraction_keeps_candidates_and_todos() -> None:

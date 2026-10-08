@@ -8,7 +8,10 @@ from time import monotonic
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
 from aegis_agent_worker.agent.orchestrator import AgentOrchestrator
-from aegis_agent_worker.agent.specialists.scheduler_agent import SchedulerAgent
+from aegis_agent_worker.agent.specialists.mail_agent import MailAgent
+from aegis_agent_worker.agent.specialists.calendar_agent import CalendarAgent
+from aegis_agent_worker.agent.workflows.calendar.factory import CalendarWorkflowFactory
+from aegis_agent_worker.agent.workflows.mail.factory import MailWorkflowFactory
 from aegis_agent_worker.config.database import Database
 from aegis_agent_worker.config.redis import create_redis_client
 from aegis_agent_worker.config.settings import get_settings
@@ -18,10 +21,13 @@ from aegis_agent_worker.observability.structured_logging import configure_struct
 from aegis_agent_worker.observability.telemetry import configure_telemetry, get_tracer, instrument_dependencies
 from aegis_agent_worker.observability.trace_context import deserialize_run_message
 from aegis_agent_worker.tool.bootstrap import create_default_tool_gateway
-from aegis_agent_worker.tool.email.mcp_client import EmailMCPClient
 from aegis_agent_worker.repository.run_repository import AgentRunRepository
-from aegis_agent_worker.service.mail_task_service import MailTaskService
-from aegis_agent_worker.service.mail_send_service import MailSendService
+from aegis_agent_worker.repository.tool_repository import ToolCallRepository
+from aegis_agent_worker.service.calendar.calendar_confirmation_service import CalendarConfirmationService
+from aegis_agent_worker.service.mail.mail_send_service import MailSendService
+from aegis_agent_worker.service.mail.mail_task_service import MailTaskService
+from aegis_agent_worker.service.memory.memory_context_service import MemoryContextService
+from aegis_agent_worker.service.tool.tool_execution_service import ToolExecutionService
 
 logger = logging.getLogger(__name__)
 
@@ -41,10 +47,36 @@ async def run_worker() -> None:
             llm_client = OpenAICompatibleClient(settings)
             events = RunEventPublisher(redis)
             runs = AgentRunRepository()
-            mail_tasks = MailTaskService(database, runs, llm_client, EmailMCPClient(settings), events)
-            email_client = EmailMCPClient(settings)
-            mail_send = MailSendService(database, runs, email_client, events)
-            orchestrator = AgentOrchestrator(database, llm_client, runs=runs, events=events, tools=create_default_tool_gateway(settings), scheduler_agent=SchedulerAgent(settings.app_timezone), checkpointer=checkpointer, mail_tasks=mail_tasks, mail_send=mail_send)
+            memory_context = MemoryContextService(database)
+            tools = create_default_tool_gateway(settings)
+            tool_calls = ToolCallRepository()
+            tool_execution = ToolExecutionService(database, runs, tools, tool_calls, events)
+            calendar_confirmation = CalendarConfirmationService(
+                database, runs, tool_execution, events, tools, tool_calls
+            )
+            calendar_workflows = CalendarWorkflowFactory(
+                calendar_agent=CalendarAgent(settings.app_timezone),
+                tool_execution=tool_execution,
+                confirmation_service=calendar_confirmation,
+            )
+            mail_tasks = MailTaskService(database, runs, tools, events)
+            mail_send = MailSendService(database, runs, tools, events)
+            mail_workflows = MailWorkflowFactory(
+                mail_tasks=mail_tasks,
+                mail_send=mail_send,
+                mail_agent=MailAgent(llm_client),
+                memory_context=memory_context,
+            )
+            orchestrator = AgentOrchestrator(
+                database,
+                llm_client,
+                runs=runs,
+                events=events,
+                workflow_factories=(calendar_workflows, mail_workflows),
+                checkpointer=checkpointer,
+                mail_tasks=mail_tasks,
+                memory_context=memory_context,
+            )
             log_event(logger, logging.INFO, "agent_worker_started", queue_name=settings.agent_queue_name)
             while True:
                 item = await redis.blpop(settings.agent_queue_name, timeout=settings.agent_worker_poll_timeout_seconds)

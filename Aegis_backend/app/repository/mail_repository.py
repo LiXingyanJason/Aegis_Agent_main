@@ -105,8 +105,8 @@ class MailRepository:
         run_result = await session.execute(
             text(
                 "INSERT INTO agent_runs (tenant_id, user_id, run_type, status, request_id, trace_id, intent, current_stage) "
-                "VALUES (:tenant_id, :user_id, 'mail_send', 'waiting_confirmation', :request_id, :trace_id, "
-                "'mail_send', '等待发送确认') RETURNING id"
+                "VALUES (:tenant_id, :user_id, 'mail_send', 'queued', :request_id, :trace_id, "
+                "'mail_send', '准备发送确认') RETURNING id"
             ),
             {"tenant_id": tenant_id, "user_id": user_id, "request_id": uuid4().hex,
              "trace_id": get_current_trace_id(),},

@@ -1,15 +1,24 @@
-"""日程专职 Agent：以确定性规则选择一期只读日历工具。"""
+"""日历专职 Agent：以确定性规则选择一期日历工具。"""
 
 import re
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from aegis_agent_worker.tool.contracts import ToolInvocation
 
 
-class SchedulerAgent:
-    """根据最新用户消息选择受限的只读日历工具，不允许模型任意调用工具。"""
+@dataclass(frozen=True, slots=True)
+class CalendarMeetingPlan:
+    """日历专家为会议确认图生成的受控计划，不包含任何外部写入结果。"""
+
+    title: str
+    attendees: list[str]
+    availability_invocation: ToolInvocation
+
+
+class CalendarAgent:
+    """只负责日历任务规划，不访问数据库、不调用 MCP，也不持久化业务结果。"""
 
     _free_time_keywords = ("空闲", "可用时间", "方便", "找时间", "约", "会议", "安排")
     _calendar_keywords = ("日程", "日历", "行程", "安排", "会议", "空闲", "可用时间")
@@ -22,8 +31,8 @@ class SchedulerAgent:
             # 配置不正确时仍使用中国项目本地开发的默认时区，避免相对日期悄悄退回 UTC。
             self._timezone = ZoneInfo("Asia/Shanghai")
 
-    def select_read_tool(self, user_content: str) -> ToolInvocation | None:
-        """为明确日历意图返回结构化调用；无匹配时返回 None。"""
+    def plan_read(self, user_content: str) -> ToolInvocation | None:
+        """为明确日历读取请求生成白名单 ToolInvocation；无匹配时返回 None。"""
         normalized = user_content.strip()
         if not normalized or not any(keyword in normalized for keyword in self._calendar_keywords):
             return None
@@ -44,15 +53,13 @@ class SchedulerAgent:
                     "participants": re.findall(r"[\w.+-]+@[\w.-]+", normalized)[:10],
                 },
             )
-        return ToolInvocation(
-            tool_name="calendar.list_events",
-            arguments=time_arguments,
-        )
+        return ToolInvocation(tool_name="calendar.list_events", arguments=time_arguments)
 
-    def select_meeting_availability_tool(self, user_content: str) -> ToolInvocation:
-        """为会议安排固定选择空闲时间查询，禁止在确认前调用写工具。"""
+    def plan_meeting(self, user_content: str) -> CalendarMeetingPlan:
+        """为会议确认生成标题、参会人与只读可用时间查询计划，禁止产生写入调用。"""
         start_at, end_at, requested_date = _resolve_time_range(user_content, self._timezone)
-        return ToolInvocation(
+        attendees = re.findall(r"[\w.+-]+@[\w.-]+", user_content)[:10]
+        invocation = ToolInvocation(
             tool_name="calendar.find_free_time",
             arguments={
                 "start_at": start_at,
@@ -60,12 +67,17 @@ class SchedulerAgent:
                 "requested_date": requested_date,
                 "timezone": self._timezone.key,
                 "duration_minutes": _resolve_duration(user_content),
-                "participants": re.findall(r"[\w.+-]+@[\w.-]+", user_content)[:10],
+                "participants": attendees,
             },
+        )
+        return CalendarMeetingPlan(
+            title=self._meeting_title(user_content),
+            attendees=attendees,
+            availability_invocation=invocation,
         )
 
     @staticmethod
-    def meeting_title(user_content: str) -> str:
+    def _meeting_title(user_content: str) -> str:
         """一期使用安全默认标题，后续由受控 LLM/表单补充会议主题。"""
         matched = re.search(r"(?:安排|创建|约)(.{1,30}?)(?:会议|开会)", user_content)
         return matched.group(1).strip() + "会议" if matched and matched.group(1).strip() else "待确认会议"

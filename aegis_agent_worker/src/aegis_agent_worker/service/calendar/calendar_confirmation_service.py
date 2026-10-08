@@ -13,7 +13,7 @@ from aegis_agent_worker.config.database import Database, TenantContext, tenant_t
 from aegis_agent_worker.event.run_event import RunEventPublisher
 from aegis_agent_worker.repository.run_repository import AgentRunRepository, ClaimedRun
 from aegis_agent_worker.repository.tool_repository import ToolCallRepository
-from aegis_agent_worker.service.tool_execution_service import ToolExecutionService
+from aegis_agent_worker.service.tool.tool_execution_service import ToolExecutionService
 from aegis_agent_worker.tool.contracts import ToolError, ToolInvocation
 from aegis_agent_worker.tool.gateway import ToolGateway
 
@@ -248,7 +248,9 @@ async def _find_calendar_connection(session, tenant_id: UUID, user_id: UUID) -> 
         text(
             "SELECT id FROM provider_connections WHERE tenant_id = :tenant_id "
             "AND user_id = :user_id AND provider IN ('google_calendar', 'outlook_calendar') "
-            "AND status = 'active' ORDER BY last_verified_at DESC NULLS LAST, created_at DESC LIMIT 1"
+            "AND status = 'active' AND (expires_at IS NULL OR expires_at > now()) "
+            "AND scopes @> '[\"calendar.write\"]'::jsonb "
+            "ORDER BY last_verified_at DESC NULLS LAST, created_at DESC LIMIT 1"
         ),
         {"tenant_id": tenant_id, "user_id": user_id},
     )

@@ -7,9 +7,12 @@ from uuid import UUID
 import pytest
 
 from aegis_agent_worker.agent.orchestrator import AgentOrchestrator
+from aegis_agent_worker.agent.specialists.calendar_agent import CalendarAgent
+from aegis_agent_worker.agent.workflows.calendar.factory import CalendarWorkflowFactory
 from aegis_agent_worker.llm.client import LLMError, LLMMessage
 from aegis_agent_worker.repository.run_repository import ClaimedRun
 from aegis_agent_worker.tool.contracts import ToolContext, ToolResult
+from aegis_agent_worker.service.tool.tool_execution_service import ToolExecutionService
 
 
 class _FakeSession:
@@ -145,6 +148,16 @@ class _FakeToolCallRepository:
         """模拟失败保存工具响应。"""
 
 
+def _calendar_factory(database, repository, gateway=None, tool_calls=None):
+    """为编排测试显式组装日历领域 Factory，根图不再自行创建领域依赖。"""
+    tool_execution = (
+        ToolExecutionService(database, repository, gateway, tool_calls)
+        if gateway is not None and tool_calls is not None
+        else None
+    )
+    return CalendarWorkflowFactory(CalendarAgent(), tool_execution, None)
+
+
 @pytest.mark.asyncio
 async def test_orchestrator_claims_run_calls_llm_and_persists_reply() -> None:
     """测试 queued run 可完整经过领取、上下文构建、模型调用和回复保存。"""
@@ -156,7 +169,13 @@ async def test_orchestrator_claims_run_calls_llm_and_persists_reply() -> None:
     )
     repository = _FakeRunRepository(run)
     llm_client = _FakeLLMClient()
-    orchestrator = AgentOrchestrator(_FakeDatabase(), llm_client, repository)
+    database = _FakeDatabase()
+    orchestrator = AgentOrchestrator(
+        database,
+        llm_client,
+        repository,
+        workflow_factories=(_calendar_factory(database, repository),),
+    )
 
     await orchestrator.execute(run.id)
 
@@ -185,8 +204,9 @@ async def test_orchestrator_routes_calendar_request_calls_tool_and_injects_resul
         _FakeDatabase(),
         llm_client,
         repository,
-        tools=gateway,
-        tool_calls=_FakeToolCallRepository(),
+        workflow_factories=(
+            _calendar_factory(_FakeDatabase(), repository, gateway, _FakeToolCallRepository()),
+        ),
     )
 
     await orchestrator.execute(run.id)
@@ -205,10 +225,12 @@ async def test_orchestrator_marks_graph_llm_step_failed_when_model_fails() -> No
         conversation_id=UUID("8bfc8088-26d5-4c19-8876-7caa364b59c0"),
     )
     repository = _FakeRunRepository(run)
+    database = _FakeDatabase()
     orchestrator = AgentOrchestrator(
-        _FakeDatabase(),
+        database,
         _FakeLLMClient(LLMError("模型服务调用失败")),
         repository,
+        workflow_factories=(_calendar_factory(database, repository),),
     )
 
     result = await orchestrator.execute(run.id)

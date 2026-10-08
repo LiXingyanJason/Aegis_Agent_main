@@ -69,6 +69,11 @@ async def decide_approval(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="待确认操作不存在或无权访问")
     if result.outcome == "expired":
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="待确认操作已过期")
+    if result.outcome == "workflow_not_ready":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="确认流程正在初始化，请等待任务进度显示“等待发送确认”后重试",
+        )
     if result.outcome == "not_pending":
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="待确认操作已处理，不能重复确认")
     assert result.approval_item_id is not None and result.run_id is not None and result.approval_status is not None

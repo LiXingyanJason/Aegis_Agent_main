@@ -10,8 +10,8 @@ from aegis_agent_worker.config.database import Database, TenantContext, tenant_t
 from aegis_agent_worker.event.run_event import RunEventPublisher
 from aegis_agent_worker.repository.run_repository import AgentRunRepository, ClaimedRun
 from aegis_agent_worker.repository.tool_repository import ToolCallRepository
-from aegis_agent_worker.tool.contracts import ToolContext, ToolError
-from aegis_agent_worker.tool.email.mcp_client import EmailMCPClient
+from aegis_agent_worker.tool.contracts import ToolError, ToolInvocation
+from aegis_agent_worker.tool.gateway import ToolGateway
 
 
 class MailSendError(RuntimeError):
@@ -25,15 +25,47 @@ class MailSendService:
         self,
         database: Database,
         runs: AgentRunRepository,
-        email_client: EmailMCPClient,
+        tools: ToolGateway,
         events: RunEventPublisher | None = None,
         tool_calls: ToolCallRepository | None = None,
     ) -> None:
         self._database = database
         self._runs = runs
-        self._email_client = email_client
+        self._tools = tools
         self._events = events
         self._tool_calls = tool_calls or ToolCallRepository()
+
+    async def prepare_confirmation_wait(self, run: ClaimedRun) -> dict[str, str]:
+        """核验主后端已创建的发送确认项，并将任务置为可由图暂停的状态。"""
+        context = TenantContext(tenant_id=run.tenant_id, user_id=run.user_id)
+        async with self._database.session() as session:
+            async with tenant_transaction(session, context):
+                result = await session.execute(
+                    text(
+                        "SELECT ai.id AS approval_item_id, ai.resource_id AS draft_id "
+                        "FROM approval_items ai JOIN mail_drafts d ON d.id = ai.resource_id "
+                        "WHERE ai.run_id = :run_id AND ai.tenant_id = :tenant_id "
+                        "AND ai.user_id = :user_id AND ai.action = 'mail.messages.send' "
+                        "AND ai.status = 'pending' AND d.status = 'pending_approval' "
+                        "ORDER BY ai.created_at DESC LIMIT 1 FOR UPDATE OF ai, d"
+                    ),
+                    {"run_id": run.id, "tenant_id": run.tenant_id, "user_id": run.user_id},
+                )
+                item = result.mappings().first()
+                if item is None:
+                    raise MailSendError("邮件发送确认项不存在、已失效或已被处理")
+                await session.execute(
+                    text(
+                        "UPDATE agent_runs SET status = 'waiting_confirmation', "
+                        "current_stage = '等待发送确认', updated_at = now() "
+                        "WHERE id = :run_id AND tenant_id = :tenant_id AND status = 'running'"
+                    ),
+                    {"run_id": run.id, "tenant_id": run.tenant_id},
+                )
+        return {
+            "approval_item_id": str(item["approval_item_id"]),
+            "draft_id": str(item["draft_id"]),
+        }
 
     async def execute(self, run: ClaimedRun, decision: str) -> None:
         """拒绝时恢复草稿，批准时发送；二者均结束当前独立 mail_send 任务。"""
@@ -74,11 +106,19 @@ class MailSendService:
                     self._events.publish_after_commit(event)
 
         try:
-            receipt = await self._email_client.send_message(
-                ToolContext(run.tenant_id, run.user_id, run.id, payload["connection_id"]),
-                to=payload["to"], cc=payload["cc"], subject=payload["subject"], body=payload["body"],
-                idempotency_key=request_payload["idempotency_key"],
-            )
+            # 发送工具只能在批准恢复分支中调用；Gateway 仍会复核连接归属与 mail.send scope。
+            async with self._database.session() as session:
+                async with tenant_transaction(session, context):
+                    prepared = await self._tools.prepare(
+                        session,
+                        tenant_id=run.tenant_id,
+                        user_id=run.user_id,
+                        run_id=run.id,
+                        invocation=ToolInvocation("mail.messages.send", request_payload),
+                        allow_confirmed_write=True,
+                        required_connection_id=payload["connection_id"],
+                    )
+            receipt = (await self._tools.invoke(prepared)).response_payload
         except ToolError as error:
             await self._mark_failed(run, payload, step_id, tool_call_id, execution_id, error)
             raise MailSendError(error.message) from error

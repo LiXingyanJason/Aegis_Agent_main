@@ -37,9 +37,11 @@ class ApprovalRepository:
         """仅允许拥有者对尚未过期的 pending 项目作出一次决定。"""
         result = await session.execute(
             text(
-                "SELECT id, run_id, status, expires_at < now() AS expired "
-                "FROM approval_items WHERE id = :approval_item_id "
-                "AND tenant_id = :tenant_id AND user_id = :user_id FOR UPDATE"
+                "SELECT ai.id, ai.run_id, ai.status, ai.expires_at < now() AS expired, "
+                "ar.run_type, ar.status AS run_status "
+                "FROM approval_items ai JOIN agent_runs ar ON ar.id = ai.run_id "
+                "WHERE ai.id = :approval_item_id AND ai.tenant_id = :tenant_id "
+                "AND ai.user_id = :user_id FOR UPDATE OF ai, ar"
             ),
             {"approval_item_id": approval_item_id, "tenant_id": tenant_id, "user_id": user_id},
         )
@@ -48,6 +50,15 @@ class ApprovalRepository:
             return ApprovalDecisionResult(outcome="not_found")
         if item["status"] != "pending":
             return ApprovalDecisionResult(outcome="not_pending", approval_item_id=item["id"], run_id=item["run_id"], approval_status=item["status"])
+        # 邮件发送确认项由 Worker 先运行到 LangGraph interrupt 并保存 Checkpoint，
+        # 在此之前接受决定会导致 resume 找不到对应图状态。
+        if item["run_type"] == "mail_send" and item["run_status"] != "waiting_confirmation":
+            return ApprovalDecisionResult(
+                outcome="workflow_not_ready",
+                approval_item_id=item["id"],
+                run_id=item["run_id"],
+                approval_status=item["status"],
+            )
         if item["expired"]:
             await session.execute(
                 text("UPDATE approval_items SET status = 'expired', updated_at = now() WHERE id = :id"),

@@ -171,6 +171,7 @@ async def request_send_confirmation(
     current_user: CurrentUser = Depends(get_current_user),
     session: AsyncSession = Depends(get_tenant_session),
     mail_service: MailService = Depends(get_mail_service_from_request),
+    dispatcher: RunDispatchService = Depends(get_run_dispatcher_from_request),
 ) -> dict[str, MailSendConfirmationVO]:
     """创建邮件发送确认项；只有批准后 Worker 才会调用邮件发送工具。"""
     result = await mail_service.request_send_confirmation(session, current_user.user, draft_id)
@@ -183,6 +184,8 @@ async def request_send_confirmation(
         )
     if result == "not_sendable":
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="当前草稿状态不允许提交发送确认")
+    # 先让邮件发送确认图运行到 interrupt(...) 并保存 Checkpoint；审批决定才会恢复图。
+    dispatcher.enqueue_after_commit(result.run_id)
     return success(MailSendConfirmationVO(
         run_id=result.run_id, approval_item_id=result.approval_item_id,
         approval_url=f"/approvals/{result.approval_item_id}",

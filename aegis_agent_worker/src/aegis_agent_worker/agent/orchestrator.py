@@ -6,21 +6,17 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from aegis_agent_worker.agent.graph.graph_runner import GraphRunner
+from aegis_agent_worker.agent.graph.graph_registry import WorkflowRegistrar
 from aegis_agent_worker.agent.graph.router import TaskGraphRouter
 from aegis_agent_worker.agent.graph.task_graph import LLMGraphError, TaskGraph, TaskGraphDependencies
-from aegis_agent_worker.agent.specialists.scheduler_agent import SchedulerAgent
 from aegis_agent_worker.config.database import Database, TenantContext
 from aegis_agent_worker.event.run_event import RunEventPublisher
 from aegis_agent_worker.llm.client import LLMError, OpenAICompatibleClient
 from aegis_agent_worker.repository.run_repository import AgentRunRepository
-from aegis_agent_worker.repository.tool_repository import ToolCallRepository
-from aegis_agent_worker.service.conversation_context_service import ConversationContextService
-from aegis_agent_worker.service.calendar_confirmation_service import CalendarConfirmationService
-from aegis_agent_worker.service.run_lifecycle_service import RunLifecycleService
-from aegis_agent_worker.service.tool_execution_service import ToolExecutionService
-from aegis_agent_worker.service.mail_task_service import MailTaskService
-from aegis_agent_worker.service.mail_send_service import MailSendService
-from aegis_agent_worker.tool.gateway import ToolGateway
+from aegis_agent_worker.service.mail.mail_task_service import MailTaskService
+from aegis_agent_worker.service.memory.memory_context_service import MemoryContextService
+from aegis_agent_worker.service.runtime.conversation_context_service import ConversationContextService
+from aegis_agent_worker.service.runtime.run_lifecycle_service import RunLifecycleService
 
 logger = logging.getLogger(__name__)
 
@@ -45,56 +41,30 @@ class AgentOrchestrator:
         llm_client: OpenAICompatibleClient, # 模型通信客户端
         runs: AgentRunRepository | None = None, # 任务相关持久化数据库仓储
         events: RunEventPublisher | None = None, # Redis 事件发布器
-        tools: ToolGateway | None = None, # 工具网关，负责查找工具、校验参数与权限、准备调用上下文、通过 MCP Client 调用外部日历服务
-        tool_calls: ToolCallRepository | None = None, # 工具调用审计仓储，负责保存 tool_calls 表记录
-        scheduler_agent: SchedulerAgent | None = None, # 日程专职 Agent
         lifecycle: RunLifecycleService | None = None, # 任务生命周期服务 记录任务事件 queued → running → completed / failed
         context_service: ConversationContextService | None = None, # 会话上下文服务。它从数据库读取当前任务对应会话的历史消息，供根图和 LLM 组织上下文。
-        tool_execution: ToolExecutionService | None = None, # 工具调用用例服务，负责把一次工具调用组织成完整业务动作 创建 run_step 创建 tool_call 审计记录校验并调用 ToolGateway保存结果或错误 写入 tool_preview / progress_updated 事件
+        workflow_factories: tuple[WorkflowRegistrar, ...] = (), # 各领域自行组装并注册子图
         graph_runner: GraphRunner | None = None, # LangGraph 根图的执行器 执行或未来恢复同一任务图
-        checkpointer=None,
+        checkpointer=None, # 检查点
         mail_tasks: MailTaskService | None = None,
-        mail_send: MailSendService | None = None,
+        memory_context: MemoryContextService | None = None,
     ) -> None:
         """组装根图及其依赖；允许测试注入服务或预构建运行器。"""
         run_repository = runs or AgentRunRepository()
         self._llm_client = llm_client
         self._mail_tasks = mail_tasks
-        self._mail_send = mail_send
         self._lifecycle = lifecycle or RunLifecycleService(database, run_repository, events)
         self._context_service = context_service or ConversationContextService(database, run_repository)
-        self._tool_execution = tool_execution
-        if self._tool_execution is None and tools is not None:
-            self._tool_execution = ToolExecutionService(
-                database,
-                run_repository,
-                tools,
-                tool_calls or ToolCallRepository(),
-                events,
-            )
-        calendar_confirmation = (
-            CalendarConfirmationService(
-                database,
-                run_repository,
-                self._tool_execution,
-                events,
-                tools,
-                tool_calls,
-            )
-            if self._tool_execution is not None
-            else None
-        )
         self._graph_runner = graph_runner or GraphRunner(
             TaskGraph(
                 TaskGraphDependencies(
                     context_service=self._context_service,
                     lifecycle=self._lifecycle,
                     llm_client=llm_client,
-                    scheduler_agent=scheduler_agent or SchedulerAgent(),
-                    tool_execution=self._tool_execution,
-                    calendar_confirmation=calendar_confirmation,
                     system_prompt=self._system_prompt,
                     router=TaskGraphRouter(),
+                    workflow_factories=workflow_factories,
+                    memory_context_service=memory_context,
                 )
             ).build(checkpointer=checkpointer)
         )
@@ -125,18 +95,6 @@ class AgentOrchestrator:
 
         step_id: UUID | None = None
         try:
-            if run.run_type in {"mail_extraction", "mail_reply_draft"}:
-                if self._mail_tasks is None:
-                    raise RuntimeError("邮件任务服务尚未配置")
-                await self._mail_tasks.execute(run)
-                return AgentExecutionResult(status="completed")
-            if run.run_type == "mail_send":
-                if self._mail_send is None:
-                    raise RuntimeError("邮件发送服务尚未配置")
-                if resume_decision is None:
-                    raise RuntimeError("邮件发送任务必须在用户确认后恢复")
-                await self._mail_send.execute(run, resume_decision)
-                return AgentExecutionResult(status="completed")
             """
                普通任务:
                 → invoke(run)
@@ -155,6 +113,9 @@ class AgentOrchestrator:
                 # 执行时框架遇到暂停点，自动帮我们用当前run_id存Checkpointer，并返回interrupt
             if state.get("__interrupt__"): # 图执行到审批暂停点时，LangGraph 返回 __interrupt__
                 return AgentExecutionResult(status="waiting_confirmation")
+            # 邮件后台子图会自行保存领域结果及 run_completed 事件，不写入对话消息。
+            if state.get("mail_workflow_completed"):
+                return AgentExecutionResult(status="completed")
             assistant_content = state.get("assistant_content")
             if not isinstance(assistant_content, str) or not assistant_content:
                 raise RuntimeError("根图未生成助手回复")

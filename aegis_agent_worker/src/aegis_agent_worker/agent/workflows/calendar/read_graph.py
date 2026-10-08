@@ -5,11 +5,11 @@ from uuid import UUID
 
 from langgraph.graph import END, START, StateGraph
 
-from aegis_agent_worker.agent.specialists.scheduler_agent import SchedulerAgent
+from aegis_agent_worker.agent.specialists.calendar_agent import CalendarAgent
 from aegis_agent_worker.agent.workflows.calendar.state import CalendarReadState
 from aegis_agent_worker.config.database import TenantContext
 from aegis_agent_worker.repository.run_repository import ClaimedRun
-from aegis_agent_worker.service.tool_execution_service import ToolExecutionService
+from aegis_agent_worker.service.tool.tool_execution_service import ToolExecutionService
 from aegis_agent_worker.tool.contracts import ToolInvocation
 
 
@@ -18,10 +18,10 @@ class CalendarReadWorkflow:
 
     def __init__(
         self,
-        scheduler_agent: SchedulerAgent,
+        calendar_agent: CalendarAgent,
         tool_execution: ToolExecutionService | None,
     ) -> None:
-        self._scheduler_agent = scheduler_agent
+        self._calendar_agent = calendar_agent
         self._tool_execution = tool_execution
 
     def build(self) -> Any:
@@ -40,7 +40,7 @@ class CalendarReadWorkflow:
 
     async def _select_calendar_tool(self, state: CalendarReadState) -> dict[str, Any]:
         """由日程专职 Agent 将用户表达转换为白名单 ToolInvocation。"""
-        invocation = self._scheduler_agent.select_read_tool(
+        invocation = self._calendar_agent.plan_read(
             state.get("latest_user_message", "")
         )
         if invocation is None:

@@ -21,7 +21,9 @@ class GraphRunner:
                 "run_id": str(run.id),
                 "tenant_id": str(run.tenant_id),
                 "user_id": str(run.user_id),
-                "conversation_id": str(run.conversation_id),
+                # 邮件后台任务没有对话，会话 ID 仅供普通对话图使用。
+                "conversation_id": str(run.conversation_id) if run.conversation_id else "",
+                "run_type": run.run_type,
             },
             self._config(run.id),
         )

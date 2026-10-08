@@ -10,8 +10,10 @@ class TaskGraphState(TypedDict, total=False):
     tenant_id: str
     user_id: str
     conversation_id: str
+    run_type: str
     history: list[dict[str, Any]]
     latest_user_message: str
+    memory_context: str
     intent: str # 意图
     workflow: str
     selected_tool_name: str
@@ -24,3 +26,5 @@ class TaskGraphState(TypedDict, total=False):
     confirmation_error: str
     llm_step_id: str
     assistant_content: str
+    mail_workflow_stage: str
+    mail_workflow_completed: bool
