@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 
-from pydantic import AnyHttpUrl
+from pydantic import AnyHttpUrl, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     default_tenant_name: str | None = None
 
     agent_queue_name: str = "aegis:agent-runs"
+
+    # 邮件列表同步由主后端直接调用；摘要和起草任务随后由独立 Agent Worker 调用。
+    email_mcp_url: AnyHttpUrl | None = None
+    email_mcp_api_key: SecretStr | None = None
+    email_mcp_timeout_seconds: float = 20.0
 
     @property
     def oidc_issuer(self) -> str:

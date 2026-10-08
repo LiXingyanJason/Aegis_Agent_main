@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     calendar_mcp_api_key: SecretStr | None = None
     calendar_mcp_timeout_seconds: float = 20.0
 
+    email_mcp_url: AnyHttpUrl | None = None
+    email_mcp_api_key: SecretStr | None = None
+    email_mcp_timeout_seconds: float = 20.0
+
     @property
     def database_async_url(self) -> str:
         """将 PostgreSQL URL 转换为 SQLAlchemy asyncpg 连接 URL。"""

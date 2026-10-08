@@ -18,6 +18,8 @@ from aegis_agent_worker.service.conversation_context_service import Conversation
 from aegis_agent_worker.service.calendar_confirmation_service import CalendarConfirmationService
 from aegis_agent_worker.service.run_lifecycle_service import RunLifecycleService
 from aegis_agent_worker.service.tool_execution_service import ToolExecutionService
+from aegis_agent_worker.service.mail_task_service import MailTaskService
+from aegis_agent_worker.service.mail_send_service import MailSendService
 from aegis_agent_worker.tool.gateway import ToolGateway
 
 logger = logging.getLogger(__name__)
@@ -51,10 +53,14 @@ class AgentOrchestrator:
         tool_execution: ToolExecutionService | None = None, # 工具调用用例服务，负责把一次工具调用组织成完整业务动作 创建 run_step 创建 tool_call 审计记录校验并调用 ToolGateway保存结果或错误 写入 tool_preview / progress_updated 事件
         graph_runner: GraphRunner | None = None, # LangGraph 根图的执行器 执行或未来恢复同一任务图
         checkpointer=None,
+        mail_tasks: MailTaskService | None = None,
+        mail_send: MailSendService | None = None,
     ) -> None:
         """组装根图及其依赖；允许测试注入服务或预构建运行器。"""
         run_repository = runs or AgentRunRepository()
         self._llm_client = llm_client
+        self._mail_tasks = mail_tasks
+        self._mail_send = mail_send
         self._lifecycle = lifecycle or RunLifecycleService(database, run_repository, events)
         self._context_service = context_service or ConversationContextService(database, run_repository)
         self._tool_execution = tool_execution
@@ -119,6 +125,18 @@ class AgentOrchestrator:
 
         step_id: UUID | None = None
         try:
+            if run.run_type in {"mail_extraction", "mail_reply_draft"}:
+                if self._mail_tasks is None:
+                    raise RuntimeError("邮件任务服务尚未配置")
+                await self._mail_tasks.execute(run)
+                return AgentExecutionResult(status="completed")
+            if run.run_type == "mail_send":
+                if self._mail_send is None:
+                    raise RuntimeError("邮件发送服务尚未配置")
+                if resume_decision is None:
+                    raise RuntimeError("邮件发送任务必须在用户确认后恢复")
+                await self._mail_send.execute(run, resume_decision)
+                return AgentExecutionResult(status="completed")
             """
                普通任务:
                 → invoke(run)
@@ -153,6 +171,8 @@ class AgentOrchestrator:
         except asyncio.CancelledError:
             raise
         except LLMGraphError as error:
+            if run.run_type in {"mail_extraction", "mail_reply_draft"} and self._mail_tasks is not None:
+                await self._mail_tasks.mark_failed(run, str(error))
             await self._lifecycle.fail_run(
                 run,
                 step_id=error.step_id,
@@ -163,6 +183,8 @@ class AgentOrchestrator:
                 status="failed", error_code="LLM_UNAVAILABLE", error_message=str(error)
             )
         except LLMError as error:
+            if run.run_type in {"mail_extraction", "mail_reply_draft"} and self._mail_tasks is not None:
+                await self._mail_tasks.mark_failed(run, str(error))
             await self._lifecycle.fail_run(
                 run,
                 step_id=step_id,
@@ -175,6 +197,8 @@ class AgentOrchestrator:
         except Exception:
             # 仅写入 Worker 本地日志以帮助开发排错；数据库和接口仍使用脱敏错误文本。
             logger.exception("Agent 执行失败：run_id=%s", run.id)
+            if run.run_type in {"mail_extraction", "mail_reply_draft"} and self._mail_tasks is not None:
+                await self._mail_tasks.mark_failed(run, "任务执行失败")
             await self._lifecycle.fail_run(
                 run,
                 step_id=step_id,

@@ -8,6 +8,8 @@ const router = createRouter({
     { path: '/login', name: 'login', component: () => import('../views/LoginView.vue'), meta: { public: true } },
     { path: '/auth/callback', name: 'auth-callback', component: () => import('../views/AuthCallbackView.vue'), meta: { public: true } },
     { path: '/tasks', name: 'tasks', component: () => import('../views/TaskConsoleView.vue') },
+    { path: '/mail', name: 'mail-management', component: () => import('../views/MailManagementView.vue') },
+    { path: '/todos', name: 'todo-plans', component: () => import('../views/TodoPlanView.vue') },
     { path: '/confirmations', name: 'confirmations', component: () => import('../views/ConfirmationView.vue') },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('../views/NotFoundView.vue'), meta: { public: true } },
   ],

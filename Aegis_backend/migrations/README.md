@@ -16,10 +16,10 @@ migrations/
 当前迁移链：
 
 ```text
-001_initial_schema → 002_msg_client_id_uq（head）
+001_initial_schema → 002_msg_client_id_uq → 003_mail_background_runs → 004_todo_plan_management（head）
 ```
 
-`002_msg_client_id_uq` 是实际 Alembic revision ID。不要使用历史 SQL 文件名 `002_fix_message_client_id_unique_constraint` 作为 `stamp` 参数。
+`002_msg_client_id_uq` 是邮件消息唯一约束修订的实际 Alembic revision ID；当前 head 为 `004_todo_plan_management`。不要使用历史 SQL 文件名 `002_fix_message_client_id_unique_constraint` 作为 `stamp` 参数。
 
 ## 使用前准备
 
@@ -60,7 +60,7 @@ D:\anaconda\envs\Aegis\python.exe -m alembic heads
 正常情况下应看到：
 
 ```text
-002_msg_client_id_uq (head)
+004_todo_plan_management (head)
 ```
 
 ### 初始化全新空数据库
@@ -85,10 +85,16 @@ D:\anaconda\envs\Aegis\python.exe -m alembic stamp 002_msg_client_id_uq
 
 `stamp` 只更新数据库的 `alembic_version` 记录，不会执行 DDL，也不会改动业务数据。
 
+随后必须执行一次升级，以创建邮件后台任务请求表、待办计划字段，并允许受确认控制的 `mail_send` 任务：
+
+```powershell
+D:\anaconda\envs\Aegis\python.exe -m alembic upgrade head
+```
+
 若此前误登记了已经不存在的 revision ID，可在确认数据库结构确实处于当前 head 后执行：
 
 ```powershell
-D:\anaconda\envs\Aegis\python.exe -m alembic stamp --purge 002_msg_client_id_uq
+D:\anaconda\envs\Aegis\python.exe -m alembic stamp --purge 005_mail_send_runs
 ```
 
 `--purge` 会清理旧的 Alembic 版本记录后重新登记；它仍不会创建或删除业务表。不要把它当作修复数据库结构的工具。

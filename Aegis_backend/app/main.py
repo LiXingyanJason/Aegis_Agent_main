@@ -8,6 +8,8 @@ from fastapi import FastAPI
 from app.controller.conversation_controller import router as conversation_router
 from app.controller.approval_controller import router as approval_router
 from app.controller.run_controller import router as run_router
+from app.controller.mail_controller import router as mail_router
+from app.controller.todo_controller import router as todo_router
 from app.config.database import Database
 from app.config.redis import create_redis_client
 from app.config.settings import get_settings
@@ -15,6 +17,8 @@ from app.observability.structured_logging import configure_structured_logging
 from app.observability.telemetry import configure_telemetry, instrument_dependencies, instrument_fastapi
 from app.security.auth_security import OIDCAuthenticator
 from app.service.identity_service import IdentityService
+from app.integration.email_mcp_client import EmailMCPClient
+from app.service.mail_service import MailService
 
 
 
@@ -34,6 +38,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.redis = redis
     app.state.oidc_authenticator = OIDCAuthenticator(settings)
     app.state.identity_service = IdentityService(settings)
+    app.state.mail_service = MailService(EmailMCPClient(settings))
     try:
         yield
     finally:
@@ -46,6 +51,8 @@ instrument_fastapi(app)
 app.include_router(conversation_router)
 app.include_router(approval_router)
 app.include_router(run_router)
+app.include_router(mail_router)
+app.include_router(todo_router)
 
 
 @app.get("/health", tags=["system"])

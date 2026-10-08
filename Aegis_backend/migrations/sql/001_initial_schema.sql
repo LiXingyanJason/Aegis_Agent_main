@@ -98,7 +98,8 @@ CREATE TABLE agent_runs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL REFERENCES tenants(id),
   user_id uuid NOT NULL REFERENCES users(id),
-  conversation_id uuid NOT NULL REFERENCES conversations(id),
+  -- 邮件摘要/回复起草等后台任务不属于一个对话；普通会话任务仍写入此字段。
+  conversation_id uuid REFERENCES conversations(id),
   input_message_id uuid REFERENCES conversation_messages(id),
   parent_run_id uuid REFERENCES agent_runs(id),
   run_type varchar(32) NOT NULL CHECK (run_type IN ('conversation','mail_extraction','mail_reply_draft')),

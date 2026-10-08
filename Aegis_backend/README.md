@@ -51,11 +51,13 @@ OTEL_CONSOLE_EXPORTER=true
 
 ## 数据库迁移（Alembic）
 
-数据库结构从当前版本起由 Alembic 管理。历史初始化脚本已固化为两个迁移版本：
+数据库结构从当前版本起由 Alembic 管理。历史初始化脚本及其后续结构演进已固化为以下迁移版本：
 
 ```text
 001_initial_schema
 002_msg_client_id_uq
+003_mail_background_runs
+004_todo_plan_management
 ```
 
 新建的空数据库使用以下命令初始化：
@@ -97,12 +99,40 @@ D:\anaconda\envs\Aegis\python.exe -m alembic revision -m "add calendar draft app
 | `POST` | `/conversations/{conversation_id}/messages` | 保存用户任务消息，并创建初始状态为 `queued` 的任务运行 |
 | `GET` | `/runs/{run_id}` | 查询当前用户任务的状态、模型信息、进度步骤、结果摘要或脱敏错误 |
 | `GET` | `/runs/{run_id}/events` | 以 SSE 补发并实时推送当前任务的进度、回复、完成或失败事件 |
+| `GET` | `/mail/messages` | 同步当前用户已授权邮箱的邮件元数据快照；不返回邮件正文 |
+| `GET` | `/mail/messages/{email_id}` | 按需读取当前用户单封邮件的正文与附件元数据；不触发 LLM 或写操作 |
+| `GET` | `/mail/drafts` | 列出当前用户保存的站内邮件草稿；列表不返回正文 |
+| `GET` | `/mail/drafts/{draft_id}` | 查看一封站内草稿的完整正文和收件人 |
+| `PATCH` | `/mail/drafts/{draft_id}` | 修改 `draft` 状态的站内草稿；不会发送邮件 |
+| `POST` | `/mail/drafts/{draft_id}/send-confirmations` | 冻结草稿并创建单项邮件发送确认；不会立即发送 |
+| `GET` | `/mail/sent-messages` | 列出当前用户的已发送邮件记录 |
+| `POST` | `/mail/{email_id}/extraction-requests` | 提交或复用邮件摘要、待办及截止时间候选提取任务 |
+| `POST` | `/mail/{email_id}/reply-draft-requests` | 提交邮件回复草稿生成任务；不会发送邮件 |
+| `POST` | `/mail/{email_id}/todo-drafts` | 将已完成摘要中的待办候选复制为站内待办草稿；不调用 LLM |
+| `GET` | `/todos` | 列出当前用户的站内待办计划；默认隐藏丢弃项 |
+| `GET` | `/todos/{todo_id}` | 读取一项待办及其邮件来源摘要 |
+| `PATCH` | `/todos/{todo_id}` | 编辑待办、标记完成或丢弃；不会创建外部日程 |
 
 当前开发版本尚未挂载 `/api/v1` 前缀。查询其他用户的会话不会暴露其存在性，统一返回 `404`。发送消息时，前端必须提交 `client_message_id`；同一会话内重复提交相同标识会复用原消息和任务，而不会重复创建任务。
 
+## 邮件列表同步（3.3 第一步）
+
+`GET /mail/messages` 仅由浏览器调用 Aegis 主后端。后端从已认证用户取得租户和用户 ID，查找状态为 `active` 且包含 `mail.read` scope 的 `gmail` 或 `outlook_mail` 连接，调用 Email MCP Server 的 `mail.messages.list`，并以“用户 + 连接 + 外部邮件 ID”更新 `email_messages` 元数据快照。邮件正文不会保存或返回给列表页面。
+
+用户点击“生成摘要”后，主后端创建 `mail_extraction` 后台任务并返回 SSE 地址；Worker 通过 `mail.messages.get` 读取正文、调用 LLM，并保存 `mail_extractions` 与待办候选。用户点击“起草回复”同样会创建 `mail_reply_draft` 后台任务；完成事件带有 `draft_id`，站内草稿会出现在 `GET /mail/drafts`，但不会调用任何邮件发送工具。草稿列表不会返回正文；完整正文仅通过 `GET /mail/drafts/{draft_id}` 返回给草稿所属用户。`PATCH /mail/drafts/{draft_id}` 只允许 `draft` 状态。用户调用 `POST /mail/drafts/{draft_id}/send-confirmations` 后，服务冻结草稿版本并生成独立 `mail_send` 确认项；批准后 Worker 才调用 `mail.messages.send`，成功时更新草稿为 `sent` 并写入 `sent_mail_messages`。
+
+本地 Mock 联调时，先启动 `Email_mcp_server`，在 `Aegis_backend/.env` 中配置：
+
+```dotenv
+EMAIL_MCP_URL=http://127.0.0.1:9002/mcp
+EMAIL_MCP_TIMEOUT_SECONDS=20
+```
+
+随后在 DataGrip 中执行一次 [004_seed_mock_email_connection.sql](scripts/004_seed_mock_email_connection.sql)，为当前 Keycloak Jason 用户创建含 `mail.read` 和 `mail.send` scope 的 Mock 连接。若未创建连接，接口返回 `409 CONNECTION_REQUIRED`；若 MCP 服务不可用，返回 `503 MAIL_TOOL_UNAVAILABLE`，不会返回虚构邮件。
+
 ## 第一版 Agent Worker 与 LLM 链路
 
-第一版已实现“文本任务 → 可控的只读日历 MCP 查询 → LLM 文本回复 → SSE 状态/结果通知”。审批、邮件和日历外部写入尚未接入。任务处理流程如下：
+第一版已实现“文本任务 → 可控的只读日历 MCP 查询 → LLM 文本回复 → SSE 状态/结果通知”，以及独立的邮件摘要、待办候选、回复草稿与经逐项确认的邮件发送任务。邮件发送当前只写入 Mock 已发送箱，不会发送真实邮件。任务处理流程如下：
 
 ```text
 POST /conversations/{conversation_id}/messages

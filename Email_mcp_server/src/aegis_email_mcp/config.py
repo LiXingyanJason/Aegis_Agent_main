@@ -17,6 +17,7 @@ class Settings:
     streamable_http_path: str
     allowed_hosts: tuple[str, ...]
     mock_data_path: Path = Path("data/mock_mailbox.json")
+    mock_sent_data_path: Path = Path("data/mock_sent_mailbox.json")
 
 
 @lru_cache
@@ -44,4 +45,7 @@ def get_settings() -> Settings:
             if host.strip()
         ),
         mock_data_path=Path(os.getenv("EMAIL_MOCK_DATA_PATH", "data/mock_mailbox.json")),
+        mock_sent_data_path=Path(
+            os.getenv("EMAIL_MOCK_SENT_DATA_PATH", "data/mock_sent_mailbox.json")
+        ),
     )

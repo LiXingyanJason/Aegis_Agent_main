@@ -307,6 +307,8 @@ onBeforeUnmount(() => stopRunTracking())
       <div class="brand"><span class="mark">⌾</span>Aegis PA</div>
       <p class="nav-label app-nav-label">工作空间</p>
       <a class="nav active" href="#task-console">◌ 任务对话</a>
+      <router-link class="nav" :to="{ name: 'mail-management' }">✉ 邮件管理</router-link>
+      <router-link class="nav" :to="{ name: 'todo-plans' }">☷ 待办计划</router-link>
       <router-link class="nav" :to="{ name: 'confirmations' }">✓ 操作确认</router-link>
       <span class="nav disabled">◇ 长期记忆（待接入）</span>
       <span class="nav disabled">◫ 连接与审计（待接入）</span>

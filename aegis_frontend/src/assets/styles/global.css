@@ -91,11 +91,85 @@ h1, h2, h3, p { margin-top: 0; }
 .approval-empty { display: grid; min-height: 180px; place-content: center; gap: 8px; color: #667085; text-align: center; }
 .approval-empty b { color: #344054; }
 
+/* 邮件管理页：收件箱、草稿与已发送分区均使用服务端真实数据。 */
+.mail-content { min-width: 0; min-height: 0; flex: 1; }
+.mail-card { display: flex; min-height: 0; flex: 1; flex-direction: column; overflow: hidden; }
+.mail-card-body { display: flex; min-height: 0; flex: 1; flex-direction: column; padding: 20px; }
+.mail-panel { display: flex; min-height: 0; flex: 1; flex-direction: column; }
+.mail-tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid #d9e1ec; }
+.mail-tab { padding: 10px 13px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #536176; font-weight: 700; }
+.mail-tab.active { border-bottom-color: #1c5ba7; color: #1c5ba7; }
+.mail-tab span { display: inline-block; padding: 1px 7px; margin-left: 4px; border-radius: 999px; background: #eff2f7; font-size: 12px; font-weight: 600; }
+.mail-tab.active span { background: #eaf3ff; }
+.mail-notice { padding: 14px 16px; margin-bottom: 20px; border: 1px solid #f4d5a4; border-radius: 10px; background: #fff4e4; color: #76470c; line-height: 1.55; }
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.section-head h2 { margin-bottom: 5px; font-size: 17px; }
+.mail-table-wrap { min-height: 0; flex: 1; overflow: auto; border: 1px solid #dfe5ee; border-radius: 10px; }
+.mail-table { width: 100%; min-width: 1040px; border-collapse: collapse; font-size: 14px; }
+.mail-table th { padding: 12px 15px; background: #f7f9fc; color: #526176; font-size: 12px; text-align: left; }
+.mail-table td { padding: 14px 15px; border-top: 1px solid #dfe5ee; vertical-align: top; line-height: 1.5; }
+.mail-table .title { margin-bottom: 3px; font-weight: 750; }
+.mail-table .detail { color: #667085; font-size: 12px; overflow-wrap: anywhere; }
+.mail-actions { display: flex; flex-wrap: wrap; gap: 8px; white-space: nowrap; }
+.mail-actions .mail-detail-button { flex-basis: 100%; width: max-content; margin-top: 1px; }
+.mail-empty { color: #667085; text-align: center; }
+.mail-send-confirmation-error { margin-bottom: 16px; }
+.mail-insights, .mail-todos { min-width: 210px; }
+.mail-point { margin: 0 0 7px; color: #344054; line-height: 1.55; }
+.reply-compose { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+.reply-compose .el-button { flex: none; }
+.reply-instruction { min-width: 190px; margin: 0; }
+.mail-todo-option { display: flex; align-items: flex-start; gap: 7px; margin: 0 0 8px; color: #344054; line-height: 1.45; cursor: pointer; }
+.mail-todo-option input { margin-top: 3px; }
+.mail-todo-option small { color: #667085; }
+.mail-progress, .mail-success, .mail-error { margin: 8px 0 0; font-size: 12px; line-height: 1.45; white-space: normal; }
+.mail-progress { color: #667085; }
+.mail-success { color: #1b7b4a; }
+.mail-error { color: #b42318; }
+.mail-coming-soon { display: grid; min-height: 230px; place-content: center; gap: 8px; color: #667085; text-align: center; }
+.mail-coming-soon h2 { margin: 0; color: #344054; }
+.mail-coming-soon p { max-width: 460px; margin: 0; line-height: 1.6; }
+.draft-version { margin: 0 0 16px; color: #667085; font-size: 13px; }
+.mail-detail-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px 22px; padding: 15px; border-radius: 9px; background: #f7f9fc; }
+.mail-detail-meta div { display: grid; gap: 3px; min-width: 0; }.mail-detail-meta span { color: #667085; font-size: 12px; }.mail-detail-meta b { overflow-wrap: anywhere; color: #344054; font-size: 13px; font-weight: 650; }
+.mail-detail-notice { margin-top: 16px; padding: 12px 14px; border: 1px solid #f4d5a4; border-radius: 9px; background: #fff4e4; color: #76470c; font-size: 13px; line-height: 1.55; }
+.mail-detail-section { padding: 18px 0; border-bottom: 1px solid #e4e9f0; }.mail-detail-section:last-of-type { border-bottom: 0; }.mail-detail-section h3 { margin: 0 0 10px; color: #1f354d; font-size: 15px; }
+.mail-detail-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }.mail-detail-heading h3 { margin: 0; }
+.mail-detail-point { margin: 0 0 8px; color: #344054; line-height: 1.6; }.mail-detail-placeholder { margin: 0; color: #667085; line-height: 1.55; }
+.mail-body { max-height: 320px; margin: 0; padding: 13px; overflow: auto; border-radius: 8px; background: #f7f9fc; color: #344054; font: inherit; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+.mail-detail-section h4 { margin: 16px 0 7px; color: #526176; font-size: 13px; }.mail-attachments { display: grid; gap: 5px; padding-left: 20px; margin: 0; color: #667085; font-size: 13px; line-height: 1.45; }
+.mail-detail-dialog { display: flex; max-height: calc(100vh - 48px); flex-direction: column; margin: 24px auto !important; overflow: hidden; }
+.mail-detail-dialog .el-dialog__header, .mail-detail-dialog .el-dialog__footer { flex: none; }
+.mail-detail-dialog .el-dialog__body { min-height: 0; overflow-y: auto; padding-right: 24px; }
+
+/* 待办计划页：列表在卡片内部滚动，编辑在弹窗中完成。 */
+.todo-content { min-width: 0; min-height: 0; flex: 1; }
+.todo-card { display: flex; min-height: 0; flex: 1; flex-direction: column; overflow: hidden; }
+.todo-card-body { display: flex; min-height: 0; flex: 1; flex-direction: column; padding: 20px; }
+.todo-tabs { display: flex; gap: 8px; flex: none; margin-bottom: 18px; border-bottom: 1px solid #d9e1ec; }
+.todo-tab { padding: 10px 13px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #536176; font-weight: 700; }
+.todo-tab.active { border-bottom-color: #1c5ba7; color: #1c5ba7; }
+.todo-list { display: grid; min-height: 0; flex: 1; align-content: start; gap: 10px; overflow-y: auto; padding-right: 2px; }
+.todo-item { display: flex; gap: 20px; align-items: flex-start; justify-content: space-between; padding: 16px 18px; border: 1px solid #dfe5ee; border-radius: 10px; background: #fff; }
+.todo-item.status-completed { background: #f7fbf8; }.todo-item.status-discarded { opacity: .72; background: #fafafa; }
+.todo-item-main { min-width: 0; }.todo-item-title { display: flex; gap: 10px; align-items: center; }.todo-item-title h3 { margin: 0; color: #1f354d; font-size: 15px; line-height: 1.45; }
+.todo-item p { margin: 7px 0 0; color: #667085; font-size: 13px; line-height: 1.45; }.todo-item p b { color: #344054; }.todo-item p .overdue { color: #b42318; }
+.todo-item-actions { display: flex; flex: none; gap: 8px; }.todo-empty { display: grid; min-height: 180px; place-content: center; gap: 8px; color: #667085; text-align: center; }.todo-empty b { color: #344054; }
+.todo-source { margin: 0 0 16px; color: #667085; font-size: 13px; line-height: 1.45; }
+
 @media (max-width: 800px) {
   .confirmation-content { height: auto; overflow: visible; }
   .approval-card { display: block; flex: none; overflow: visible; }
   .approval-scroll { max-height: 560px; }
   .approval-actions { align-items: flex-start; flex-direction: column; }
+  .mail-card-body { padding: 15px; }
+  .mail-content, .mail-card, .mail-card-body, .mail-panel { min-height: auto; flex: none; overflow: visible; }
+  .mail-table-wrap { overflow: auto; }
+  .mail-detail-meta { grid-template-columns: 1fr; }
+  .mail-detail-heading { align-items: flex-start; flex-direction: column; }
+  .todo-content, .todo-card, .todo-card-body { min-height: auto; flex: none; overflow: visible; }
+  .todo-list { max-height: 560px; }
+  .todo-item { flex-direction: column; gap: 12px; }
 }
 
 @media (max-width: 600px) {

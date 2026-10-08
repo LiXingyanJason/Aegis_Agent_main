@@ -23,7 +23,7 @@ class RunDetailVO(BaseModel):
     """一次 Agent 任务运行的当前状态和可展示进度。"""
 
     run_id: UUID
-    conversation_id: UUID
+    conversation_id: UUID | None
     status: str
     current_stage: str | None
     model_provider: str | None

@@ -1,11 +1,11 @@
 # Aegis Email MCP Server
 
-这是仅供 Aegis 主后端调用的无用户状态、只读邮件工具服务。它不负责用户登录、租户、审批、审计、数据库或邮箱 OAuth 凭据管理；这些职责全部属于 Aegis 主后端。
+这是仅供 Aegis 主后端调用的无用户状态邮件工具服务。它不负责用户登录、租户、审批、审计、数据库或邮箱 OAuth 凭据管理；这些职责全部属于 Aegis 主后端。
 
 ```text
 Aegis 主后端（认证、权限、审计、连接管理）
   ↓ MCP Streamable HTTP / stdio
-Email MCP Server（只读邮件工具与邮件业务）
+Email MCP Server（邮件读取与已批准发送）
   ↓
 Mock / Gmail / Outlook Provider
 ```
@@ -18,14 +18,16 @@ Mock / Gmail / Outlook Provider
 | --- | --- | --- |
 | `mail.messages.list` | 读取当前连接邮箱的全部邮件列表快照 | 发件人、主题、时间、预览、版本、附件数量；不返回正文。 |
 | `mail.messages.get` | 读取指定邮件 | 邮件正文及附件元数据；供主后端后续进行摘要、待办提取和回复起草。 |
+| `mail.messages.send` | 发送已批准草稿 | 外部邮件 ID、发送时间与收件人回执；必须由 Worker 在逐项批准后调用。 |
 
-服务本身不提供写邮件、删邮件或修改邮件的工具。后续的邮件发送必须由主后端完成风险判断与逐项审批后，再单独设计受控写工具。
+`mail.messages.send` 不是浏览器 API。主后端必须先冻结草稿、创建 `approval_item`，用户批准后才由 Agent Worker 调用它；调用还必须携带稳定的幂等键。Mock 模式将发送结果写入 `data/mock_sent_mailbox.json`，不会发送真实邮件。
 
 ## 目录
 
 ```text
 Email_mcp_server/
 ├── data/mock_mailbox.json       # 固定 Mock 邮箱数据
+├── data/mock_sent_mailbox.json  # Mock 已发送箱（运行时写入）
 ├── src/aegis_email_mcp/
 │   ├── __main__.py              # stdio 或 Streamable HTTP 启动入口
 │   ├── server.py                # 创建 MCPServer、注册工具
@@ -57,6 +59,7 @@ D:\anaconda\envs\Aegis\python.exe -m aegis_email_mcp
 | `EMAIL_MCP_PATH` | `/mcp` | MCP HTTP 路径。 |
 | `EMAIL_MCP_ALLOWED_HOSTS` | 本机地址 | MCP SDK 校验的 Host 白名单。 |
 | `EMAIL_MOCK_DATA_PATH` | `data/mock_mailbox.json` | 固定 Mock 邮箱数据路径。 |
+| `EMAIL_MOCK_SENT_DATA_PATH` | `data/mock_sent_mailbox.json` | Mock 已发送箱的写入路径。 |
 
 stdio 模式：
 
@@ -74,7 +77,7 @@ EMAIL_MCP_URL=http://127.0.0.1:9002/mcp
 EMAIL_MCP_TIMEOUT_SECONDS=20
 ```
 
-主后端在 MCP 调用 `_meta` 中传递 `aegis_connection_id`、`aegis_tenant_id`、`aegis_user_id` 与 `aegis_run_id`。本服务仅校验其格式；Mock Provider 不连接业务数据库，也不自行认证。生产环境应以私有网络、服务网格或网关限制仅允许主后端调用。
+主后端在 MCP 调用 `_meta` 中传递 `aegis_connection_id`、`aegis_tenant_id`、`aegis_user_id`；由 Agent Worker 发起的摘要、起草等任务还会传递 `aegis_run_id`。本服务仅校验其格式；Mock Provider 不连接业务数据库，也不自行认证。生产环境应以私有网络、服务网格或网关限制仅允许主后端调用。
 
 ## 测试
 

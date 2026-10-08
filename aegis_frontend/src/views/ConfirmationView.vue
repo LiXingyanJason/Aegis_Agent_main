@@ -32,6 +32,11 @@ const labels = {
   calendar_name: '日历',
   calendar_id: '日历',
   description: '说明',
+  to: '收件人',
+  cc: '抄送',
+  subject: '主题',
+  body_preview: '邮件正文预览',
+  draft_version: '草稿版本',
 }
 
 function formatValue(value) {
@@ -55,7 +60,7 @@ function actionVersion(item) {
 function statusText(status) {
   return {
     pending: '待确认',
-    approved_executing: '已批准，正在创建日历事件',
+    approved_executing: '已批准，正在执行',
     rejected: '已拒绝',
     expired: '已过期',
     executed: '已执行',
@@ -64,7 +69,15 @@ function statusText(status) {
 }
 
 function approvalLabel(item) {
-  return item.action === 'calendar.create_event' ? '批准并创建日历事件' : '批准并执行'
+  if (item.action === 'calendar.create_event') return '批准并创建日历事件'
+  if (item.action === 'mail.messages.send') return '批准并发送邮件'
+  return '批准并执行'
+}
+
+function actionNoun(item) {
+  if (item?.action === 'mail.messages.send') return '邮件'
+  if (item?.action === 'calendar.create_event') return '日历事件'
+  return '操作'
 }
 
 async function loadItems() {
@@ -131,8 +144,9 @@ async function subscribeToRunExecution(targetRunId) {
       lastEventId: runEventNos.value[targetRunId] ?? 0,
       signal: controller.signal,
       onEvent: async (sseEvent) => {
-        const payload = sseEvent.data
-        const eventNo = Number(payload.event_no ?? sseEvent.id)
+        const wireEvent = sseEvent.data ?? {}
+        const payload = wireEvent.payload ?? {}
+        const eventNo = Number(wireEvent.event_no ?? sseEvent.id)
         if (Number.isSafeInteger(eventNo)) {
           if (eventNo <= (runEventNos.value[targetRunId] ?? 0)) return
           runEventNos.value = { ...runEventNos.value, [targetRunId]: eventNo }
@@ -142,7 +156,7 @@ async function subscribeToRunExecution(targetRunId) {
           setExecutionState(
             payload.approval_item_id,
             'executed',
-            '日历事件已创建。',
+            actionNoun(items.value.find((item) => item.approval_item_id === payload.approval_item_id)) + '已执行。',
             payload.provider_resource_id,
           )
           await refreshApprovalItemsForRun(targetRunId)
@@ -155,7 +169,7 @@ async function subscribeToRunExecution(targetRunId) {
             .forEach((item) => setExecutionState(
               item.approval_item_id,
               'failed',
-              payload.error_message ?? payload.message ?? '日历事件创建失败。',
+              payload.error_message ?? payload.message ?? '操作执行失败。',
             ))
           await refreshApprovalItemsForRun(targetRunId)
         }
@@ -200,10 +214,10 @@ async function decide(item, decision) {
       setExecutionState(
         item.approval_item_id,
         'executing',
-        '已登记执行，正在创建日历事件。',
+        '已登记执行，正在由服务端处理。',
       )
     } else {
-      setExecutionState(item.approval_item_id, 'rejected', '已拒绝，日历不会发生变更。')
+      setExecutionState(item.approval_item_id, 'rejected', '已拒绝，该操作不会执行。')
     }
     void subscribeToRunExecution(result.run_id)
   } catch (cause) {
@@ -231,6 +245,8 @@ onBeforeUnmount(stopAllRunStreams)
       <div class="brand"><span class="mark">⌾</span>Aegis PA</div>
       <p class="nav-label app-nav-label">工作空间</p>
       <router-link class="nav" :to="{ name: 'tasks' }">◌ 任务对话</router-link>
+      <router-link class="nav" :to="{ name: 'mail-management' }">✉ 邮件管理</router-link>
+      <router-link class="nav" :to="{ name: 'todo-plans' }">☷ 待办计划</router-link>
       <router-link class="nav active" :to="{ name: 'confirmations' }">✓ 操作确认</router-link>
       <span class="nav disabled">◇ 长期记忆（待接入）</span>
       <span class="nav disabled">◫ 连接与审计（待接入）</span>
@@ -288,7 +304,7 @@ onBeforeUnmount(stopAllRunStreams)
 
             <div v-if="item.status === 'pending'" class="approval-actions">
               <el-checkbox v-model="checkedById[item.approval_item_id]">
-                我已核对该操作的参数、风险级别和目标日历。
+                我已核对该操作的参数、风险级别和目标对象。
               </el-checkbox>
               <div class="approval-buttons">
                 <el-button

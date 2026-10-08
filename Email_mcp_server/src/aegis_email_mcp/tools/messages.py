@@ -4,7 +4,7 @@ from typing import Any
 
 from mcp.server.mcpserver import Context, MCPServer
 
-from aegis_email_mcp.schemas.email import parse_request_context
+from aegis_email_mcp.schemas.email import EmailSendParam, parse_request_context
 from aegis_email_mcp.services.email_service import EmailService
 
 
@@ -16,7 +16,7 @@ def _context_from_mcp(ctx: Context):
 
 
 def register_message_tools(mcp: MCPServer, email_service: EmailService) -> None:
-    """注册邮件列表和邮件全文两个只读 MCP 工具。"""
+    """注册邮件读取工具及只供批准后调用的发送工具。"""
 
     @mcp.tool(name="mail.messages.list", description="获取当前连接邮箱的全部邮件列表快照。仅只读，不返回正文。")
     async def list_messages(ctx: Context) -> dict[str, Any]:
@@ -36,4 +36,20 @@ def register_message_tools(mcp: MCPServer, email_service: EmailService) -> None:
                 await email_service.get_message(context, provider_message_id)
             ).model_dump(mode="json")
         except (LookupError, ValueError) as error:
+            raise ValueError(str(error)) from error
+
+    @mcp.tool(name="mail.messages.send", description="发送一封已由 Aegis 逐项批准的邮件。该工具会产生外部副作用。")
+    async def send_message(
+        to: list[str], subject: str, body: str, idempotency_key: str, ctx: Context,
+        cc: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """发送邮件；调用方必须在主后端完成确认与审计。"""
+        try:
+            context = _context_from_mcp(ctx)
+            param = EmailSendParam(
+                to=to, cc=cc or [], subject=subject, body=body,
+                idempotency_key=idempotency_key,
+            )
+            return (await email_service.send_message(context, param)).model_dump(mode="json")
+        except ValueError as error:
             raise ValueError(str(error)) from error

@@ -6,6 +6,8 @@ from aegis_email_mcp.schemas.email import (
     EmailMessagesVO,
     EmailMessageListItemVO,
     EmailRequestContext,
+    EmailSendParam,
+    SentEmailVO,
 )
 
 
@@ -30,3 +32,9 @@ class EmailService:
         if message is None:
             raise LookupError("邮件不存在或当前连接无权读取")
         return EmailMessageDetailVO.from_entity(message)
+
+    async def send_message(
+        self, context: EmailRequestContext, param: EmailSendParam
+    ) -> SentEmailVO:
+        """委托 Provider 发送已经由主后端批准的邮件。"""
+        return await self._provider.send_message(context, param)

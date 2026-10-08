@@ -15,7 +15,8 @@ class EmailRequestContext:
     connection_id: UUID
     tenant_id: UUID
     user_id: UUID
-    run_id: UUID
+    # 邮件列表同步由 API 直接发起时没有 agent_run；摘要或起草任务发起时才携带 run_id。
+    run_id: UUID | None
 
 
 def parse_request_context(meta: dict[str, Any] | None) -> EmailRequestContext:
@@ -27,7 +28,11 @@ def parse_request_context(meta: dict[str, Any] | None) -> EmailRequestContext:
             connection_id=UUID(str(meta["aegis_connection_id"])),
             tenant_id=UUID(str(meta["aegis_tenant_id"])),
             user_id=UUID(str(meta["aegis_user_id"])),
-            run_id=UUID(str(meta["aegis_run_id"])),
+            run_id=(
+                UUID(str(meta["aegis_run_id"]))
+                if meta.get("aegis_run_id") is not None
+                else None
+            ),
         )
     except (KeyError, ValueError, TypeError) as error:
         raise ValueError("缺少有效的 Aegis 连接与身份上下文") from error
@@ -108,3 +113,22 @@ class EmailMessageDetailVO(EmailMessageListItemVO):
             body_text=message.body_text,
             attachments=list(message.attachments),
         )
+
+
+class EmailSendParam(BaseModel):
+    """已获 Aegis 批准后才可提交给邮件 Provider 的发送参数。"""
+
+    to: list[str] = Field(min_length=1)
+    cc: list[str] = Field(default_factory=list)
+    subject: str = Field(min_length=1, max_length=998)
+    body: str = Field(min_length=1, max_length=65535)
+    idempotency_key: str = Field(min_length=1, max_length=128)
+
+
+class SentEmailVO(BaseModel):
+    """邮件 Provider 确认发送后的最小回执。"""
+
+    provider_message_id: str
+    sent_at: datetime
+    status: str = "sent"
+    recipients: dict[str, list[str]]

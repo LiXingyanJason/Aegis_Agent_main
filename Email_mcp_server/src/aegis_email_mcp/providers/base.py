@@ -2,7 +2,12 @@
 
 from typing import Protocol
 
-from aegis_email_mcp.schemas.email import EmailMessage, EmailRequestContext
+from aegis_email_mcp.schemas.email import (
+    EmailMessage,
+    EmailRequestContext,
+    EmailSendParam,
+    SentEmailVO,
+)
 
 
 class EmailProvider(Protocol):
@@ -15,3 +20,8 @@ class EmailProvider(Protocol):
         self, context: EmailRequestContext, provider_message_id: str
     ) -> EmailMessage | None:
         """按邮件平台标识读取单封邮件的正文和附件元数据。"""
+
+    async def send_message(
+        self, context: EmailRequestContext, param: EmailSendParam
+    ) -> SentEmailVO:
+        """发送一封已通过主后端审批的邮件。"""

@@ -13,10 +13,12 @@ def create_server(settings: Settings) -> MCPServer:
     if settings.provider != "mock":
         raise ValueError(f"当前未支持的邮件 Provider：{settings.provider}")
 
-    email_service = EmailService(MockEmailProvider(settings.mock_data_path))
+    email_service = EmailService(
+        MockEmailProvider(settings.mock_data_path, settings.mock_sent_data_path)
+    )
     mcp = MCPServer(
         "aegis-email-mcp",
-        instructions="Aegis 内部只读邮件工具服务；身份、权限、审计和写操作审批由主后端处理。",
+        instructions="Aegis 内部邮件工具服务；身份、权限、审计和写操作审批均由主后端处理。",
         version="0.1.0",
     )
     register_message_tools(mcp, email_service)

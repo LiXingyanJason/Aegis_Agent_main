@@ -19,7 +19,8 @@ class ClaimedRun:
     id: UUID
     tenant_id: UUID
     user_id: UUID
-    conversation_id: UUID
+    conversation_id: UUID | None
+    run_type: str = "conversation"
 
 
 class AgentRunRepository:
@@ -41,7 +42,7 @@ class AgentRunRepository:
                 "    model_provider = :model_provider, model_name = :model_name, "
                 "    started_at = COALESCE(started_at, now()), updated_at = now() "
                 "WHERE id = :run_id AND status = 'queued' "
-                "RETURNING id, tenant_id, user_id, conversation_id"
+                "RETURNING id, tenant_id, user_id, conversation_id, run_type"
             ),
             {"run_id": run_id, "model_provider": model_provider, "model_name": model_name},
         )
@@ -53,6 +54,7 @@ class AgentRunRepository:
             tenant_id=row["tenant_id"],
             user_id=row["user_id"],
             conversation_id=row["conversation_id"],
+            run_type=row["run_type"],
         )
 
     async def claim_waiting_confirmation_run(
@@ -66,14 +68,14 @@ class AgentRunRepository:
                 "AND EXISTS (SELECT 1 FROM approval_items ai JOIN approval_decisions ad "
                 "ON ad.approval_item_id = ai.id WHERE ai.run_id = ar.id "
                 "AND ai.tenant_id = ar.tenant_id AND ad.decision = :decision) "
-                "RETURNING ar.id, ar.tenant_id, ar.user_id, ar.conversation_id"
+                "RETURNING ar.id, ar.tenant_id, ar.user_id, ar.conversation_id, ar.run_type"
             ),
             {"run_id": run_id, "decision": decision},
         )
         row = result.mappings().first()
         if row is None:
             return None
-        return ClaimedRun(id=row["id"], tenant_id=row["tenant_id"], user_id=row["user_id"], conversation_id=row["conversation_id"])
+        return ClaimedRun(id=row["id"], tenant_id=row["tenant_id"], user_id=row["user_id"], conversation_id=row["conversation_id"], run_type=row["run_type"])
 
     async def load_conversation_history(
         self,
