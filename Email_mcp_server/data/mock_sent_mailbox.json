@@ -12,5 +12,19 @@
     "subject": "Re: 下周产品评审材料",
     "body": "王敏：\n\n邮件已收到，评审材料（第 3 至第 5 页）我已阅读完毕。\n\n我这边会按要求在周三上午前补充负责模块的风险项，并在会议前完成相关材料的复核。如材料有进一步更新，请随时同步。\n\n谢谢。",
     "idempotency_key": "mail:fd57d6cb-750e-40ad-b19e-b466299e82ed:1"
+  },
+  {
+    "provider_message_id": "mock-sent-c54cac6af95c4fe1a6f18ba64b7bd4d9",
+    "sent_at": "2026-10-08T14:02:16.356546+00:00",
+    "status": "sent",
+    "recipients": {
+      "to": [
+        "lili@northstar.example.com"
+      ],
+      "cc": []
+    },
+    "subject": "Re: 2026 年服务续约确认",
+    "body": "李莉，您好：\n\n确认按原方案续约。签约联系人：Jason；预计完成时间：2026-10-09 前。\n\n如需补充其他材料，请随时告知。\n\n谢谢。\nJason",
+    "idempotency_key": "mail:4571a6d2-ed89-47c2-8f3d-fda27295515d:1"
   }
 ]

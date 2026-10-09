@@ -33,26 +33,37 @@ class ProviderConnectionRepository:
         """返回满足提供商、scope 与可选指定连接标识的有效连接。"""
         if not providers:
             return None
+
+        # 不在 SQL 中使用 ``:connection_id IS NULL OR ...`` 这类可选参数条件。
+        # asyncpg 对该参数为 UUID 时，无法仅由 ``IS NULL`` 分支稳定推断其类型，
+        # 会导致 ``AmbiguousParameterError``。按实际查询意图附加条件，也使索引
+        # 过滤与 SQL 语义更直观。
+        filters = [
+            "tenant_id = :tenant_id AND user_id = :user_id",
+            "provider = ANY(CAST(:providers AS varchar[]))",
+            "status = 'active'",
+            "(expires_at IS NULL OR expires_at > now())",
+        ]
+        parameters: dict[str, Any] = {
+            "tenant_id": tenant_id,
+            "user_id": user_id,
+            "providers": list(providers),
+        }
+        if required_connection_id is not None:
+            filters.append("id = CAST(:connection_id AS uuid)")
+            parameters["connection_id"] = required_connection_id
+        if required_scope is not None:
+            filters.append("scopes @> CAST(:scope_json AS jsonb)")
+            parameters["scope_json"] = json.dumps([required_scope])
+
+        statement = (
+            "SELECT id, provider FROM provider_connections WHERE "
+            + " AND ".join(filters)
+            + " ORDER BY last_verified_at DESC NULLS LAST, created_at DESC LIMIT 1"
+        )
         result = await session.execute(
-            text(
-                "SELECT id, provider FROM provider_connections "
-                "WHERE tenant_id = :tenant_id AND user_id = :user_id "
-                "  AND provider = ANY(CAST(:providers AS varchar[])) "
-                "  AND status = 'active' "
-                "  AND (expires_at IS NULL OR expires_at > now()) "
-                "  AND (:connection_id IS NULL OR id = :connection_id) "
-                "  AND (CAST(:required_scope AS varchar) IS NULL "
-                "       OR scopes @> CAST(:scope_json AS jsonb)) "
-                "ORDER BY last_verified_at DESC NULLS LAST, created_at DESC LIMIT 1"
-            ),
-            {
-                "tenant_id": tenant_id,
-                "user_id": user_id,
-                "providers": list(providers),
-                "connection_id": required_connection_id,
-                "required_scope": required_scope,
-                "scope_json": json.dumps([required_scope]) if required_scope else None,
-            },
+            text(statement),
+            parameters,
         )
         row = result.mappings().first()
         return ProviderConnection(id=row["id"], provider=row["provider"]) if row else None
