@@ -5,6 +5,15 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
+# 源码开发安装中，以项目目录为基准；独立安装和 Docker 可使用绝对环境变量覆盖。
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+
+def resolve_data_path(value: str | Path) -> Path:
+    """相对路径固定相对于服务项目目录，避免依赖终端或 IDE 工作目录。"""
+    path = Path(value)
+    return (path if path.is_absolute() else PROJECT_ROOT / path).resolve()
+
 
 @dataclass(frozen=True, slots=True)
 class Settings:
@@ -18,6 +27,11 @@ class Settings:
     allowed_hosts: tuple[str, ...]
     mock_data_path: Path = Path("data/mock_mailbox.json")
     mock_sent_data_path: Path = Path("data/mock_sent_mailbox.json")
+
+    def __post_init__(self):
+        """直接构造 Settings 与环境配置使用一致的路径规则。"""
+        object.__setattr__(self, "mock_data_path", resolve_data_path(self.mock_data_path))
+        object.__setattr__(self, "mock_sent_data_path", resolve_data_path(self.mock_sent_data_path))
 
 
 @lru_cache

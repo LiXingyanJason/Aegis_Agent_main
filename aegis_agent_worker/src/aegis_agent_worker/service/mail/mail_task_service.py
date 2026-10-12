@@ -22,6 +22,20 @@ MailTaskError = MailAgentError
 class MailTaskService:
     """为邮件子图提供摘要、回复草稿及其持久化业务动作。"""
 
+    async def load_planning_reference(self, run):
+        """页面任务的可信目标来自已有请求表，供图层直接构造计划，不调用模型分类。"""
+        if run.run_type == "mail_extraction":
+            source = await self.load_extraction_source(run)
+        elif run.run_type == "mail_reply_draft":
+            source = await self.load_reply_source(run)
+        else:
+            raise MailTaskError("任务不支持直接邮件规划")
+        return {
+            "target": {"resource_type": "email", "id": str(source["email_id"]),
+                       "source_version": source["source_version"]},
+            "instruction": source.get("instruction") or "",
+        }
+
     async def prepare_conversation_handoff(self, run, raw_handoff):
         """普通对话复用邮件子图前，核验并登记单封邮件请求。"""
         from aegis_agent_worker.agent.contracts.decision import AgentHandoff

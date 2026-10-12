@@ -12,7 +12,17 @@
 
 普通对话由独立 `MainDecisionWorkflow` 子图组织：读取引用 → MainAgent 调用 LLM → 能力校验 → 目标核验 → 组装 handoff → 保存审计。LLM 推理和流程分支位于 `agent/workflows/main/decision_workflow.py`；`DecisionContextService` 只负责业务引用、归属／版本检查及事务性审计。根图注册主决策子图并根据其结果分流，领域工厂显式声明可用意图。原关键词路由保留为旧组件，但不再负责生产根图的普通对话决策。页面指定任务与审批恢复均绕过主决策子图。
 
-当前支持日程查看、空闲查询、会议安排，以及明确邮件的摘要和回复起草。邮件目标来自本人已同步的最近 20 条快照，模型只能选择提供的 ID 与 source_version；邮件检索、草稿修改、复合任务暂返回澄清。先在邮件管理页面同步收件箱，再在主对话中指定邮件主题；若多个候选有歧义，需补充目标。
+当前支持日程查看、空闲查询、会议安排，以及主对话邮件列表／单封操作卡片。邮件查询由 MailQueryWorkflow 经 MailPlanningWorkflow 生成查询条件，再经 Gateway 读取元数据、同步快照并筛选，保存 mail_candidates Artifact，通过 artifacts_ready 通知前端。主对话不直接生成邮件摘要或回复；用户必须点击卡片／页面按钮发起明确任务。
+
+后续目标优先来自当前会话最近的邮件候选卡片，按 position 保持显示顺序并核验 source_version；没有查询卡片时才提供最近20条已同步快照。空、过期或版本失效候选不能用其他收件箱邮件替代。草稿修改及复合任务仍需后续实现。
+
+前端需新增 mail_candidates 卡片类型，复用 GET /conversations/{conversation_id}/artifacts 与现有邮件详情、摘要、待办、起草接口。本次不修改前端代码。查询默认展示最多10条，可选择最多20条，数量／字节截断通过 matched_count、returned_count、truncated 明示。先测试“查询全部邮件”，再测试“查找续约邮件”或“找本周续约邮件”；固定 Mock 日期不在本周时，空结果是正常情况。
+
+邮件领域统一使用 `MailPlanningWorkflow → MailAgent.plan_mail → MailDecision`。普通对话仅规划 query／clarify，查询参数在 decision.query，可带已核验 decision.target 来定位单封卡片；摘要／起草／待办由按钮调用既有业务接口触发。模型提出 extract／draft_reply 时主路由会降级为 query_mail，生成子图也设有对话执行阻断。页面任务从可信请求记录构造 MailDecision，不再次调用模型分类。plan_query 仅保留兼容入口。
+
+笼统“生成摘要”返回列表；完整主题或有效序号定位唯一邮件时返回 single 卡片。Artifact 新增 display_mode=list／single，前端已适配单封模式隐藏列表标题和计数栏。subject_equals 支持完整主题精确匹配。需要重启 Worker 并刷新前端，旧 Artifact 不会自动重新执行。
+
+查询、摘要、起草子图均先经过统一规划，非法计划或澄清不会读取正文或生成草稿；后台请求无效时标记失败。发送确认不经过此规划子图，仍由专用审批恢复流程执行。新增 mail_plan_completed 审计事件，包含规划来源 llm／explicit_task、动作、目标引用和耗时，不包含正文。本次无需新增配置或迁移，重启 Worker 生效。
 
 决策事件 `main_decision_completed` 持久化到 run_events 并经 SSE 通知，包含意图、目标引用、能力版本、模型信息、耗时及校验结果；不含正文或模型思维过程。模型不可用时任务失败，非法输出时返回澄清。没有新增配置或迁移，使用原模型配置，修改后重启 Worker。
 

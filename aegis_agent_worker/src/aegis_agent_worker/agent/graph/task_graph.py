@@ -114,6 +114,8 @@ class TaskGraph:
             graph.add_edge("calendar_confirmation", END)
         if "mail_extraction" in registered_workflows:
             graph.add_edge("mail_extraction", END)
+        if "mail_query" in registered_workflows:
+            graph.add_edge("mail_query", END)
         if "mail_reply_draft" in registered_workflows:
             graph.add_edge("mail_reply_draft", END)
         if "mail_send_confirmation" in registered_workflows:

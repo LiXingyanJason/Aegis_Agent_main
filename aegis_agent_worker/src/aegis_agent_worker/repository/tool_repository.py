@@ -76,6 +76,13 @@ CalendarConnectionRepository = ProviderConnectionRepository
 class ToolCallRepository:
     """保存工具调用的完整审计载荷和安全展示摘要。"""
 
+    async def bind_connection(self, session, *, tool_call_id, tenant_id, connection_id):
+        """授权完成后补齐审计记录的可信连接，不接受模型提供的连接。"""
+        await session.execute(text("""
+            UPDATE tool_calls SET connection_id = :connection_id
+            WHERE id = :tool_call_id AND tenant_id = :tenant_id AND status = 'running'
+        """), {"tool_call_id": tool_call_id, "tenant_id": tenant_id, "connection_id": connection_id})
+
     async def create_running(
         self,
         session: AsyncSession,

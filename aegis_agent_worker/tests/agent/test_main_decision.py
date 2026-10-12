@@ -80,21 +80,21 @@ async def decide(main, service, capabilities, **state):
 
 CAPABILITIES = (
     ConversationCapability(domain="calendar", intent="list_events", workflow="calendar_read", description="读取"),
-    ConversationCapability(domain="mail", intent="extract_mail", workflow="mail_extraction",
-                           description="摘要", requires_target=True),
+    ConversationCapability(domain="mail", intent="query_mail", workflow="mail_query",
+                           description="邮件卡片"),
 )
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("target_id,source_version,expected", [
-    (EMAIL_ID, "v1", "mail_extraction"),
+    (EMAIL_ID, "v1", "mail_query"),
     (EMAIL_ID, "v0", "clarify"),
     (UUID(int=99), "v1", "clarify"),
 ])
 async def test_mail_target_is_offered_owned_and_current(target_id, source_version, expected):
     """模型只能交接服务端提供且仍有效的邮件引用，过期及伪造引用转为澄清。"""
     decision = MainDecision.model_validate({
-        "decision": "delegate", "domain": "mail", "intent": "extract_mail", "instruction": "提取待办",
+        "decision": "delegate", "domain": "mail", "intent": "query_mail", "instruction": "展示对应卡片",
         "target": {"resource_type": "email", "id": target_id, "source_version": source_version},
     })
     service = Service(None, None, repository=FakeRepository())
@@ -198,3 +198,16 @@ async def test_main_agent_calls_model_and_validates_json():
     decision = await MainAgent(Client()).decide(
         message="那封邮件", history=[], capabilities=[CAPABILITIES[0].model_dump()], references=[])
     assert decision.decision == "clarify"
+
+
+@pytest.mark.asyncio
+async def test_legacy_natural_language_mail_generation_is_downgraded_to_card_navigation():
+    """即使模型提出摘要动作，生产主决策也只交接只读卡片导航。"""
+    response = MainDecision(decision="delegate", domain="mail", intent="extract_mail",
+                            instruction="摘要第一封", target={"resource_type":"email",
+                            "id":EMAIL_ID, "source_version":"v1"})
+    result = await decide(FakeMain(response), Service(None, None, repository=FakeRepository()),
+                          CAPABILITIES, latest_user_message="摘要第一封")
+    assert result["workflow"] == "mail_query"
+    assert result["handoff"]["intent"] == "query_mail"
+    assert result["handoff"]["target"]["id"] == str(EMAIL_ID)

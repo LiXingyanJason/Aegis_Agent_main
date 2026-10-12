@@ -1,7 +1,8 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { subscribeRunEvents } from '../api/run'
+import MailCandidateCard from '../components/MailCandidateCard.vue'
 import { useAuthStore } from '../store/auth'
 import { useConversationStore } from '../store/conversation'
 
@@ -111,7 +112,11 @@ function meetingRunForMessage(message) {
 function artifactsForMessage(message) {
   if (!message.run_id) return []
   return (conversations.artifactsByRun[message.run_id] ?? [])
-    .filter((artifact) => artifact.assistant_message_id === message.message_id)
+    .filter((artifact) => {
+      if (!['calendar_events', 'calendar_free_time', 'mail_candidates'].includes(artifact.artifact_type)) return false
+      if (artifact.assistant_message_id) return artifact.assistant_message_id === message.message_id
+      return message.role === 'user'
+    })
 }
 
 function artifactTitle(artifact) {
@@ -147,7 +152,12 @@ function isTrackableRun(run) {
 async function scrollMessagesToBottom() {
   await nextTick()
   const element = messagesElement.value
-  if (element) element.scrollTop = element.scrollHeight
+  if (!element) return
+  element.scrollTop = element.scrollHeight
+  // 等待浏览器完成布局，避免首次进入页面时卡片撑高消息区后又停在顶部。
+  window.requestAnimationFrame(() => {
+    if (messagesElement.value === element) element.scrollTop = element.scrollHeight
+  })
 }
 
 async function loadHistory() {
@@ -165,7 +175,6 @@ async function restoreConversation(conversationId, syncUrl = true) {
   try {
     const detail = await conversations.loadConversation(conversationId)
     await loadArtifactsForConversation(detail)
-    await scrollMessagesToBottom()
     draftMessage.value = ''
     pendingClientMessageId.value = null
     const activeRun = detail.runs?.find(isTrackableRun)
@@ -176,6 +185,7 @@ async function restoreConversation(conversationId, syncUrl = true) {
     if (syncUrl) {
       await router.replace({ query: { conversation_id: conversationId } })
     }
+    await scrollMessagesToBottom()
   } catch (cause) {
     error.value = cause.response?.data?.detail || cause.message || '恢复会话失败。'
   }
@@ -303,7 +313,7 @@ async function startRunStream(runId, conversationId) {
         })
         if (!handled) return
         error.value = ''
-        if (sseEvent.event === 'artifacts_ready') {
+        if (['artifacts_ready', 'assistant_message_completed'].includes(sseEvent.event)) {
           await refreshArtifactsForRun(runId, sseEvent.data?.payload?.conversation_id ?? conversationId)
         }
         if (['run_completed', 'run_failed', 'approval_required'].includes(sseEvent.event)) {
@@ -340,6 +350,13 @@ onMounted(async () => {
   const conversationId = route.query.conversation_id
   if (typeof conversationId === 'string' && conversationId) {
     await restoreConversation(conversationId, false)
+  }
+})
+
+watch(() => route.query.conversation_id, (conversationId) => {
+  if (typeof conversationId === 'string' && conversationId
+    && conversationId !== activeConversation.value?.conversation_id) {
+    void restoreConversation(conversationId, false)
   }
 })
 
@@ -427,7 +444,8 @@ onBeforeUnmount(() => stopRunTracking())
                   class="message artifact-message"
                 >
                   <div class="avatar">A</div>
-                  <div class="artifact-card">
+                  <MailCandidateCard v-if="artifact.artifact_type === 'mail_candidates'" :artifact="artifact" />
+                  <div v-else class="artifact-card">
                     <div class="artifact-heading">
                       <b>{{ artifactTitle(artifact) }}</b>
                       <span v-if="artifact.payload?.display_timezone">{{ artifact.payload.display_timezone }}</span>

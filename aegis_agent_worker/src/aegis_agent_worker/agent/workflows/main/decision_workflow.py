@@ -52,7 +52,7 @@ class MainDecisionWorkflow:
     async def _load_context(self, state):
         """只为需要业务对象的已注册能力读取候选引用。"""
         references = []
-        if any(item.requires_target for item in self._capabilities):
+        if any(item.domain == "mail" or item.requires_target for item in self._capabilities):
             references = await self._context_service.load_references(_run(state))
         return {"decision_references": references}
 
@@ -70,6 +70,12 @@ class MainDecisionWorkflow:
                     capabilities=[item.model_dump(mode="json") for item in self._capabilities],
                     references=state["decision_references"],
                 )
+                if decision.decision == "delegate" and decision.domain == "mail" and decision.intent != "query_mail":
+                    # 代码保证自然语言只导航卡片，不能触发摘要或起草。
+                    decision = MainDecision(
+                        decision="delegate", domain="mail", intent="query_mail",
+                        instruction=decision.instruction, target=decision.target,
+                    )
             except ValueError:
                 outcome = "invalid_output"
                 decision = clarify("暂时无法确定要执行的任务，请说明要查询日历、安排会议，还是处理哪一封邮件。")

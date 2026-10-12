@@ -11,11 +11,14 @@ from aegis_agent_worker.agent.contracts.calendar import (
 )
 from aegis_agent_worker.agent.contracts.common import ConversationArtifact, ToolResultSummary
 from aegis_agent_worker.agent.contracts.decision import MainDecision, AgentHandoff, ResourceReference
+from aegis_agent_worker.agent.contracts.mail import MailQueryPlan, MailDecision
 
 __all__ = [
     "CalendarReadPlan",
     "CalendarDecision",
     "MainDecision",
+    "MailQueryPlan",
+    "MailDecision",
     "AgentHandoff",
     "ResourceReference",
     "CalendarFreeTimeCandidate",

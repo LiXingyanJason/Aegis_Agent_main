@@ -80,4 +80,12 @@ def _safe_summary(tool_name: str, value: dict[str, Any]) -> dict[str, Any]:
             for key in ("provider_message_id", "sent_at", "recipients")
             if key in value
         }
+    if tool_name == "mail.messages.list":
+        messages = value.get("messages")
+        fields = ("provider_message_id", "subject", "sender_name", "sender_email", "received_at", "source_version")
+        return {
+            "source": value.get("source"), "mail_count": len(messages) if isinstance(messages, list) else 0,
+            "messages": [{key: item[key] for key in fields if key in item}
+                         for item in messages[:20] if isinstance(item, dict)] if isinstance(messages, list) else [],
+        }
     return {key: value[key] for key in list(value)[:20] if key != "body_text"}

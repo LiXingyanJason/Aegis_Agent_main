@@ -41,4 +41,7 @@ class TaskGraphState(TypedDict, total=False):
     llm_step_id: str
     assistant_content: str
     mail_workflow_stage: str
+    mail_query_error: str
+    mail_decision: dict[str, Any]
+    mail_planning_error: str
     mail_workflow_completed: bool

@@ -52,13 +52,14 @@ def _request(client: TestClient, request_id: int, method: str, params: dict) -> 
     return response.json()
 
 
-def test_tools_list_exposes_two_read_only_email_tools() -> None:
-    """测试 MCP SDK 能发现两个只读邮件工具。"""
+def test_tools_list_exposes_email_tools() -> None:
+    """测试 MCP SDK 能发现读取与已有的受控发送工具。"""
     with _client() as client:
         response = _request(client, 1, "tools/list", {})
     assert [tool["name"] for tool in response["result"]["tools"]] == [
         "mail.messages.list",
         "mail.messages.get",
+        "mail.messages.send",
     ]
 
 

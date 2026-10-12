@@ -9,21 +9,31 @@ from aegis_agent_worker.agent.graph.state import TaskGraphState
 from aegis_agent_worker.agent.specialists.mail_agent import MailAgent
 from aegis_agent_worker.repository.run_repository import ClaimedRun
 from aegis_agent_worker.service.mail.mail_task_service import MailTaskService
+from aegis_agent_worker.agent.workflows.mail.planning_workflow import MailPlanningWorkflow, finish_mail_planning
+from aegis_agent_worker.agent.contracts.mail import MailDecision
 
 
 class MailExtractionWorkflow:
     """将现有邮件提取应用服务纳入可观测、可扩展的 LangGraph 子图。"""
 
-    def __init__(self, mail_tasks: MailTaskService, mail_agent: MailAgent) -> None:
+    def __init__(self, mail_tasks: MailTaskService, mail_agent: MailAgent, planning_audit=None) -> None:
         self._mail_tasks = mail_tasks
         self._mail_agent = mail_agent
+        self._planning_audit = planning_audit
 
     def build(self) -> Any:
         """构建“任务预检 → 生成并保存摘要”的邮件提取图。"""
         graph = StateGraph(TaskGraphState)
+        graph.add_node("mail_planning", MailPlanningWorkflow(
+            self._mail_agent, "extract_mail", self._mail_tasks, self._planning_audit).build())
+        graph.add_node("finish_mail_planning", finish_mail_planning)
         graph.add_node("ensure_mail_extraction_ready", self._ensure_ready)
         graph.add_node("generate_mail_extraction", self._generate_extraction)
-        graph.add_edge(START, "ensure_mail_extraction_ready")
+        graph.add_edge(START, "mail_planning")
+        graph.add_conditional_edges("mail_planning",
+            lambda state: "finish" if state.get("mail_planning_error") else "execute",
+            {"finish": "finish_mail_planning", "execute": "ensure_mail_extraction_ready"})
+        graph.add_edge("finish_mail_planning", END)
         graph.add_edge("ensure_mail_extraction_ready", "generate_mail_extraction")
         graph.add_edge("generate_mail_extraction", END)
         return graph.compile()
@@ -31,10 +41,13 @@ class MailExtractionWorkflow:
     async def _ensure_ready(self, state: TaskGraphState) -> dict[str, str]:
         """预检任务引用；图状态只保存阶段标记，不保存邮件正文。"""
         run = _run_from_state(state, expected_type="mail_extraction")
+        decision = MailDecision.model_validate(state["mail_decision"])
+        if decision.action != "extract":
+            raise ValueError("摘要入口不允许其他动作")
         if run.run_type == "conversation":
             await self._mail_tasks.prepare_conversation_handoff(run, state["handoff"])
         await self._mail_tasks.ensure_extraction_ready(run)
-        return {"mail_workflow_stage": "extraction_ready"}
+        return {"mail_workflow_stage": "extraction_ready", "plan": decision.model_dump(mode="json")}
 
     async def _generate_extraction(self, state: TaskGraphState) -> dict[str, bool | str]:
         """在节点局部变量中读取邮件、调用专职 Agent，并由 Service 保存结果。"""

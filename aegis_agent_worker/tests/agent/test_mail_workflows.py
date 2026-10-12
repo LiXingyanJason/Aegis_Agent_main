@@ -4,6 +4,7 @@ import pytest
 
 from aegis_agent_worker.agent.workflows.mail.extraction_graph import MailExtractionWorkflow
 from aegis_agent_worker.agent.workflows.mail.reply_draft_graph import MailReplyDraftWorkflow
+from aegis_agent_worker.agent.contracts.mail import MailDecision
 
 
 class _FakeMailTaskService:
@@ -57,9 +58,19 @@ class _FakeMailTaskService:
         assert handoff["target"]["resource_type"] == "email"
         self.calls.append("prepare_conversation_handoff")
 
+    async def load_planning_reference(self, run):
+        """模拟页面后台请求的固定目标，不触发模型分类。"""
+        return {"target": {"resource_type": "email", "id": "00000000-0000-0000-0000-000000000009",
+                           "source_version": "v1"}, "instruction": ""}
+
 
 class _FakeMailAgent:
     """模拟邮件专职 Agent；只验证工作流在正确位置发起语义推理。"""
+
+    async def plan_mail(self, user_content, handoff):
+        """对话目标在交接时已经核验，专家只能保留它。"""
+        return MailDecision(action="extract" if handoff.intent == "extract_mail" else "draft_reply",
+                            target=handoff.target, instruction=handoff.instruction)
 
     @property
     def provider_name(self) -> str:
@@ -132,8 +143,8 @@ async def test_reply_draft_workflow_prechecks_then_generates() -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("intent", ["extract_mail", "draft_mail_reply"])
-async def test_conversation_handoff_reuses_mail_expert_without_ending_run_early(intent):
-    """聊天交接复用专家，保留最终助手消息且不把草稿正文写入 Checkpoint。"""
+async def test_conversation_cannot_generate_mail_content_directly(intent):
+    """摘要与起草必须由卡片按钮触发明确后台任务，对话直达旧入口也不会执行。"""
     service = _FakeMailTaskService()
     graph = (MailExtractionWorkflow(service, _FakeMailAgent()).build() if intent == "extract_mail"
              else MailReplyDraftWorkflow(service, _FakeMailAgent()).build())
@@ -145,7 +156,7 @@ async def test_conversation_handoff_reuses_mail_expert_without_ending_run_early(
                    "source_version": "v1"},
     }
     result = await graph.ainvoke(state)
-    assert service.calls[0] == "prepare_conversation_handoff"
-    assert result["assistant_content"]
+    assert not service.calls
+    assert "点击" in result["assistant_content"]
     assert result["mail_workflow_completed"] is False
     assert "body" not in result and "email" not in result

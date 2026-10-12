@@ -29,6 +29,8 @@ from aegis_agent_worker.service.calendar.calendar_confirmation_service import Ca
 from aegis_agent_worker.service.calendar.calendar_planning_service import CalendarPlanningService
 from aegis_agent_worker.service.mail.mail_send_service import MailSendService
 from aegis_agent_worker.service.mail.mail_task_service import MailTaskService
+from aegis_agent_worker.service.mail.mail_query_service import MailQueryService
+from aegis_agent_worker.service.mail.mail_planning_service import MailPlanningService
 from aegis_agent_worker.service.memory.memory_context_service import MemoryContextService
 from aegis_agent_worker.service.runtime.conversation_artifact_service import ConversationArtifactService
 from aegis_agent_worker.service.tool.tool_execution_service import ToolExecutionService
@@ -71,8 +73,11 @@ async def run_worker() -> None:
             mail_workflows = MailWorkflowFactory(
                 mail_tasks=mail_tasks,
                 mail_send=mail_send,
-                mail_agent=MailAgent(llm_client),
+                mail_agent=MailAgent(llm_client, settings.app_timezone),
                 memory_context=memory_context,
+                query_service=MailQueryService(database, runs, tools, events),
+                artifact_service=artifact_service,
+                planning_audit=MailPlanningService(database, runs, events),
             )
             orchestrator = AgentOrchestrator(
                 database,

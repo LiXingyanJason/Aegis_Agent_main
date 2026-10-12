@@ -1,5 +1,9 @@
 # Aegis Email MCP Server
 
+Mock 数据相对路径现在固定相对于 Email MCP 项目目录，不依赖启动终端或 IDE 的工作目录。默认读取 `Email_mcp_server/data/mock_mailbox.json`；已发送记录写入同目录的 `mock_sent_mailbox.json`。配置 `EMAIL_MOCK_DATA_PATH`、`EMAIL_MOCK_SENT_DATA_PATH` 时，相对路径采用同一规则，绝对路径保持不变。
+
+Docker 明确配置 `/app/data/mock_mailbox.json` 和 `/app/data/mock_sent_mailbox.json`；使用独立安装的包时也应通过环境变量指定数据绝对路径。收件箱文件不存在时仍报错，不自动生成或清空已有邮箱。
+
 这是仅供 Aegis 主后端调用的无用户状态邮件工具服务。它不负责用户登录、租户、审批、审计、数据库或邮箱 OAuth 凭据管理；这些职责全部属于 Aegis 主后端。
 
 ```text

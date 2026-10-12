@@ -25,6 +25,7 @@ h1, h2, h3, p { margin-top: 0; }
 .history-scroll { display: block; overflow-y: scroll; scrollbar-gutter: stable; }
 .history-item { display: flex; min-height: 52px; flex-direction: column; justify-content: center; margin-bottom: 4px; line-height: 1.25; }
 .history-title { display: block; line-height: 18px; }
+.messages > * { flex-shrink: 0; }
 .history-time { display: block; line-height: 16px; }
 .new-chat-button { font-size: 14px; letter-spacing: 0; }
 .new-title-editor { display: grid; gap: 7px; flex: none; margin-top: 14px; padding: 11px; border-radius: 8px; background: #f4f8fd; }

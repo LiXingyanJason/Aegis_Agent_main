@@ -70,7 +70,7 @@ class MailTaskRepository:
         result = await session.execute(
             text(
                 "SELECT rr.email_id, rr.extraction_id, rr.instruction, em.connection_id, "
-                "em.provider_message_id, me.key_points, me.due_date_candidates "
+                "em.provider_message_id, em.source_version, me.key_points, me.due_date_candidates "
                 "FROM mail_reply_draft_requests rr JOIN email_messages em ON em.id = rr.email_id "
                 "LEFT JOIN mail_extractions me ON me.id = rr.extraction_id "
                 "WHERE rr.run_id = :run_id AND rr.tenant_id = :tenant_id "

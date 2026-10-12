@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   getMailDraft,
   getMailMessageDetail,
@@ -18,6 +18,7 @@ import { subscribeRunEvents } from '../api/run'
 
 const auth = useAuthStore()
 const router = useRouter()
+const route = useRoute()
 const activeTab = ref('received')
 const messages = ref([])
 const drafts = ref([])
@@ -391,6 +392,15 @@ async function signOut() {
 onMounted(async () => {
   // 标签上的数量应当反映真实服务端数据，而不是等用户第一次切换分区后才更新。
   await Promise.all([loadMessages(), loadDrafts(), loadSentMessages()])
+  if (typeof route.query.draft_id === 'string' && route.query.draft_id) {
+    activeTab.value = 'drafts'
+    await openDraft(route.query.draft_id)
+  } else if (typeof route.query.email_id === 'string' && route.query.email_id) {
+    activeTab.value = 'received'
+    const message = messages.value.find((item) => item.email_id === route.query.email_id)
+      ?? { email_id: route.query.email_id, subject: '邮件详情', from_email: '', extraction_status: 'not_generated' }
+    await openMailDetail(message)
+  }
 })
 onBeforeUnmount(() => {
   for (const controller of streamControllers.values()) controller.abort()
@@ -683,7 +693,7 @@ onBeforeUnmount(() => {
       <el-alert v-if="mailDetailError" :title="mailDetailError" type="error" :closable="false" show-icon />
       <template v-else-if="selectedMail">
         <div class="mail-detail-meta">
-          <div><span>发件人</span><b>{{ mailDetail ? addressList([mailDetail.from]) : (selectedMail.customer || selectedMail.from_email) + ' · ' + selectedMail.from_email }}</b></div>
+          <div><span>发件人</span><b>{{ mailDetail ? addressList([mailDetail.from]) : (selectedMail.customer || selectedMail.from_email || '加载中…') }}</b></div>
           <div><span>收件人</span><b>{{ mailDetail ? addressList(mailDetail.to) : '加载中…' }}</b></div>
           <div><span>抄送</span><b>{{ mailDetail ? addressList(mailDetail.cc) : '加载中…' }}</b></div>
           <div><span>主题</span><b>{{ mailDetail?.subject || selectedMail.subject }}</b></div>

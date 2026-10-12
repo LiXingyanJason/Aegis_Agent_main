@@ -7,7 +7,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 Domain = Literal["calendar", "mail"]
-Intent = Literal["list_events", "find_free_time", "arrange_meeting", "extract_mail", "draft_mail_reply"]
+Intent = Literal["list_events", "find_free_time", "arrange_meeting", "query_mail", "extract_mail", "draft_mail_reply"]
 
 
 class ResourceReference(BaseModel):
@@ -49,13 +49,15 @@ class MainDecision(BaseModel):
         if self.decision == "delegate":
             if not self.domain or not self.intent or not self.instruction.strip() or self.clarification_question:
                 raise ValueError("交接决定缺少领域、意图或任务要求")
-            expected = "mail" if self.intent in {"extract_mail", "draft_mail_reply"} else "calendar"
+            expected = "mail" if self.intent in {"query_mail", "extract_mail", "draft_mail_reply"} else "calendar"
             if self.domain != expected:
                 raise ValueError("领域与意图不匹配")
-            if expected == "mail" and (self.target is None or self.target.resource_type != "email"):
+            if self.intent in {"extract_mail", "draft_mail_reply"} and (self.target is None or self.target.resource_type != "email"):
                 raise ValueError("邮件交接必须指向一封明确邮件")
-            if expected == "mail" and (not self.target.source_version or self.target.version is not None):
+            if self.target and expected == "mail" and (not self.target.source_version or self.target.version is not None):
                 raise ValueError("邮件引用必须携带快照 source_version，不使用草稿版本")
+            if self.target and expected == "mail" and self.target.resource_type != "email":
+                raise ValueError("邮件入口只能引用邮件")
             if expected == "calendar" and self.target is not None:
                 raise ValueError("当前日历能力不支持修改已有对象")
         else:
