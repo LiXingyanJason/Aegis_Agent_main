@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import {
   createConversation,
+  getConversationArtifacts,
   getConversationDetail,
   listConversations,
   sendConversationMessage,
@@ -13,6 +14,7 @@ export const useConversationStore = defineStore('conversation', {
     current: null,
     messages: [],
     runs: [],
+    artifactsByRun: {},
     runEventNos: {},
     latestSubmission: null,
     loadingHistory: false,
@@ -37,6 +39,7 @@ export const useConversationStore = defineStore('conversation', {
         this.current = detail
         this.messages = detail.messages ?? []
         this.runs = detail.runs ?? []
+        this.artifactsByRun = {}
         this.latestSubmission = null
         return detail
       } finally {
@@ -49,6 +52,7 @@ export const useConversationStore = defineStore('conversation', {
         this.current = await createConversation(title)
         this.messages = []
         this.runs = []
+        this.artifactsByRun = {}
         this.latestSubmission = null
         this.history.unshift({
           ...this.current,
@@ -126,6 +130,16 @@ export const useConversationStore = defineStore('conversation', {
         }
       }
       return run
+    },
+    async loadArtifacts(conversationId, runId) {
+      const artifacts = await getConversationArtifacts(conversationId, runId)
+      if (this.current?.conversation_id === conversationId) {
+        this.artifactsByRun = {
+          ...this.artifactsByRun,
+          [runId ?? '__all__']: artifacts,
+        }
+      }
+      return artifacts
     },
     applyRunEvent(event) {
       const runId = event.run_id

@@ -15,6 +15,13 @@ export async function getConversationDetail(conversationId) {
   return response.data.data
 }
 
+export async function getConversationArtifacts(conversationId, runId) {
+  const response = await http.get('/conversations/' + conversationId + '/artifacts', {
+    params: runId ? { run_id: runId } : {},
+  })
+  return response.data.data
+}
+
 export async function sendConversationMessage(conversationId, content, clientMessageId) {
   const response = await http.post(
     `/conversations/${conversationId}/messages`,

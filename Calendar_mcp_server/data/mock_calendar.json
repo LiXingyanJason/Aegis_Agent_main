@@ -1,46 +1,72 @@
 [
   {
-    "external_event_id": "mock-seed-1",
-    "title": "项目同步",
-    "start_at": "2026-10-05T07:00:00+00:00",
-    "end_at": "2026-10-05T07:30:00+00:00",
+    "external_event_id": "mock-seed-20261009-standup",
+    "title": "研发站会",
+    "start_at": "2026-10-13T01:00:00+00:00",
+    "end_at": "2026-10-13T01:30:00+00:00",
+    "attendees": [
+      "jason@example.com",
+      "wangmin@example.com",
+      "chenyu@example.com"
+    ]
+  },
+  {
+    "external_event_id": "mock-seed-20261009-review",
+    "title": "项目阶段评审",
+    "start_at": "2026-10-14T05:00:00+00:00",
+    "end_at": "2026-10-14T06:00:00+00:00",
     "attendees": [
       "jason@example.com",
       "wangmin@example.com"
     ]
   },
   {
-    "external_event_id": "mock-seed-2",
-    "title": "产品评审",
-    "start_at": "2026-10-09T09:00:00+00:00",
-    "end_at": "2026-10-09T10:00:00+00:00",
+    "external_event_id": "mock-seed-20261010-sync",
+    "title": "项目同步",
+    "start_at": "2026-10-10T01:00:00+00:00",
+    "end_at": "2026-10-10T01:30:00+00:00",
+    "attendees": [
+      "jason@example.com",
+      "wangmin@example.com"
+    ]
+  },
+  {
+    "external_event_id": "mock-seed-20261010-planning",
+    "title": "产品迭代规划",
+    "start_at": "2026-10-10T03:00:00+00:00",
+    "end_at": "2026-10-10T04:00:00+00:00",
+    "attendees": [
+      "jason@example.com",
+      "chenyu@example.com"
+    ]
+  },
+  {
+    "external_event_id": "mock-seed-20261010-renewal",
+    "title": "客户续约沟通",
+    "start_at": "2026-10-10T06:00:00+00:00",
+    "end_at": "2026-10-10T07:00:00+00:00",
+    "attendees": [
+      "jason@example.com",
+      "sales@example.com"
+    ]
+  },
+  {
+    "external_event_id": "mock-seed-20261012-weekly",
+    "title": "下周工作排期",
+    "start_at": "2026-10-12T02:00:00+00:00",
+    "end_at": "2026-10-12T03:00:00+00:00",
     "attendees": [
       "jason@example.com"
     ]
   },
   {
-    "external_event_id": "mock-seed-3",
-    "title": "周报整理",
-    "start_at": "2026-10-10T02:00:00+00:00",
-    "end_at": "2026-10-10T03:00:00+00:00",
-    "attendees": [
-      "jason@example.com"
-    ]
-  },
-  {
-    "external_event_id": "mock-event-f5e69a6c-27ed-59c8-a651-b0ff9ddd9929",
-    "idempotency_key": "calendar:83c264d4-6412-4dca-b5ac-a175c126587c:1",
-    "title": "待确认会议",
-    "start_at": "2026-10-07T01:00:00+00:00",
-    "end_at": "2026-10-07T10:00:00+00:00",
-    "attendees": []
-  },
-  {
-    "external_event_id": "mock-event-3c212b1e-d813-5f95-a75a-614e61de2b69",
-    "idempotency_key": "calendar:aa98bf66-130a-420d-9486-138e4aa93e8b:1",
-    "title": "待确认会议",
-    "start_at": "2026-10-08T01:00:00+00:00",
-    "end_at": "2026-10-08T10:00:00+00:00",
-    "attendees": []
+    "external_event_id": "mock-event-4d8194a1-9d81-5594-88ef-ada53eb3f2fc",
+    "idempotency_key": "calendar:a8be1bbc-a858-406b-8f3e-d444af1aaa42:1",
+    "title": "一个50分钟的会议",
+    "start_at": "2026-10-15T07:00:00+00:00",
+    "end_at": "2026-10-15T07:50:00+00:00",
+    "attendees": [],
+    "description": "会议时间为 2026-10-15 15:00～15:50（北京时间），时长 50 分钟。",
+    "location": null
   }
 ]

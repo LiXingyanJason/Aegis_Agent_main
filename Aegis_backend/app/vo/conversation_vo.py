@@ -40,6 +40,18 @@ class ConversationMessageVO(BaseModel):
     created_at: datetime
 
 
+class ConversationArtifactVO(BaseModel):
+    """一个可供对话卡片渲染的短期业务对象引用。"""
+
+    artifact_id: UUID
+    run_id: UUID
+    assistant_message_id: UUID | None
+    artifact_type: str
+    payload: dict[str, Any] | str
+    expires_at: datetime
+    created_at: datetime
+
+
 class RunStepVO(BaseModel):
     """任务运行的单个进度步骤。"""
 

@@ -16,9 +16,19 @@ class TaskGraphState(TypedDict, total=False):
     memory_context: str
     intent: str # 意图
     workflow: str
+    # 领域 Agent 产生、且已经过 Pydantic 校验的受限执行计划。
+    plan: dict[str, Any]
+    # 工具调用的脱敏结果摘要；完整事实仍在 tool_calls 等业务表。
+    tool_result: dict[str, Any]
+    # 供前端卡片及短期指代使用的稳定对象引用和展示字段。
+    artifacts: list[dict[str, Any]]
     selected_tool_name: str
     selected_tool_arguments: dict[str, Any]
     tool_context: str
+    # 会议安排确认图：事实候选与模型草稿分开保存，恢复后仍可重新校验。
+    calendar_meeting_plan: dict[str, Any]
+    availability: dict[str, Any]
+    calendar_meeting_draft: dict[str, Any]
     awaiting_confirmation: bool
     draft_id: str
     approval_item_id: str

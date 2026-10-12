@@ -78,6 +78,30 @@ class ConversationService:
             )
         return {"conversation": conversation, "messages": messages, "runs": runs}
 
+    async def list_active_artifacts(
+        self,
+        session: AsyncSession,
+        local_user: LocalUser,
+        conversation_id: UUID,
+        run_id: UUID | None = None,
+    ) -> list[dict[str, Any]] | None:
+        """返回会话的短期展示引用；会话不存在或无权访问时返回 None。"""
+        conversation = await self._conversations.find_detail_for_user(
+            session,
+            conversation_id=conversation_id,
+            tenant_id=local_user.tenant_id,
+            user_id=local_user.id,
+        )
+        if conversation is None:
+            return None
+        return await self._conversations.list_active_artifacts_for_conversation(
+            session,
+            conversation_id=conversation_id,
+            tenant_id=local_user.tenant_id,
+            user_id=local_user.id,
+            run_id=run_id,
+        )
+
     async def send_message(
         self,
         session: AsyncSession,

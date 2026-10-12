@@ -15,7 +15,8 @@ class CalendarRequestContext:
     connection_id: UUID
     tenant_id: UUID
     user_id: UUID
-    run_id: UUID
+    run_id: UUID | None = None
+    request_id: UUID | None = None
 
 
 def parse_request_context(meta: dict[str, Any] | None) -> CalendarRequestContext:
@@ -23,11 +24,16 @@ def parse_request_context(meta: dict[str, Any] | None) -> CalendarRequestContext
     if not isinstance(meta, dict):
         raise ValueError("缺少有效的 Aegis 调用上下文")
     try:
+        run_id = UUID(str(meta["aegis_run_id"])) if meta.get("aegis_run_id") else None
+        request_id = UUID(str(meta["aegis_request_id"])) if meta.get("aegis_request_id") else None
+        if run_id is None and request_id is None:
+            raise ValueError("缺少调用关联标识")
         return CalendarRequestContext(
             connection_id=UUID(str(meta["aegis_connection_id"])),
             tenant_id=UUID(str(meta["aegis_tenant_id"])),
             user_id=UUID(str(meta["aegis_user_id"])),
-            run_id=UUID(str(meta["aegis_run_id"])),
+            run_id=run_id,
+            request_id=request_id,
         )
     except (KeyError, ValueError, TypeError) as error:
         raise ValueError("缺少有效的 Aegis 连接与身份上下文") from error
@@ -41,6 +47,9 @@ class CalendarEvent:
     start_at: datetime
     end_at: datetime
     attendees: tuple[str, ...]
+    external_event_id: str = ""
+    description: str | None = None
+    location: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,14 +103,17 @@ class CreateEventVO(BaseModel):
 
 
 class CalendarEventVO(BaseModel):
+    external_event_id: str
     title: str
     start_at: datetime
     end_at: datetime
     attendees: list[str]
+    description: str | None = None
+    location: str | None = None
 
     @classmethod
     def from_entity(cls, event: CalendarEvent) -> "CalendarEventVO":
-        return cls(title=event.title, start_at=event.start_at, end_at=event.end_at, attendees=list(event.attendees))
+        return cls(external_event_id=event.external_event_id, title=event.title, start_at=event.start_at, end_at=event.end_at, attendees=list(event.attendees), description=event.description, location=event.location)
 
 
 class CalendarEventsVO(BaseModel):

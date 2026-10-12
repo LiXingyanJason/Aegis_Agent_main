@@ -25,6 +25,7 @@ ON CONFLICT (tenant_id, user_id, provider, provider_account_id) DO UPDATE SET
   credential_ref = EXCLUDED.credential_ref,
   scopes = EXCLUDED.scopes,
   status = 'active',
+  expires_at = NULL,
   last_verified_at = now();
 
 COMMIT;

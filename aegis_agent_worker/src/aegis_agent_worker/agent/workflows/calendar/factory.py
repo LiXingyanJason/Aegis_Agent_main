@@ -7,6 +7,7 @@ from aegis_agent_worker.agent.specialists.calendar_agent import CalendarAgent
 from aegis_agent_worker.agent.workflows.calendar.confirmation_graph import CalendarConfirmationWorkflow
 from aegis_agent_worker.agent.workflows.calendar.read_graph import CalendarReadWorkflow
 from aegis_agent_worker.service.calendar.calendar_confirmation_service import CalendarConfirmationService
+from aegis_agent_worker.service.runtime.conversation_artifact_service import ConversationArtifactService
 from aegis_agent_worker.service.tool.tool_execution_service import ToolExecutionService
 
 
@@ -17,12 +18,17 @@ class CalendarWorkflowFactory:
     calendar_agent: CalendarAgent
     tool_execution: ToolExecutionService | None
     confirmation_service: CalendarConfirmationService | None
+    artifact_service: ConversationArtifactService | None = None
 
     def register(self, registry: GraphRegistry) -> None:
         """将日历读取和会议确认子图注册到根图可见的注册表。"""
         registry.register(
             "calendar_read",
-            CalendarReadWorkflow(self.calendar_agent, self.tool_execution).build(),
+            CalendarReadWorkflow(
+                self.calendar_agent,
+                self.tool_execution,
+                self.artifact_service,
+            ).build(),
         )
         registry.register(
             "calendar_confirmation",

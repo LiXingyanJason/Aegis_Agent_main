@@ -9,6 +9,11 @@ from uuid import UUID
 
 from sqlalchemy import text
 
+from aegis_agent_worker.agent.contracts.calendar import (
+    CalendarFreeTimeCandidate,
+    CalendarMeetingDraftProposal,
+    extract_calendar_free_time_candidates,
+)
 from aegis_agent_worker.config.database import Database, TenantContext, tenant_transaction
 from aegis_agent_worker.event.run_event import RunEventPublisher
 from aegis_agent_worker.repository.run_repository import AgentRunRepository, ClaimedRun
@@ -45,25 +50,61 @@ class CalendarConfirmationService:
         self._tools = tools
         self._tool_calls = tool_calls or ToolCallRepository()
 
-    async def prepare(
+    async def query_available_slots(
         self,
         run: ClaimedRun,
         *,
         invocation: ToolInvocation,
-        title: str,
-        attendees: list[str],
     ) -> dict[str, Any]:
-        """查询空闲时间并创建一个待确认的会议草稿。"""
+        """查询可信空闲候选；本方法不选择时段，也不创建草稿。"""
         if self._tool_execution is None:
-            return {"confirmation_error": "当前日历工具尚未配置，无法生成会议草稿。"}
+            return {"confirmation_error": "当前日历工具尚未配置，无法查询可用时间。"}
 
         context = TenantContext(tenant_id=run.tenant_id, user_id=run.user_id)
-        tool_context = await self._tool_execution.invoke_read_tool(run, context, invocation)
-        free_slot = _first_free_slot(tool_context)
-        if free_slot is None:
-            return {"confirmation_error": "未查询到可用于安排会议的空闲时间，未创建草稿。"}
+        execution = await self._tool_execution.execute_read_tool(run, context, invocation)
+        candidates, duration_minutes = extract_calendar_free_time_candidates(
+            execution.output_summary
+        )
+        if execution.status != "succeeded" or not candidates:
+            return {
+                "confirmation_error": "未查询到可用于安排会议的空闲时间，未创建草稿。",
+                "tool_context": execution.tool_context,
+            }
+        return {
+            "availability": {
+                "duration_minutes": duration_minutes,
+                "candidates": [candidate.model_dump(mode="json") for candidate in candidates],
+            },
+            "tool_context": execution.tool_context,
+        }
 
-        start_at, end_at = free_slot
+    async def create_recommended_draft(
+        self,
+        run: ClaimedRun,
+        *,
+        proposal: CalendarMeetingDraftProposal,
+        selected_slot: CalendarFreeTimeCandidate,
+        alternatives: list[CalendarFreeTimeCandidate],
+        duration_minutes: int,
+    ) -> dict[str, Any]:
+        """将已经过候选集合校验的推荐时段固化为指定时长的待确认会议草稿。"""
+        context = TenantContext(tenant_id=run.tenant_id, user_id=run.user_id)
+        start_at, end_at = _meeting_interval(selected_slot, duration_minutes)
+        recommendation_preview = {
+            "selected_slot_id": selected_slot.slot_id,
+            "reason": proposal.reason,
+            "alternative_slots": [
+                {
+                    "slot_id": candidate.slot_id,
+                    "start_at": alternative_start.isoformat(),
+                    "end_at": alternative_end.isoformat(),
+                    "start_at_local": candidate.start_at_local,
+                    "end_at_local": candidate.end_at_local,
+                }
+                for candidate in alternatives
+                for alternative_start, alternative_end in [_meeting_interval(candidate, duration_minutes)]
+            ],
+        }
         async with self._database.session() as session:
             async with tenant_transaction(session, context):
                 connection_id = await _find_calendar_connection(session, run.tenant_id, run.user_id)
@@ -73,19 +114,21 @@ class CalendarConfirmationService:
                     session,
                     run=run,
                     connection_id=connection_id,
-                    title=title,
+                    title=proposal.title,
                     start_at=start_at,
                     end_at=end_at,
-                    attendees=attendees,
+                    attendees=proposal.attendees,
+                    description=proposal.description,
                 )
                 approval_item_id = await _create_approval_item(
                     session,
                     run=run,
                     draft_id=draft_id,
-                    title=title,
+                    title=proposal.title,
                     start_at=start_at,
                     end_at=end_at,
-                    attendees=attendees,
+                    attendees=proposal.attendees,
+                    recommendation_preview=recommendation_preview,
                 )
                 await session.execute(
                     text(
@@ -105,13 +148,14 @@ class CalendarConfirmationService:
                             "approval_item_id": str(approval_item_id),
                             "resource_type": "calendar_event_draft",
                             "resource_id": str(draft_id),
-                            "title": title,
+                            "title": proposal.title,
                             "action": "calendar.create_event",
                             "status": "pending",
                             "preview": {
                                 "start_at": start_at.isoformat(),
                                 "end_at": end_at.isoformat(),
-                                "attendees": attendees,
+                                "attendees": proposal.attendees,
+                                "recommendation": recommendation_preview,
                             },
                         },
                     )
@@ -120,7 +164,7 @@ class CalendarConfirmationService:
             "awaiting_confirmation": True,
             "draft_id": str(draft_id),
             "approval_item_id": str(approval_item_id),
-            "assistant_content": "我已根据空闲时间生成会议草稿，请在确认页逐项确认后再创建日历事件。",
+            "assistant_content": "我已基于可用时间生成会议草稿和备选时段，请在确认页逐项确认后再创建日历事件。",
         }
 
     async def create_approved_event(
@@ -232,17 +276,6 @@ class CalendarConfirmationService:
                 await session.execute(text("UPDATE approval_items SET status = 'failed', updated_at = now() WHERE id = :approval_item_id AND tenant_id = :tenant_id"), {"approval_item_id": approval_item_id, "tenant_id": run.tenant_id})
 
 
-def _first_free_slot(tool_context: str) -> tuple[datetime, datetime] | None:
-    """从只读工具的可信摘要中取第一个空闲时段；失败文本不会被当作日历数据。"""
-    try:
-        payload = json.loads(tool_context.rsplit("\n", 1)[-1])
-        slots = payload["tool_result"]["available_slots"]
-        first_slot = slots[0]
-        return datetime.fromisoformat(first_slot["start_at"]), datetime.fromisoformat(first_slot["end_at"])
-    except (IndexError, KeyError, TypeError, ValueError, json.JSONDecodeError):
-        return None
-
-
 async def _find_calendar_connection(session, tenant_id: UUID, user_id: UUID) -> UUID | None:
     result = await session.execute(
         text(
@@ -258,7 +291,21 @@ async def _find_calendar_connection(session, tenant_id: UUID, user_id: UUID) -> 
     return row["id"] if row else None
 
 
-async def _create_draft(session, *, run: ClaimedRun, connection_id: UUID, title: str, start_at: datetime, end_at: datetime, attendees: list[str]) -> UUID:
+def _meeting_interval(
+    candidate: CalendarFreeTimeCandidate, duration_minutes: int
+) -> tuple[datetime, datetime]:
+    """从空闲区间起点截取用户请求时长，避免把整段空闲时间误建成会议。"""
+    if not 15 <= duration_minutes <= 480:
+        raise ValueError("会议时长必须在 15 至 480 分钟之间")
+    start_at = datetime.fromisoformat(candidate.start_at)
+    available_end_at = datetime.fromisoformat(candidate.end_at)
+    end_at = start_at + timedelta(minutes=duration_minutes)
+    if end_at > available_end_at:
+        raise ValueError("推荐时段不足以容纳请求的会议时长")
+    return start_at, end_at
+
+
+async def _create_draft(session, *, run: ClaimedRun, connection_id: UUID, title: str, start_at: datetime, end_at: datetime, attendees: list[str], description: str) -> UUID:
     result = await session.execute(
         text(
             "INSERT INTO calendar_event_drafts "
@@ -266,7 +313,7 @@ async def _create_draft(session, *, run: ClaimedRun, connection_id: UUID, title:
             "VALUES (:tenant_id, :user_id, :run_id, :connection_id, 'primary', '主日历', :title, "
             ":description, :start_at, :end_at, :timezone, 'pending_approval') RETURNING id"
         ),
-        {"tenant_id": run.tenant_id, "user_id": run.user_id, "run_id": run.id, "connection_id": connection_id, "title": title[:500], "description": "由 Aegis PA 生成，等待用户确认。", "start_at": start_at, "end_at": end_at, "timezone": "Asia/Shanghai"},
+        {"tenant_id": run.tenant_id, "user_id": run.user_id, "run_id": run.id, "connection_id": connection_id, "title": title[:500], "description": description[:4000], "start_at": start_at, "end_at": end_at, "timezone": "Asia/Shanghai"},
     )
     draft_id = result.mappings().one()["id"]
     for email in sorted(set(attendees)):
@@ -280,8 +327,8 @@ async def _create_draft(session, *, run: ClaimedRun, connection_id: UUID, title:
     return draft_id
 
 
-async def _create_approval_item(session, *, run: ClaimedRun, draft_id: UUID, title: str, start_at: datetime, end_at: datetime, attendees: list[str]) -> UUID:
-    preview = {"title": title, "start_at": start_at.isoformat(), "end_at": end_at.isoformat(), "attendees": attendees}
+async def _create_approval_item(session, *, run: ClaimedRun, draft_id: UUID, title: str, start_at: datetime, end_at: datetime, attendees: list[str], recommendation_preview: dict[str, Any]) -> UUID:
+    preview = {"title": title, "start_at": start_at.isoformat(), "end_at": end_at.isoformat(), "attendees": attendees, "recommendation": recommendation_preview}
     parameters_hash = sha256(json.dumps(preview, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
     result = await session.execute(
         text(

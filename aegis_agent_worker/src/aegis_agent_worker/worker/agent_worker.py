@@ -27,6 +27,7 @@ from aegis_agent_worker.service.calendar.calendar_confirmation_service import Ca
 from aegis_agent_worker.service.mail.mail_send_service import MailSendService
 from aegis_agent_worker.service.mail.mail_task_service import MailTaskService
 from aegis_agent_worker.service.memory.memory_context_service import MemoryContextService
+from aegis_agent_worker.service.runtime.conversation_artifact_service import ConversationArtifactService
 from aegis_agent_worker.service.tool.tool_execution_service import ToolExecutionService
 
 logger = logging.getLogger(__name__)
@@ -51,13 +52,15 @@ async def run_worker() -> None:
             tools = create_default_tool_gateway(settings)
             tool_calls = ToolCallRepository()
             tool_execution = ToolExecutionService(database, runs, tools, tool_calls, events)
+            artifact_service = ConversationArtifactService(database, runs, events)
             calendar_confirmation = CalendarConfirmationService(
                 database, runs, tool_execution, events, tools, tool_calls
             )
             calendar_workflows = CalendarWorkflowFactory(
-                calendar_agent=CalendarAgent(settings.app_timezone),
+                calendar_agent=CalendarAgent(settings.app_timezone, llm_client),
                 tool_execution=tool_execution,
                 confirmation_service=calendar_confirmation,
+                artifact_service=artifact_service,
             )
             mail_tasks = MailTaskService(database, runs, tools, events)
             mail_send = MailSendService(database, runs, tools, events)

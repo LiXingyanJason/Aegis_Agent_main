@@ -11,7 +11,27 @@ cd D:\AI\Aegis_Agent_main\Aegis_backend
 D:\anaconda\envs\Aegis\python.exe -m pip install -e ".[dev]"
 ```
 
-从 `.env.example` 复制一份 `.env`，填写数据库、Redis 与 OIDC 配置。`.env` 不得提交到 Git。模型与 MCP 配置位于独立的 `aegis_agent_worker/.env`。
+从 `.env.example` 复制一份 `.env`，填写数据库、Redis 与 OIDC 配置。`.env` 不得提交到 Git。模型配置位于独立的 `aegis_agent_worker/.env`；主后端的邮件／日历页面也会调用 MCP，因此相关 MCP URL 需分别配置在主后端和 Worker 中。
+
+### 日历展示页联调
+
+在主后端 `.env` 中配置：
+
+```dotenv
+CALENDAR_MCP_URL=http://127.0.0.1:9001/mcp
+CALENDAR_MCP_TIMEOUT_SECONDS=20
+```
+
+启动 Calendar MCP Server，并重启主后端。当前用户需具备有效的 `calendar.read` 连接；开发可使用 `scripts/003_seed_mock_calendar_connection.sql`。本次日历展示接口无需新增数据库迁移，使用既有日历草稿与审批表。
+
+1. 携带 access token 调用 `GET /calendar/calendars`，取得 connection_id。
+2. 调用 `GET /calendar/events`，携带 connection_id、start_at、end_at；例如北京时间 `2026-10-12T00:00:00+08:00` 至 `2026-10-19T00:00:00+08:00`。使用请求库编码参数，避免加号丢失。
+3. 用返回的 external_event_id 调用 `GET /calendar/events/detail`，同时传 connection_id。
+4. 调用 `GET /calendar/drafts` 读取同范围的待确认草稿；`GET /calendar/drafts/{draft_id}` 读取详情。审批继续使用现有 /approvals 接口。
+
+列表不包含完整描述或参会人邮箱；详情才返回这些字段。正式日历目前使用单用户共享 JSON Mock，页面会明确返回 `source=mock_calendar`。生产多租户须先实现 Provider 数据隔离。
+
+验证：`python -m pytest tests/controller/test_calendar_controller.py -q`。这组测试使用模拟数据库与 MCP；真实 PostgreSQL、Keycloak、MCP 联调需在本地服务启动后进行。
 
 运行基础设施测试：
 

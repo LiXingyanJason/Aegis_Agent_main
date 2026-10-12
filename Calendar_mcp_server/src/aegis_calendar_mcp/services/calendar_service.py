@@ -16,6 +16,11 @@ class CalendarService:
         events = await self._provider.list_events(context, param.start_at, param.end_at)
         return CalendarEventsVO(query_range={"start_at": param.start_at, "end_at": param.end_at}, events=[CalendarEventVO.from_entity(event) for event in events])
 
+    async def get_event(self, context: CalendarRequestContext, external_event_id: str) -> CalendarEventVO | None:
+        """详情不存在时返回空值，供调用方转换为 HTTP 404。"""
+        event = await self._provider.get_event(context, external_event_id)
+        return CalendarEventVO.from_entity(event) if event is not None else None
+
     async def find_free_time(self, context: CalendarRequestContext, param: FindFreeTimeParam) -> FreeTimeVO:
         busy_events = await self._provider.list_events(context, param.start_at, param.end_at)
         slots: list[FreeTimeSlot] = []
@@ -34,7 +39,7 @@ class CalendarService:
 
     async def create_event(self, context: CalendarRequestContext, param: CreateEventParam) -> CreateEventVO:
         """将已由主服务批准的会议写入 Provider。"""
-        event = CalendarEvent(param.title, param.start_at, param.end_at, tuple(param.attendees))
+        event = CalendarEvent(param.title, param.start_at, param.end_at, tuple(param.attendees), description=param.description)
         external_event_id = await self._provider.create_event(context, event, param.idempotency_key)
         return CreateEventVO(external_event_id=external_event_id)
 

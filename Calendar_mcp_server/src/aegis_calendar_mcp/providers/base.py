@@ -7,6 +7,9 @@ from aegis_calendar_mcp.schemas.calendar import CalendarEvent, CalendarRequestCo
 
 
 class CalendarProvider(Protocol):
+    async def get_event(self, context: CalendarRequestContext, external_event_id: str) -> CalendarEvent | None:
+        """按稳定外部标识读取单个日程。"""
+
     async def list_events(self, context: CalendarRequestContext, start_at: datetime, end_at: datetime) -> list[CalendarEvent]:
         """读取给定时间范围内有重叠的日程。"""
 

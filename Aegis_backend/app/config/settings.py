@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 
-from pydantic import AnyHttpUrl, SecretStr
+from pydantic import AnyHttpUrl, SecretStr, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     email_mcp_url: AnyHttpUrl | None = None
     email_mcp_api_key: SecretStr | None = None
     email_mcp_timeout_seconds: float = 20.0
+
+    # 页面查询与 Worker 共用同一个 Calendar MCP；主后端仅调用读取工具。
+    calendar_mcp_url: AnyHttpUrl | None = None
+    calendar_mcp_api_key: SecretStr | None = None
+    calendar_mcp_timeout_seconds: float = Field(default=20.0, gt=0, le=120)
 
     @property
     def oidc_issuer(self) -> str:

@@ -219,6 +219,43 @@ class ConversationRepository:
         )
         return [dict(row) for row in result.mappings().all()]
 
+    async def list_active_artifacts_for_conversation(
+        self,
+        session: AsyncSession,
+        *,
+        conversation_id: UUID,
+        tenant_id: UUID,
+        user_id: UUID,
+        run_id: UUID | None = None,
+    ) -> list[dict[str, Any]]:
+        """读取当前用户会话中尚未过期的脱敏 Artifact。"""
+        filters = [
+            "a.conversation_id = :conversation_id",
+            "a.tenant_id = :tenant_id",
+            "a.user_id = :user_id",
+            "c.user_id = :user_id",
+            "a.expires_at > now()",
+        ]
+        parameters: dict[str, Any] = {
+            "conversation_id": conversation_id,
+            "tenant_id": tenant_id,
+            "user_id": user_id,
+        }
+        if run_id is not None:
+            filters.append("a.run_id = :run_id")
+            parameters["run_id"] = run_id
+        result = await session.execute(
+            text(
+                "SELECT a.id, a.run_id, a.assistant_message_id, a.artifact_type, a.payload, "
+                "       a.expires_at, a.created_at "
+                "FROM conversation_message_artifacts a "
+                "JOIN conversations c ON c.id = a.conversation_id "
+                "WHERE " + " AND ".join(filters) + " ORDER BY a.created_at"
+            ),
+            parameters,
+        )
+        return [dict(row) for row in result.mappings().all()]
+
     async def create_message_and_run(
         self,
         session: AsyncSession,

@@ -94,9 +94,49 @@ function meetingPlanOutcome(run) {
   return ''
 }
 
+function meetingRecommendation(preview) {
+  return preview?.recommendation ?? null
+}
+
+function formatRecommendationSlot(slot) {
+  if (!slot?.start_at && !slot?.end_at) return slot?.slot_id ?? '—'
+  return `${formatDateTime(slot.start_at)} ～ ${formatDateTime(slot.end_at)}`
+}
+
 function meetingRunForMessage(message) {
   if (!message.run_id) return null
   return conversations.runs.find((run) => run.run_id === message.run_id) ?? null
+}
+
+function artifactsForMessage(message) {
+  if (!message.run_id) return []
+  return (conversations.artifactsByRun[message.run_id] ?? [])
+    .filter((artifact) => artifact.assistant_message_id === message.message_id)
+}
+
+function artifactTitle(artifact) {
+  return artifact.artifact_type === 'calendar_free_time' ? '可用时间' : '日程结果'
+}
+
+function artifactItems(artifact) {
+  return artifact.payload?.items ?? []
+}
+
+async function loadArtifactsForConversation(detail) {
+  const conversationId = detail?.conversation_id
+  if (!conversationId) return
+  await Promise.allSettled((detail.runs ?? []).map(
+    (run) => conversations.loadArtifacts(conversationId, run.run_id),
+  ))
+}
+
+async function refreshArtifactsForRun(runId, conversationId) {
+  if (!conversationId || !runId) return
+  try {
+    await conversations.loadArtifacts(conversationId, runId)
+  } catch {
+    // Artifact 是可选展示结果；失败不覆盖任务本身的状态或错误信息。
+  }
 }
 
 function isTrackableRun(run) {
@@ -124,6 +164,7 @@ async function restoreConversation(conversationId, syncUrl = true) {
   error.value = ''
   try {
     const detail = await conversations.loadConversation(conversationId)
+    await loadArtifactsForConversation(detail)
     await scrollMessagesToBottom()
     draftMessage.value = ''
     pendingClientMessageId.value = null
@@ -227,7 +268,8 @@ async function finishRunTracking(runId, conversationId) {
   stopRunPolling(runId)
   isRunActive.value = false
   if (activeConversation.value?.conversation_id === conversationId) {
-    await conversations.loadConversation(conversationId)
+    const detail = await conversations.loadConversation(conversationId)
+    await loadArtifactsForConversation(detail)
   }
   await conversations.loadHistory()
 }
@@ -261,6 +303,9 @@ async function startRunStream(runId, conversationId) {
         })
         if (!handled) return
         error.value = ''
+        if (sseEvent.event === 'artifacts_ready') {
+          await refreshArtifactsForRun(runId, sseEvent.data?.payload?.conversation_id ?? conversationId)
+        }
         if (['run_completed', 'run_failed', 'approval_required'].includes(sseEvent.event)) {
           await finishRunTracking(runId, conversationId)
         }
@@ -307,6 +352,7 @@ onBeforeUnmount(() => stopRunTracking())
       <div class="brand"><span class="mark">⌾</span>Aegis PA</div>
       <p class="nav-label app-nav-label">工作空间</p>
       <a class="nav active" href="#task-console">◌ 任务对话</a>
+      <router-link class="nav" :to="{ name: 'calendar' }">▦ 日历</router-link>
       <router-link class="nav" :to="{ name: 'mail-management' }">✉ 邮件管理</router-link>
       <router-link class="nav" :to="{ name: 'todo-plans' }">☷ 待办计划</router-link>
       <router-link class="nav" :to="{ name: 'confirmations' }">✓ 操作确认</router-link>
@@ -375,6 +421,27 @@ onBeforeUnmount(() => stopRunTracking())
                     <div class="message-meta">{{ item.role === 'user' ? '你' : 'Aegis' }} · {{ formatTime(item.created_at) }}</div>
                   </div>
                 </div>
+                <div
+                  v-for="artifact in artifactsForMessage(item)"
+                  :key="'artifact-' + artifact.artifact_id"
+                  class="message artifact-message"
+                >
+                  <div class="avatar">A</div>
+                  <div class="artifact-card">
+                    <div class="artifact-heading">
+                      <b>{{ artifactTitle(artifact) }}</b>
+                      <span v-if="artifact.payload?.display_timezone">{{ artifact.payload.display_timezone }}</span>
+                    </div>
+                    <p v-if="artifact.artifact_type === 'calendar_free_time' && artifact.payload?.duration_minutes">
+                      建议会议时长：{{ artifact.payload.duration_minutes }} 分钟
+                    </p>
+                    <div v-for="(entry, index) in artifactItems(artifact)" :key="index" class="artifact-item">
+                      <b>{{ entry.title || '可用时段' }}</b>
+                      <span>{{ entry.start_at_local || entry.start_at || '—' }} ～ {{ entry.end_at_local || entry.end_at || '—' }}</span>
+                    </div>
+                    <p v-if="!artifactItems(artifact).length" class="muted">暂无可展示的脱敏结果。</p>
+                  </div>
+                </div>
                 <template v-if="item.role === 'user' && meetingRunForMessage(item) && meetingPreview(meetingRunForMessage(item))">
                   <div v-for="run in [meetingRunForMessage(item)]" :key="'meeting-plan-' + run.run_id" class="message meeting-plan-message">
                     <div class="avatar">A</div>
@@ -387,6 +454,16 @@ onBeforeUnmount(() => stopRunTracking())
                         <div v-if="meetingPreview(run).attendees?.length"><dt>参与者</dt><dd>{{ formatCalendarData(meetingPreview(run).attendees) }}</dd></div>
                         <div v-if="meetingPreview(run).calendar_name"><dt>日历</dt><dd>{{ meetingPreview(run).calendar_name }}</dd></div>
                       </dl>
+                      <div v-if="meetingRecommendation(meetingPreview(run))" class="meeting-recommendation">
+                        <b>推荐原因</b>
+                        <span v-if="meetingRecommendation(meetingPreview(run)).reason">{{ meetingRecommendation(meetingPreview(run)).reason }}</span>
+                        <template v-if="meetingRecommendation(meetingPreview(run)).alternative_slots?.length">
+                          <b>备选时间</b>
+                          <span v-for="slot in meetingRecommendation(meetingPreview(run)).alternative_slots" :key="slot.slot_id || `${slot.start_at}-${slot.end_at}`">
+                            {{ formatRecommendationSlot(slot) }}
+                          </span>
+                        </template>
+                      </div>
                       <router-link v-if="canConfirmMeeting(run)" class="run-approval-link" :to="{ name: 'confirmations', query: { run_id: run.run_id } }">核对并逐项确认</router-link>
                       <span v-else-if="meetingPlanOutcome(run)" class="meeting-plan-outcome">{{ meetingPlanOutcome(run) }}</span>
                     </div>
@@ -454,6 +531,15 @@ onBeforeUnmount(() => stopRunTracking())
                       <p>结束：{{ formatDateTime(plan.preview?.end_at) }}</p>
                       <p v-if="plan.preview?.attendees?.length">参与者：{{ formatCalendarData(plan.preview.attendees) }}</p>
                       <p v-if="plan.preview?.calendar_name">日历：{{ plan.preview.calendar_name }}</p>
+                      <p v-if="meetingRecommendation(plan.preview)?.reason">推荐原因：{{ meetingRecommendation(plan.preview).reason }}</p>
+                      <template v-if="meetingRecommendation(plan.preview)?.alternative_slots?.length">
+                        <p>备选时间：</p>
+                        <ul class="run-alternatives">
+                          <li v-for="slot in meetingRecommendation(plan.preview).alternative_slots" :key="slot.slot_id || `${slot.start_at}-${slot.end_at}`">
+                            {{ formatRecommendationSlot(slot) }}
+                          </li>
+                        </ul>
+                      </template>
                     </div>
                   </div>
                   <div v-if="run.approval_items?.length" class="run-section">

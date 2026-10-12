@@ -2,8 +2,9 @@
 
 import json
 import logging
+from dataclasses import dataclass
 from time import monotonic
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 from aegis_agent_worker.config.database import Database, TenantContext, tenant_transaction
@@ -16,6 +17,16 @@ from aegis_agent_worker.tool.contracts import ToolError, ToolInvocation
 from aegis_agent_worker.tool.gateway import ToolGateway
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, slots=True)
+class ReadToolExecutionResult:
+    """只读工具执行后可安全交给工作流的最小结果。"""
+
+    tool_name: str
+    status: Literal["succeeded", "failed"]
+    tool_context: str
+    output_summary: dict[str, Any] | None = None
 
 
 class ToolExecutionService:
@@ -35,9 +46,9 @@ class ToolExecutionService:
         self._tool_calls = tool_calls
         self._events = events
 
-    async def invoke_read_tool(
+    async def execute_read_tool(
         self, run: ClaimedRun, context: TenantContext, invocation: ToolInvocation
-    ) -> str:
+    ) -> ReadToolExecutionResult:
         """
         持久化只读工具调用、发出 SSE 预览事件，并返回可供 LLM 使用的可信上下文。
         invocation:需要调用工具的名称
@@ -109,7 +120,14 @@ class ToolExecutionService:
                             definition=definition,
                             error=error,
                         )
-                        return f"日历工具暂不可用：{error.message}。请明确告知用户，不要编造日程或空闲时间。"
+                        return ReadToolExecutionResult(
+                            tool_name=invocation.tool_name,
+                            status="failed",
+                            tool_context=(
+                                f"日历工具暂不可用：{error.message}。"
+                                "请明确告知用户，不要编造日程或空闲时间。"
+                            ),
+                        )
 
                     # 工具准备成功后，登记一次真正即将发生的工具调用，并通知前端开始执行
                     # 在 tool_calls 表新增一条记录，状态为 running
@@ -149,7 +167,14 @@ class ToolExecutionService:
             await self._finish_tool_failure(
                 run, context, step_id, tool_call_id, definition, error, int((monotonic() - started_at) * 1000)
             )
-            return f"日历工具调用失败：{error.message}。请说明无法取得日历结果，不要编造信息。"
+            return ReadToolExecutionResult(
+                tool_name=invocation.tool_name,
+                status="failed",
+                tool_context=(
+                    f"日历工具调用失败：{error.message}。"
+                    "请说明无法取得日历结果，不要编造信息。"
+                ),
+            )
 
         duration_ms = int((monotonic() - started_at) * 1000)
         log_event(
@@ -209,7 +234,7 @@ class ToolExecutionService:
                     )
                     self._events.publish_after_commit(preview_event)
                     self._events.publish_after_commit(progress_event)
-        return (
+        tool_context = (
             "以下是 Calendar MCP 工具返回的可信只读结果。只能基于这些结果回答。"
             "若调用参数含 requested_date，表示系统已按 timezone 将相对日期（如“明天”）"
             "解析为该具体日期；应直接回答，不能要求用户再次确认今天日期或时区。"
@@ -220,6 +245,19 @@ class ToolExecutionService:
                 ensure_ascii=False,
             )
         )
+        return ReadToolExecutionResult(
+            tool_name=definition.name,
+            status="succeeded",
+            tool_context=tool_context,
+            output_summary=result.output_summary,
+        )
+
+    async def invoke_read_tool(
+        self, run: ClaimedRun, context: TenantContext, invocation: ToolInvocation
+    ) -> str:
+        """兼容已有确认工作流：仅返回给 LLM 的可信文本上下文。"""
+        result = await self.execute_read_tool(run, context, invocation)
+        return result.tool_context
 
     async def _finish_tool_failure(
         self,

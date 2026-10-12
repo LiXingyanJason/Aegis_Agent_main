@@ -18,6 +18,8 @@ def register_write_tools(mcp: MCPServer, calendar_service: CalendarService) -> N
     async def create_event(start_at: datetime, end_at: datetime, title: str, idempotency_key: str, ctx: Context, attendees: list[str] | None = None, description: str | None = None) -> dict[str, Any]:
         try:
             context = context_from_mcp(ctx)
+            if context.run_id is None:
+                raise ValueError("创建日程必须来自已审批的 Agent 任务上下文")
             param = CreateEventParam(start_at=start_at, end_at=end_at, title=title, description=description, attendees=attendees or [], idempotency_key=idempotency_key)
         except (ValidationError, ValueError) as error:
             raise ValueError(str(error)) from error

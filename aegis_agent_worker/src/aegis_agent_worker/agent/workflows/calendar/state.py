@@ -11,6 +11,9 @@ class CalendarReadState(TypedDict, total=False):
     user_id: str
     conversation_id: str
     latest_user_message: str
+    plan: dict[str, Any]
+    tool_result: dict[str, Any]
+    artifacts: list[dict[str, Any]]
     selected_tool_name: str
     selected_tool_arguments: dict[str, Any]
     tool_context: str

@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-import httpx2
+import httpx
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 from pydantic import BaseModel, Field, ValidationError
@@ -86,7 +86,7 @@ class EmailMCPClient:
             http_client = (
                 self._http_client_factory(headers, timeout)
                 if self._http_client_factory is not None
-                else httpx2.AsyncClient(headers=headers, timeout=timeout)
+                else httpx.AsyncClient(headers=headers, timeout=timeout)
             )
             async with http_client:
                 async with streamable_http_client(
@@ -159,7 +159,7 @@ class EmailMCPClient:
             http_client = (
                 self._http_client_factory(headers, timeout)
                 if self._http_client_factory is not None
-                else httpx2.AsyncClient(headers=headers, timeout=timeout)
+                else httpx.AsyncClient(headers=headers, timeout=timeout)
             )
             async with http_client:
                 async with streamable_http_client(

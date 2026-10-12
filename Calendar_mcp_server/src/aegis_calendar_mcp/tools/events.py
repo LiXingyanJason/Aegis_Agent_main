@@ -30,3 +30,11 @@ def register_event_tools(mcp: MCPServer, calendar_service: CalendarService) -> N
         except (ValidationError, ValueError) as error:
             raise ValueError(str(error)) from error
         return (await calendar_service.list_events(context, param)).model_dump(mode="json")
+
+    @mcp.tool(name="calendar.get_event", description="按稳定事件标识读取当前日历事件详情。仅只读。")
+    async def get_event(external_event_id: str, ctx: Context) -> dict[str, Any]:
+        """以显式空事件区分不存在与工具故障。"""
+        if not external_event_id or len(external_event_id) > 512:
+            raise ValueError("事件标识无效")
+        event = await calendar_service.get_event(context_from_mcp(ctx), external_event_id)
+        return {"source": "mock_calendar", "event": event.model_dump(mode="json") if event else None}

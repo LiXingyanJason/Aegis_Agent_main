@@ -12,6 +12,19 @@ Mock / Google / Outlook Provider
 
 ## 目录
 
+日历页面扩展了只读工具 `calendar.get_event(external_event_id)`，返回
+`{"source":"mock_calendar","event":{...}}`；不存在时 event 为 null。
+`calendar.list_events` 返回稳定的 external_event_id。创建后的描述会写入 JSON，
+旧记录缺少 ID 时读取过程中一次补齐并保存；不会重建已有标识。
+
+主后端页面请求在 MCP meta 中发送 `aegis_request_id`，Worker 仍发送
+`aegis_run_id`，二者至少提供一个；连接、租户、用户标识仍必填。
+创建工具必须具有 run_id，且调用方必须已经完成审批和权限校验。
+当前 Mock Provider 共享同一 JSON，仅适用于单用户开发，不提供生产多租户数据隔离。
+
+测试使用临时 JSON，不修改开发数据：
+`python -m pytest tests/integration/test_mcp_server.py -q`。
+
 ```text
 Calendar_mcp_server/
 ├── pyproject.toml

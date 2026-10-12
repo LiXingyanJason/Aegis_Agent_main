@@ -46,11 +46,26 @@ function formatValue(value) {
 }
 
 function previewEntries(item) {
-  return Object.entries(item.preview_snapshot ?? {}).map(([key, value]) => ({
+  return Object.entries(item.preview_snapshot ?? {})
+    .filter(([key]) => key !== 'recommendation')
+    .map(([key, value]) => ({
     key,
     label: labels[key] ?? key,
     value: formatValue(value),
-  }))
+    }))
+}
+
+function recommendation(item) {
+  return item.preview_snapshot?.recommendation ?? null
+}
+
+function recommendationAlternatives(item) {
+  return recommendation(item)?.alternative_slots ?? []
+}
+
+function formatRecommendationSlot(slot) {
+  if (!slot?.start_at && !slot?.end_at) return slot?.slot_id ?? '—'
+  return `${formatValue(slot.start_at)} ～ ${formatValue(slot.end_at)}`
 }
 
 function actionVersion(item) {
@@ -245,6 +260,7 @@ onBeforeUnmount(stopAllRunStreams)
       <div class="brand"><span class="mark">⌾</span>Aegis PA</div>
       <p class="nav-label app-nav-label">工作空间</p>
       <router-link class="nav" :to="{ name: 'tasks' }">◌ 任务对话</router-link>
+      <router-link class="nav" :to="{ name: 'calendar' }">▦ 日历</router-link>
       <router-link class="nav" :to="{ name: 'mail-management' }">✉ 邮件管理</router-link>
       <router-link class="nav" :to="{ name: 'todo-plans' }">☷ 待办计划</router-link>
       <router-link class="nav active" :to="{ name: 'confirmations' }">✓ 操作确认</router-link>
@@ -301,6 +317,19 @@ onBeforeUnmount(stopAllRunStreams)
               </div>
             </dl>
             <p v-else class="muted">此操作没有额外的可展示参数。</p>
+
+            <section v-if="recommendation(item)" class="approval-recommendation">
+              <b>已校验的时段推荐</b>
+              <p v-if="recommendation(item).reason">{{ recommendation(item).reason }}</p>
+              <div v-if="recommendationAlternatives(item).length" class="recommendation-alternatives">
+                <span>备选时间</span>
+                <ul>
+                  <li v-for="slot in recommendationAlternatives(item)" :key="slot.slot_id || `${slot.start_at}-${slot.end_at}`">
+                    {{ formatRecommendationSlot(slot) }}
+                  </li>
+                </ul>
+              </div>
+            </section>
 
             <div v-if="item.status === 'pending'" class="approval-actions">
               <el-checkbox v-model="checkedById[item.approval_item_id]">

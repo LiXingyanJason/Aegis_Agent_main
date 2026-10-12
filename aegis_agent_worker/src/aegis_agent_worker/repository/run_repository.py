@@ -217,12 +217,12 @@ class AgentRunRepository:
             ),
             {"conversation_id": conversation_id, "tenant_id": tenant_id},
         )
-        await session.execute(
+        message_result = await session.execute(
             text(
                 "INSERT INTO conversation_messages "
                 "(tenant_id, conversation_id, run_id, role, content, display_content, sequence_no, content_hash) "
                 "VALUES (:tenant_id, :conversation_id, :run_id, 'assistant', :content, :display_content, "
-                "        :sequence_no, :content_hash)"
+                "        :sequence_no, :content_hash) RETURNING id"
             ),
             {
                 "tenant_id": tenant_id,
@@ -232,6 +232,22 @@ class AgentRunRepository:
                 "display_content": content,
                 "sequence_no": sequence_result.mappings().one()["next_sequence_no"],
                 "content_hash": sha256(content.encode("utf-8")).hexdigest(),
+            },
+        )
+        assistant_message_id = message_result.mappings().one()["id"]
+        # 日历等工具在模型回复前已生成 Artifact；在同一完成事务中补齐其消息归属，
+        # 使历史会话恢复时可稳定关联“哪条助手消息展示了哪组卡片”。
+        await session.execute(
+            text(
+                "UPDATE conversation_message_artifacts "
+                "SET assistant_message_id = :assistant_message_id "
+                "WHERE run_id = :run_id AND tenant_id = :tenant_id "
+                "  AND assistant_message_id IS NULL"
+            ),
+            {
+                "assistant_message_id": assistant_message_id,
+                "run_id": run_id,
+                "tenant_id": tenant_id,
             },
         )
         if step_id is not None:
