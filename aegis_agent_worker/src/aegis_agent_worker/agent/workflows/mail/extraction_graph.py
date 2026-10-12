@@ -30,9 +30,10 @@ class MailExtractionWorkflow:
 
     async def _ensure_ready(self, state: TaskGraphState) -> dict[str, str]:
         """预检任务引用；图状态只保存阶段标记，不保存邮件正文。"""
-        await self._mail_tasks.ensure_extraction_ready(
-            _run_from_state(state, expected_type="mail_extraction")
-        )
+        run = _run_from_state(state, expected_type="mail_extraction")
+        if run.run_type == "conversation":
+            await self._mail_tasks.prepare_conversation_handoff(run, state["handoff"])
+        await self._mail_tasks.ensure_extraction_ready(run)
         return {"mail_workflow_stage": "extraction_ready"}
 
     async def _generate_extraction(self, state: TaskGraphState) -> dict[str, bool | str]:
@@ -51,17 +52,26 @@ class MailExtractionWorkflow:
             model_provider=self._mail_agent.provider_name,
             model_name=self._mail_agent.model_name,
         )
+        if run.conversation_id is not None:
+            return {
+                "mail_workflow_stage": "extraction_completed", "mail_workflow_completed": False,
+                "assistant_content": "邮件摘要已生成：\n" + "\n".join(result["key_points"]),
+            }
         return {"mail_workflow_stage": "extraction_completed", "mail_workflow_completed": True}
 
 
 def _run_from_state(state: TaskGraphState, *, expected_type: str) -> ClaimedRun:
     """从稳定图状态还原后台任务的最小归属对象。"""
-    if state.get("run_type") != expected_type:
+    conversation = state.get("run_type") == "conversation"
+    expected_intent = "extract_mail"
+    if conversation and state.get("handoff", {}).get("intent") != expected_intent:
+        raise RuntimeError("邮件子图收到不匹配的交接意图")
+    if not conversation and state.get("run_type") != expected_type:
         raise RuntimeError(f"邮件子图收到不匹配的任务类型：{state.get('run_type')}")
     return ClaimedRun(
         id=UUID(state["run_id"]),
         tenant_id=UUID(state["tenant_id"]),
         user_id=UUID(state["user_id"]),
-        conversation_id=None,
-        run_type=expected_type,
+        conversation_id=UUID(state["conversation_id"]) if conversation else None,
+        run_type="conversation" if conversation else expected_type,
     )

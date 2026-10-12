@@ -38,7 +38,10 @@ class MailReplyDraftWorkflow:
 
     async def _ensure_ready(self, state: TaskGraphState) -> dict[str, str]:
         """预检任务引用；图状态不保存原邮件正文或模型草稿正文。"""
-        await self._mail_tasks.ensure_reply_draft_ready(_run_from_state(state))
+        run = _run_from_state(state)
+        if run.run_type == "conversation":
+            await self._mail_tasks.prepare_conversation_handoff(run, state["handoff"])
+        await self._mail_tasks.ensure_reply_draft_ready(run)
         return {"mail_workflow_stage": "reply_draft_ready"}
 
     async def _generate_reply_draft(self, state: TaskGraphState) -> dict[str, bool | str]:
@@ -61,18 +64,27 @@ class MailReplyDraftWorkflow:
             instruction=source.get("instruction"),
             memory_context=memory_prompt,
         )
-        await self._mail_tasks.save_reply_draft(run, source=source, reply=reply, step_id=step_id)
+        draft_id = await self._mail_tasks.save_reply_draft(run, source=source, reply=reply, step_id=step_id)
+        if run.conversation_id is not None:
+            return {
+                "mail_workflow_stage": "reply_draft_completed", "mail_workflow_completed": False,
+                "assistant_content": f"已保存回复草稿「{reply['subject']}」。请在邮件管理中查看并核对，草稿尚未发送。",
+                "draft_id": str(draft_id),
+            }
         return {"mail_workflow_stage": "reply_draft_completed", "mail_workflow_completed": True}
 
 
 def _run_from_state(state: TaskGraphState) -> ClaimedRun:
     """从稳定图状态重建邮件回复草稿所需的任务归属对象。"""
-    if state.get("run_type") != "mail_reply_draft":
+    conversation = state.get("run_type") == "conversation"
+    if conversation and state.get("handoff", {}).get("intent") != "draft_mail_reply":
+        raise RuntimeError("邮件子图收到不匹配的交接意图")
+    if not conversation and state.get("run_type") != "mail_reply_draft":
         raise RuntimeError(f"邮件子图收到不匹配的任务类型：{state.get('run_type')}")
     return ClaimedRun(
         id=UUID(state["run_id"]),
         tenant_id=UUID(state["tenant_id"]),
         user_id=UUID(state["user_id"]),
-        conversation_id=None,
-        run_type="mail_reply_draft",
+        conversation_id=UUID(state["conversation_id"]) if conversation else None,
+        run_type="conversation" if conversation else "mail_reply_draft",
     )

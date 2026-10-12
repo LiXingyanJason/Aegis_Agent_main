@@ -9,9 +9,13 @@ from aegis_agent_worker.agent.contracts.calendar import (
     extract_calendar_free_time_candidates,
 )
 from aegis_agent_worker.agent.contracts.common import ConversationArtifact, ToolResultSummary
+from aegis_agent_worker.agent.contracts.decision import MainDecision, AgentHandoff, ResourceReference
 
 __all__ = [
     "CalendarReadPlan",
+    "MainDecision",
+    "AgentHandoff",
+    "ResourceReference",
     "CalendarFreeTimeCandidate",
     "CalendarMeetingDraftProposal",
     "CalendarSlotRecommendation",

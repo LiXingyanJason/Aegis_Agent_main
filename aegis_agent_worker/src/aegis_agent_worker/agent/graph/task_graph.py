@@ -16,6 +16,9 @@ from aegis_agent_worker.repository.run_repository import ClaimedRun
 from aegis_agent_worker.service.memory.memory_context_service import MemoryContextService
 from aegis_agent_worker.service.runtime.conversation_context_service import ConversationContextService
 from aegis_agent_worker.service.runtime.run_lifecycle_service import RunLifecycleService
+from aegis_agent_worker.service.runtime.decision_context_service import DecisionContextService
+from aegis_agent_worker.agent.specialists.main_agent import MainAgent
+from aegis_agent_worker.agent.workflows.main.decision_workflow import MainDecisionWorkflow
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,6 +32,8 @@ class TaskGraphDependencies:
     router: TaskGraphRouter
     workflow_factories: tuple[WorkflowRegistrar, ...]
     memory_context_service: MemoryContextService | None = None
+    main_agent: MainAgent | None = None
+    decision_context_service: DecisionContextService | None = None
 
 
 class LLMGraphError(LLMError):
@@ -51,15 +56,22 @@ class TaskGraph:
         for factory in self._dependencies.workflow_factories:
             factory.register(registry)
         registered_workflows = registry.names()
+        self._capabilities = registry.capabilities()
 
         graph = StateGraph(TaskGraphState)
         graph.add_node("select_run_workflow", self._select_run_workflow)
         graph.add_node("load_context", self._load_context)
-        graph.add_node("decide_workflow", self._decide_workflow)
+        if self._dependencies.main_agent is None or self._dependencies.decision_context_service is None:
+            raise RuntimeError("主决策 Agent 或上下文服务尚未配置")
+        graph.add_node("main_decision", MainDecisionWorkflow(
+            self._dependencies.main_agent, self._dependencies.decision_context_service,
+            self._capabilities,
+        ).build())
         # 统一将workflow作为子图加载进入主图
         for workflow_name in registered_workflows:
             graph.add_node(workflow_name, registry.get(workflow_name))
         graph.add_node("generate_reply", self._generate_reply)
+        graph.add_node("clarify", self._clarify)
 
         run_routes = {"conversation": "load_context"}
         if "mail_extraction" in registered_workflows:
@@ -83,14 +95,16 @@ class TaskGraph:
             self._route_run_type,
             run_routes,
         )
-        graph.add_edge("load_context", "decide_workflow")
-        conversation_routes = {"general_reply": "generate_reply"}
+        graph.add_edge("load_context", "main_decision")
+        conversation_routes = {"general_reply": "generate_reply", "clarify": "clarify"}
+        for capability in self._capabilities:
+            conversation_routes[capability.workflow] = capability.workflow
         if "calendar_read" in registered_workflows:
             conversation_routes["calendar_read"] = "calendar_read"
         if "calendar_confirmation" in registered_workflows:
             conversation_routes["calendar_confirmation"] = "calendar_confirmation"
         graph.add_conditional_edges(
-            "decide_workflow",
+            "main_decision",
             self._select_workflow,
             conversation_routes,
         )
@@ -105,6 +119,7 @@ class TaskGraph:
         if "mail_send_confirmation" in registered_workflows:
             graph.add_edge("mail_send_confirmation", END)
         graph.add_edge("generate_reply", END)
+        graph.add_edge("clarify", END)
         return graph.compile(checkpointer=checkpointer)
 
     @staticmethod
@@ -160,9 +175,10 @@ class TaskGraph:
             "memory_context": memory_context or "",
         }
 
-    def _decide_workflow(self, state: TaskGraphState) -> dict[str, str]:
-        """记录意图及选中的子图名称，便于后续审计和恢复。"""
-        return self._dependencies.router.decide(state)
+    @staticmethod
+    def _clarify(state: TaskGraphState) -> dict[str, str]:
+        """直接返回已校验的澄清问题，避免第二次模型调用改变执行决定。"""
+        return {"assistant_content": state["main_decision"]["clarification_question"]}
 
     @staticmethod
     def _select_workflow(state: TaskGraphState) -> str:

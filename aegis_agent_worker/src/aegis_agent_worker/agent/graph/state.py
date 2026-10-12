@@ -16,6 +16,8 @@ class TaskGraphState(TypedDict, total=False):
     memory_context: str
     intent: str # 意图
     workflow: str
+    main_decision: dict[str, Any]
+    handoff: dict[str, Any]
     # 领域 Agent 产生、且已经过 Pydantic 校验的受限执行计划。
     plan: dict[str, Any]
     # 工具调用的脱敏结果摘要；完整事实仍在 tool_calls 等业务表。

@@ -43,10 +43,12 @@ class CalendarAgent:
             self._timezone = ZoneInfo("Asia/Shanghai")
         self._llm_client = llm_client
 
-    def plan_read(self, user_content: str) -> ToolInvocation | None:
+    def plan_read(self, user_content: str, *, action: str | None = None) -> ToolInvocation | None:
         """为明确日历读取请求生成白名单 ToolInvocation；无匹配时返回 None。"""
         normalized = user_content.strip()
-        if not normalized or not any(keyword in normalized for keyword in self._calendar_keywords):
+        if action not in {None, "list_events", "find_free_time"}:
+            raise ValueError("日历读取意图无效")
+        if not normalized or (action is None and not any(keyword in normalized for keyword in self._calendar_keywords)):
             return None
         start_at, end_at, requested_date = _resolve_time_range(normalized, self._timezone)
         time_arguments = {
@@ -56,7 +58,7 @@ class CalendarAgent:
             "requested_date": requested_date,
             "timezone": self._timezone.key,
         }
-        if any(keyword in normalized for keyword in self._free_time_keywords):
+        if action == "find_free_time" or (action is None and any(keyword in normalized for keyword in self._free_time_keywords)):
             return ToolInvocation(
                 tool_name="calendar.find_free_time",
                 arguments={

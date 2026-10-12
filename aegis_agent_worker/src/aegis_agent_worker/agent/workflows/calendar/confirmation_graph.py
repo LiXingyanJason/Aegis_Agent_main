@@ -18,6 +18,7 @@ from aegis_agent_worker.repository.run_repository import ClaimedRun
 from aegis_agent_worker.service.calendar.calendar_confirmation_service import CalendarConfirmationService
 from aegis_agent_worker.tool.contracts import ToolInvocation
 from uuid import UUID
+from aegis_agent_worker.agent.contracts.decision import AgentHandoff
 
 
 class CalendarWorkflowState(TypedDict, total=False):
@@ -79,6 +80,11 @@ class CalendarConfirmationWorkflow:
             return {"confirmation_error": "会议确认服务尚未配置。"}
         run = _conversation_run_from_state(state)
         message = state.get("latest_user_message", "")
+        if state.get("handoff"):
+            handoff = AgentHandoff.model_validate(state["handoff"])
+            if handoff.domain != "calendar" or handoff.intent != "arrange_meeting":
+                return {"confirmation_error": "会议交接计划无效。"}
+            message = handoff.instruction
         try:
             plan = self._calendar_agent.plan_meeting(message)
         except ValueError:
@@ -87,6 +93,7 @@ class CalendarConfirmationWorkflow:
             "calendar_meeting_plan": {
                 "title": plan.title,
                 "attendees": plan.attendees,
+                "instruction": message,
                 "availability_tool_name": plan.availability_invocation.tool_name,
                 "availability_arguments": plan.availability_invocation.arguments,
             }
@@ -129,7 +136,7 @@ class CalendarConfirmationWorkflow:
             if not isinstance(suggested_title, str) or not isinstance(extracted_attendees, list):
                 raise ValueError("会议草稿计划无效")
             proposal = await self._calendar_agent.generate_meeting_draft(
-                user_content=state.get("latest_user_message", ""),
+                user_content=plan.get("instruction", state.get("latest_user_message", "")),
                 candidates=candidates,
                 duration_minutes=availability.get("duration_minutes"),
                 suggested_title=suggested_title,

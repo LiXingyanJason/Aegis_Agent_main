@@ -1,6 +1,7 @@
 """日历领域工作流的组装工厂。"""
 
 from dataclasses import dataclass
+from aegis_agent_worker.agent.contracts.decision import ConversationCapability
 
 from aegis_agent_worker.agent.graph.graph_registry import GraphRegistry
 from aegis_agent_worker.agent.specialists.calendar_agent import CalendarAgent
@@ -36,3 +37,16 @@ class CalendarWorkflowFactory:
                 self.calendar_agent, self.confirmation_service
             ).build(),
         )
+        if self.tool_execution is not None:
+            for intent, description in (
+                ("list_events", "查看指定范围日程"),
+                ("find_free_time", "查询空闲时段"),
+            ):
+                registry.register_capability(ConversationCapability(
+                    domain="calendar", intent=intent, workflow="calendar_read", description=description,
+                ))
+        if self.confirmation_service is not None:
+            registry.register_capability(ConversationCapability(
+                domain="calendar", intent="arrange_meeting", workflow="calendar_confirmation",
+                description="生成会议草稿并等待人工确认；不能修改现有草稿",
+            ))

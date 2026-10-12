@@ -11,6 +11,41 @@ from sqlalchemy.ext.asyncio import AsyncSession
 class MailTaskRepository:
     """只处理邮件后台任务输入、派生结果与任务终态。"""
 
+    async def prepare_conversation_input(self, session, run, handoff):
+        """将明确邮件交接登记到已有请求表，保留原 conversation run 的身份。"""
+        target = handoff.target
+        result = await session.execute(text("""
+            SELECT id, source_version, content_hash FROM email_messages
+            WHERE id = :email_id AND tenant_id = :tenant_id AND user_id = :user_id
+            FOR UPDATE
+        """), {"email_id": target.id, "tenant_id": run.tenant_id, "user_id": run.user_id})
+        email = result.mappings().first()
+        if email is None or email["source_version"] != target.source_version:
+            raise ValueError("邮件引用已失效")
+        args = dict(tenant_id=run.tenant_id, user_id=run.user_id, email_id=target.id,
+                    run_id=run.id, source_version=email["source_version"],
+                    content_hash=email["content_hash"], instruction=handoff.instruction)
+        if handoff.intent == "extract_mail":
+            await session.execute(text("""
+                INSERT INTO mail_extractions
+                  (tenant_id, user_id, email_id, run_id, source_version, content_hash,
+                   extractor_version, prompt_version, status)
+                SELECT :tenant_id, :user_id, :email_id, :run_id, :source_version, :content_hash,
+                       'main-handoff-v1', 'mail-extraction-v1', 'queued'
+                WHERE NOT EXISTS (SELECT 1 FROM mail_extractions
+                                  WHERE run_id = :run_id AND tenant_id = :tenant_id)
+            """), args)
+            await session.execute(text("""
+                UPDATE email_messages SET extraction_status = 'running' WHERE id = :email_id
+                  AND tenant_id = :tenant_id AND user_id = :user_id
+            """), args)
+        else:
+            await session.execute(text("""
+                INSERT INTO mail_reply_draft_requests (tenant_id, user_id, email_id, run_id, instruction)
+                VALUES (:tenant_id, :user_id, :email_id, :run_id, :instruction)
+                ON CONFLICT (run_id) DO NOTHING
+            """), args)
+
     async def load_extraction_input(
         self, session: AsyncSession, *, run_id: UUID, tenant_id: UUID, user_id: UUID
     ) -> dict[str, Any] | None:
@@ -154,7 +189,7 @@ class MailTaskRepository:
 
     async def mark_mail_task_failed(self, session: AsyncSession, *, run_id: UUID, tenant_id: UUID, run_type: str, message: str) -> None:
         """同步邮件派生记录的失败状态，供页面显示重新生成入口。"""
-        if run_type == "mail_extraction":
+        if run_type in {"mail_extraction", "conversation"}:
             await session.execute(
                 text("UPDATE mail_extractions SET status = 'failed', failure_reason = :message WHERE run_id = :run_id AND tenant_id = :tenant_id"),
                 {"run_id": run_id, "tenant_id": tenant_id, "message": message[:1000]},
@@ -168,7 +203,7 @@ class MailTaskRepository:
                 ),
                 {"run_id": run_id, "tenant_id": tenant_id},
             )
-        elif run_type == "mail_reply_draft":
+        if run_type in {"mail_reply_draft", "conversation"}:
             await session.execute(
                 text("UPDATE mail_reply_draft_requests SET status = 'failed' WHERE run_id = :run_id AND tenant_id = :tenant_id"),
                 {"run_id": run_id, "tenant_id": tenant_id},
@@ -184,6 +219,6 @@ class MailTaskRepository:
 
     async def _complete_run(self, session: AsyncSession, *, run_id: UUID, tenant_id: UUID, summary: str) -> None:
         await session.execute(
-            text("UPDATE agent_runs SET status = 'completed', current_stage = '已完成', result_summary = :summary, finished_at = now(), updated_at = now() WHERE id = :run_id AND tenant_id = :tenant_id"),
+            text("UPDATE agent_runs SET status = 'completed', current_stage = '已完成', result_summary = :summary, finished_at = now(), updated_at = now() WHERE id = :run_id AND tenant_id = :tenant_id AND conversation_id IS NULL"),
             {"run_id": run_id, "tenant_id": tenant_id, "summary": summary},
         )

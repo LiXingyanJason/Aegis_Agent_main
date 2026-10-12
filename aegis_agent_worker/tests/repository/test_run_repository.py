@@ -39,11 +39,14 @@ class _FakeSession:
     """按顺序提供查询结果并记录 SQL 文本。"""
 
     def __init__(self) -> None:
-        self._results = iter([_Result({"id": CONVERSATION_ID}), _Result({"next_sequence_no": 2})])
+        self._results = iter([
+            _Result({"id": CONVERSATION_ID}), _Result({"next_sequence_no": 2}),
+            _Result({"id": UUID(int=10)}),
+        ])
         self.statements: list[str] = []
 
     async def execute(self, statement: object, _parameters: dict[str, object]) -> _Result:
-        """记录 SQL；前两次返回锁定会话和消息序号所需的记录。"""
+        """记录 SQL，并返回会话锁定、序号及新助手消息标识。"""
         self.statements.append(str(statement))
         try:
             return next(self._results)
@@ -74,5 +77,7 @@ async def test_complete_run_marks_run_step_as_succeeded() -> None:
         step_id=STEP_ID,
     )
 
-    assert "status = 'succeeded'" in session.statements[3]
-    assert "status = 'completed'" in session.statements[4]
+    step_statement = next(sql for sql in session.statements if sql.startswith("UPDATE run_steps"))
+    run_statement = next(sql for sql in session.statements if sql.startswith("UPDATE agent_runs"))
+    assert "status = 'succeeded'" in step_statement
+    assert "status = 'completed'" in run_statement

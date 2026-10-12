@@ -22,6 +22,19 @@ MailTaskError = MailAgentError
 class MailTaskService:
     """为邮件子图提供摘要、回复草稿及其持久化业务动作。"""
 
+    async def prepare_conversation_handoff(self, run, raw_handoff):
+        """普通对话复用邮件子图前，核验并登记单封邮件请求。"""
+        from aegis_agent_worker.agent.contracts.decision import AgentHandoff
+        handoff = AgentHandoff.model_validate(raw_handoff)
+        if (run.run_type != "conversation" or handoff.domain != "mail"
+                or handoff.intent not in {"extract_mail", "draft_mail_reply"} or handoff.target is None
+                or handoff.target.resource_type != "email"):
+            raise MailTaskError("邮件交接计划无效")
+        context = TenantContext(tenant_id=run.tenant_id, user_id=run.user_id)
+        async with self._database.session() as session:
+            async with tenant_transaction(session, context):
+                await self._repository.prepare_conversation_input(session, run, handoff)
+
     def __init__(
         self,
         database: Database,
@@ -38,7 +51,7 @@ class MailTaskService:
 
     async def ensure_extraction_ready(self, run: ClaimedRun) -> None:
         """确认摘要任务仍存在且属于当前用户；不读取邮件正文，也不产生外部副作用。"""
-        if run.run_type != "mail_extraction":
+        if run.run_type not in {"mail_extraction", "conversation"}:
             raise MailTaskError(f"邮件摘要节点收到不匹配的任务类型：{run.run_type}")
         source = await self._load_extraction_source(run)
         if source is None:
@@ -46,7 +59,7 @@ class MailTaskService:
 
     async def ensure_reply_draft_ready(self, run: ClaimedRun) -> None:
         """确认回复草稿任务仍存在且属于当前用户；不读取邮件正文，也不产生外部副作用。"""
-        if run.run_type != "mail_reply_draft":
+        if run.run_type not in {"mail_reply_draft", "conversation"}:
             raise MailTaskError(f"邮件起草节点收到不匹配的任务类型：{run.run_type}")
         source = await self._load_reply_source(run)
         if source is None:
@@ -120,11 +133,12 @@ class MailTaskService:
                     "key_points": result["key_points"], "todos": result["todos"],
                     "due_date_candidates": result["due_date_candidates"],
                 })
-                await self._append_event(session, run, "run_completed", {"status": "completed", "result_summary": "邮件摘要已生成"})
+                if run.conversation_id is None:
+                    await self._append_event(session, run, "run_completed", {"status": "completed", "result_summary": "邮件摘要已生成"})
 
     async def save_reply_draft(
         self, run: ClaimedRun, *, source: dict[str, Any], reply: dict[str, Any], step_id
-    ) -> None:
+    ):
         """原子保存回复草稿和步骤结果；不参与 LLM 推理。"""
         context = TenantContext(tenant_id=run.tenant_id, user_id=run.user_id)
         async with self._database.session() as session:
@@ -139,7 +153,9 @@ class MailTaskService:
                     "draft_id": str(draft_id), "to": reply["to"], "cc": reply["cc"],
                     "subject": reply["subject"], "body": reply["body"],
                 })
-                await self._append_event(session, run, "run_completed", {"status": "completed", "result_summary": "邮件回复草稿已生成"})
+                if run.conversation_id is None:
+                    await self._append_event(session, run, "run_completed", {"status": "completed", "result_summary": "邮件回复草稿已生成"})
+        return draft_id
 
     async def _start_llm_step(self, run: ClaimedRun, context: TenantContext, label: str):
         """登记模型步骤并将默认标签替换为邮件任务的用户可见进度。"""

@@ -17,6 +17,8 @@ from aegis_agent_worker.service.mail.mail_task_service import MailTaskService
 from aegis_agent_worker.service.memory.memory_context_service import MemoryContextService
 from aegis_agent_worker.service.runtime.conversation_context_service import ConversationContextService
 from aegis_agent_worker.service.runtime.run_lifecycle_service import RunLifecycleService
+from aegis_agent_worker.service.runtime.decision_context_service import DecisionContextService
+from aegis_agent_worker.agent.specialists.main_agent import MainAgent
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +35,10 @@ class AgentExecutionResult:
 class AgentOrchestrator:
     """消费一个 queued 任务并运行 LangGraph 根图；持久化由应用服务负责。"""
 
-    _system_prompt = "你是 Aegis PA 个人效率助手。请基于当前会话，给出准确、简洁、可执行的中文回复。"
+    _system_prompt = (
+        "你是 Aegis PA 个人效率助手。请基于当前会话及可信工具结果给出简洁中文回复。"
+        "只有实际工具或业务执行结果才能证明已查询、已创建或已发送；没有结果时不能宣称已经完成操作。"
+    )
 
     def __init__(
         self,
@@ -48,6 +53,8 @@ class AgentOrchestrator:
         checkpointer=None, # 检查点
         mail_tasks: MailTaskService | None = None,
         memory_context: MemoryContextService | None = None,
+        main_agent: MainAgent | None = None,
+        decision_context_service: DecisionContextService | None = None,
     ) -> None:
         """组装根图及其依赖；允许测试注入服务或预构建运行器。"""
         run_repository = runs or AgentRunRepository()
@@ -65,6 +72,10 @@ class AgentOrchestrator:
                     router=TaskGraphRouter(),
                     workflow_factories=workflow_factories,
                     memory_context_service=memory_context,
+                    main_agent=main_agent or MainAgent(llm_client),
+                    decision_context_service=decision_context_service or DecisionContextService(
+                        database, run_repository, events,
+                    ),
                 )
             ).build(checkpointer=checkpointer)
         )
@@ -132,7 +143,7 @@ class AgentOrchestrator:
         except asyncio.CancelledError:
             raise
         except LLMGraphError as error:
-            if run.run_type in {"mail_extraction", "mail_reply_draft"} and self._mail_tasks is not None:
+            if run.run_type in {"mail_extraction", "mail_reply_draft", "conversation"} and self._mail_tasks is not None:
                 await self._mail_tasks.mark_failed(run, str(error))
             await self._lifecycle.fail_run(
                 run,
@@ -144,7 +155,7 @@ class AgentOrchestrator:
                 status="failed", error_code="LLM_UNAVAILABLE", error_message=str(error)
             )
         except LLMError as error:
-            if run.run_type in {"mail_extraction", "mail_reply_draft"} and self._mail_tasks is not None:
+            if run.run_type in {"mail_extraction", "mail_reply_draft", "conversation"} and self._mail_tasks is not None:
                 await self._mail_tasks.mark_failed(run, str(error))
             await self._lifecycle.fail_run(
                 run,
@@ -158,7 +169,7 @@ class AgentOrchestrator:
         except Exception:
             # 仅写入 Worker 本地日志以帮助开发排错；数据库和接口仍使用脱敏错误文本。
             logger.exception("Agent 执行失败：run_id=%s", run.id)
-            if run.run_type in {"mail_extraction", "mail_reply_draft"} and self._mail_tasks is not None:
+            if run.run_type in {"mail_extraction", "mail_reply_draft", "conversation"} and self._mail_tasks is not None:
                 await self._mail_tasks.mark_failed(run, "任务执行失败")
             await self._lifecycle.fail_run(
                 run,

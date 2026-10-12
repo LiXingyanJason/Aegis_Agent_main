@@ -7,6 +7,7 @@ from langgraph.graph import END, START, StateGraph
 from pydantic import ValidationError
 
 from aegis_agent_worker.agent.contracts.calendar import CalendarReadPlan, build_calendar_read_artifact
+from aegis_agent_worker.agent.contracts.decision import AgentHandoff
 from aegis_agent_worker.agent.contracts.common import ToolResultSummary
 from aegis_agent_worker.agent.specialists.calendar_agent import CalendarAgent
 from aegis_agent_worker.agent.workflows.calendar.state import CalendarReadState
@@ -45,7 +46,11 @@ class CalendarReadWorkflow:
 
     async def _plan_calendar_read(self, state: CalendarReadState) -> dict[str, Any]:
         """将专家输出转换为 Pydantic 校验后的只读计划。"""
-        invocation = self._calendar_agent.plan_read(state.get("latest_user_message", ""))
+        handoff = AgentHandoff.model_validate(state["handoff"]) if state.get("handoff") else None
+        invocation = self._calendar_agent.plan_read(
+            handoff.instruction if handoff else state.get("latest_user_message", ""),
+            action=handoff.intent if handoff else None,
+        )
         if invocation is None:
             return {
                 "tool_context": "未识别到可安全执行的日历读取请求，请基于现有会话正常回复。",

@@ -56,6 +56,10 @@ class _FakeLLMClient:
     async def complete(self, messages: list[LLMMessage]) -> str:
         """记录上下文并返回模拟 LLM 回复。"""
         self.messages = messages
+        if "Aegis 主任务分派助手" in messages[0].content:
+            if messages[-1].content == "查看我明天的日程":
+                return '{"decision":"delegate","domain":"calendar","intent":"list_events","instruction":"查看我明天的日程"}'
+            return '{"decision":"reply"}'
         if self._error is not None:
             raise self._error
         return "这是模型生成的回复。"
@@ -95,6 +99,10 @@ class _FakeRunRepository:
     async def fail_run(self, _session, **kwargs) -> None:
         """记录任务失败时传入的 LLM 步骤标识。"""
         self.failed = kwargs
+
+    async def append_event(self, _session, **kwargs):
+        """主决策审计使用模拟事件，不连接 Redis。"""
+        return kwargs
 
 
 class _FakeToolGateway:

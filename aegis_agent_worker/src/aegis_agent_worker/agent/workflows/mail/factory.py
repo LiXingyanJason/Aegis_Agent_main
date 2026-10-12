@@ -1,6 +1,7 @@
 """邮件领域工作流的组装工厂。"""
 
 from dataclasses import dataclass
+from aegis_agent_worker.agent.contracts.decision import ConversationCapability
 
 from aegis_agent_worker.agent.graph.graph_registry import GraphRegistry
 from aegis_agent_worker.agent.specialists.mail_agent import MailAgent
@@ -35,3 +36,11 @@ class MailWorkflowFactory:
         registry.register(
             "mail_send_confirmation", MailSendConfirmationWorkflow(self.mail_send).build()
         )
+        for intent, workflow, description in (
+            ("extract_mail", "mail_extraction", "对明确的一封邮件生成摘要和待办候选"),
+            ("draft_mail_reply", "mail_reply_draft", "对明确的一封邮件起草站内回复，绝不发送"),
+        ):
+            registry.register_capability(ConversationCapability(
+                domain="mail", intent=intent, workflow=workflow,
+                description=description, requires_target=True,
+            ))

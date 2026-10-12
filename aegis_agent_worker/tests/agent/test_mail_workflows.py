@@ -14,12 +14,12 @@ class _FakeMailTaskService:
 
     async def ensure_extraction_ready(self, run) -> None:
         """模拟摘要任务预检。"""
-        assert run.run_type == "mail_extraction"
+        assert run.run_type in {"mail_extraction", "conversation"}
         self.calls.append("ensure_extraction_ready")
 
     async def ensure_reply_draft_ready(self, run) -> None:
         """模拟回复草稿任务预检。"""
-        assert run.run_type == "mail_reply_draft"
+        assert run.run_type in {"mail_reply_draft", "conversation"}
         self.calls.append("ensure_reply_draft_ready")
 
     async def load_extraction_source(self, _run) -> dict:
@@ -49,6 +49,13 @@ class _FakeMailTaskService:
     async def save_reply_draft(self, _run, **_kwargs) -> None:
         """模拟持久化回复草稿。"""
         self.calls.append("save_reply_draft")
+        return "00000000-0000-0000-0000-000000000010"
+
+    async def prepare_conversation_handoff(self, run, handoff):
+        """对话入口应先保留会话标识、登记明确目标的派生请求。"""
+        assert run.conversation_id is not None
+        assert handoff["target"]["resource_type"] == "email"
+        self.calls.append("prepare_conversation_handoff")
 
 
 class _FakeMailAgent:
@@ -121,3 +128,24 @@ async def test_reply_draft_workflow_prechecks_then_generates() -> None:
     ]
     assert state["mail_workflow_stage"] == "reply_draft_completed"
     assert state["mail_workflow_completed"] is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("intent", ["extract_mail", "draft_mail_reply"])
+async def test_conversation_handoff_reuses_mail_expert_without_ending_run_early(intent):
+    """聊天交接复用专家，保留最终助手消息且不把草稿正文写入 Checkpoint。"""
+    service = _FakeMailTaskService()
+    graph = (MailExtractionWorkflow(service, _FakeMailAgent()).build() if intent == "extract_mail"
+             else MailReplyDraftWorkflow(service, _FakeMailAgent()).build())
+    state = _state("conversation")
+    state["conversation_id"] = "00000000-0000-0000-0000-000000000011"
+    state["handoff"] = {
+        "domain": "mail", "intent": intent, "instruction": "按用户要求处理",
+        "target": {"resource_type": "email", "id": "00000000-0000-0000-0000-000000000009",
+                   "source_version": "v1"},
+    }
+    result = await graph.ainvoke(state)
+    assert service.calls[0] == "prepare_conversation_handoff"
+    assert result["assistant_content"]
+    assert result["mail_workflow_completed"] is False
+    assert "body" not in result and "email" not in result

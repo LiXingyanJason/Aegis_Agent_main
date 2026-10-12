@@ -10,6 +10,8 @@ from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from aegis_agent_worker.agent.orchestrator import AgentOrchestrator
 from aegis_agent_worker.agent.specialists.mail_agent import MailAgent
 from aegis_agent_worker.agent.specialists.calendar_agent import CalendarAgent
+from aegis_agent_worker.agent.specialists.main_agent import MainAgent
+from aegis_agent_worker.service.runtime.decision_context_service import DecisionContextService
 from aegis_agent_worker.agent.workflows.calendar.factory import CalendarWorkflowFactory
 from aegis_agent_worker.agent.workflows.mail.factory import MailWorkflowFactory
 from aegis_agent_worker.config.database import Database
@@ -79,6 +81,8 @@ async def run_worker() -> None:
                 checkpointer=checkpointer,
                 mail_tasks=mail_tasks,
                 memory_context=memory_context,
+                main_agent=MainAgent(llm_client, settings.app_timezone),
+                decision_context_service=DecisionContextService(database, runs, events),
             )
             log_event(logger, logging.INFO, "agent_worker_started", queue_name=settings.agent_queue_name)
             while True:
