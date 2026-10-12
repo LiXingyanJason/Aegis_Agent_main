@@ -26,6 +26,7 @@ from aegis_agent_worker.tool.bootstrap import create_default_tool_gateway
 from aegis_agent_worker.repository.run_repository import AgentRunRepository
 from aegis_agent_worker.repository.tool_repository import ToolCallRepository
 from aegis_agent_worker.service.calendar.calendar_confirmation_service import CalendarConfirmationService
+from aegis_agent_worker.service.calendar.calendar_planning_service import CalendarPlanningService
 from aegis_agent_worker.service.mail.mail_send_service import MailSendService
 from aegis_agent_worker.service.mail.mail_task_service import MailTaskService
 from aegis_agent_worker.service.memory.memory_context_service import MemoryContextService
@@ -63,6 +64,7 @@ async def run_worker() -> None:
                 tool_execution=tool_execution,
                 confirmation_service=calendar_confirmation,
                 artifact_service=artifact_service,
+                planning_audit=CalendarPlanningService(database, runs, events),
             )
             mail_tasks = MailTaskService(database, runs, tools, events)
             mail_send = MailSendService(database, runs, tools, events)

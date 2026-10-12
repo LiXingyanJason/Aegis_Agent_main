@@ -2,6 +2,7 @@
 
 from aegis_agent_worker.agent.contracts.calendar import (
     CalendarFreeTimeCandidate,
+    CalendarDecision,
     CalendarMeetingDraftProposal,
     CalendarReadPlan,
     CalendarSlotRecommendation,
@@ -13,6 +14,7 @@ from aegis_agent_worker.agent.contracts.decision import MainDecision, AgentHando
 
 __all__ = [
     "CalendarReadPlan",
+    "CalendarDecision",
     "MainDecision",
     "AgentHandoff",
     "ResourceReference",

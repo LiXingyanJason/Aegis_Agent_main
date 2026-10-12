@@ -103,7 +103,10 @@ def _safe_summary(value: dict[str, Any], timezone_name: Any = None) -> dict[str,
             return item
         return str(item)[:500]
 
-    return trim(value)
+    summary = trim(value)
+    if isinstance(value.get("events"), list):
+        summary["events_total"] = len(value["events"])
+    return summary
 
 
 def _resolve_timezone(timezone_name: Any) -> ZoneInfo | None:

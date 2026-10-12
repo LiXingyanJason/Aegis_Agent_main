@@ -4,6 +4,12 @@
 
 当前任务由 LangGraph 根图执行：根图加载会话上下文、进行意图/工作流路由；日历读取作为 `calendar/read_graph.py` 子图执行，工具审计、事务与 SSE 事件仍由 `service/` 处理。
 
+日历读取和会议确认现在先进入 `CalendarPlanningWorkflow`，由 `CalendarAgent.plan_calendar` 调用 LLM 生成受控 CalendarDecision，校验后再执行工具。旧同步关键词规划方法仅作为兼容入口保留，生产图不调用。指定起止时段（包括凌晨）使用日程查询做确定性冲突检查；无冲突时创建该时段的待确认草稿，并提示非工作时间。自动推荐仍使用 MCP 空闲候选。冲突检查目前仅覆盖 Mock 当前用户日历。
+
+没有新增环境变量或数据库迁移；使用既有模型配置，更新后重启 Worker。测试示例：发送“请在2026-10-15 03:00～03:50安排50分钟总结会议”，在该时段无日程时应产生凌晨三点的草稿，而非上午十一点或默认工作时段。
+
+日历规划输出校验失败时最多调用模型修复一次，修复结果仍重新核验 Schema、原始指定时间、时长与交接范围。两次均失败时不调用日历工具。Worker 日志记录字段路径和错误类型，如 `preferences:string_type` 或 `CALENDAR_EXPLICIT_TIME_MISMATCH`；`calendar_plan_completed.validation_issues` 也保存同样的脱敏诊断，不记录原始模型响应或邮箱。模型请求超时等网络故障不走格式修复。
+
 普通对话由独立 `MainDecisionWorkflow` 子图组织：读取引用 → MainAgent 调用 LLM → 能力校验 → 目标核验 → 组装 handoff → 保存审计。LLM 推理和流程分支位于 `agent/workflows/main/decision_workflow.py`；`DecisionContextService` 只负责业务引用、归属／版本检查及事务性审计。根图注册主决策子图并根据其结果分流，领域工厂显式声明可用意图。原关键词路由保留为旧组件，但不再负责生产根图的普通对话决策。页面指定任务与审批恢复均绕过主决策子图。
 
 当前支持日程查看、空闲查询、会议安排，以及明确邮件的摘要和回复起草。邮件目标来自本人已同步的最近 20 条快照，模型只能选择提供的 ID 与 source_version；邮件检索、草稿修改、复合任务暂返回澄清。先在邮件管理页面同步收件箱，再在主对话中指定邮件主题；若多个候选有歧义，需补充目标。

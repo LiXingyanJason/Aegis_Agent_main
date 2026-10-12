@@ -29,6 +29,8 @@ class TaskGraphState(TypedDict, total=False):
     tool_context: str
     # 会议安排确认图：事实候选与模型草稿分开保存，恢复后仍可重新校验。
     calendar_meeting_plan: dict[str, Any]
+    calendar_decision: dict[str, Any]
+    calendar_planning_error: str
     availability: dict[str, Any]
     calendar_meeting_draft: dict[str, Any]
     awaiting_confirmation: bool

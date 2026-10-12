@@ -3,6 +3,8 @@
 import hashlib
 import json
 import re
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -15,6 +17,89 @@ from aegis_agent_worker.agent.contracts.common import (
 from aegis_agent_worker.tool.contracts import ToolInvocation
 
 MAX_CALENDAR_ARTIFACT_ITEMS = 20
+
+
+class CalendarDecision(BaseModel):
+    """日历专家的受限领域计划；时间事实仍由 MCP 查询取得。"""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    version: Literal[1] = 1
+    action: Literal["list_events", "find_free_time", "prepare_meeting", "clarify"]
+    time_mode: Literal["explicit_interval", "search_window"] | None = None
+    timezone: str = "Asia/Shanghai"
+    start_at: datetime | None = None
+    end_at: datetime | None = None
+    duration_minutes: int | None = Field(default=None, strict=True, ge=15, le=480)
+    title: str | None = Field(default=None, min_length=1, max_length=200)
+    attendees: list[str] = Field(default_factory=list, max_length=10)
+    preferences: str = Field(default="", max_length=1000)
+    clarification_question: str | None = Field(default=None, min_length=1, max_length=500)
+
+    @field_validator("timezone")
+    @classmethod
+    def valid_timezone(cls, value):
+        try:
+            ZoneInfo(value)
+        except (ZoneInfoNotFoundError, ValueError) as error:
+            raise ValueError("无效的 IANA 时区") from error
+        return value
+
+    @field_validator("attendees")
+    @classmethod
+    def valid_attendees(cls, values):
+        normalized = [value.strip().lower() for value in values]
+        if len(set(normalized)) != len(normalized) or not all(_is_email(value) for value in normalized):
+            raise ValueError("参会人邮箱无效或重复")
+        return normalized
+
+    @model_validator(mode="after")
+    def validate_action(self):
+        if self.action == "clarify":
+            if (not self.clarification_question or self.start_at is not None or self.end_at is not None
+                    or self.time_mode is not None or self.duration_minutes is not None
+                    or self.title is not None or self.attendees or self.preferences):
+                raise ValueError("澄清决定不能携带执行参数")
+            return self
+        if self.clarification_question or self.start_at is None or self.end_at is None or self.time_mode is None:
+            raise ValueError("日历计划缺少有效时间范围")
+        zone = ZoneInfo(self.timezone)
+        start = self.start_at.replace(tzinfo=zone) if self.start_at.tzinfo is None else self.start_at.astimezone(zone)
+        end = self.end_at.replace(tzinfo=zone) if self.end_at.tzinfo is None else self.end_at.astimezone(zone)
+        if not timedelta(0) < end - start <= timedelta(days=62):
+            raise ValueError("查询范围必须大于零且不超过62天")
+        object.__setattr__(self, "start_at", start)
+        object.__setattr__(self, "end_at", end)
+        if self.action != "list_events":
+            if self.duration_minutes is None:
+                raise ValueError("空闲查询和会议安排必须给出时长")
+            duration = timedelta(minutes=self.duration_minutes)
+            if end - start < duration:
+                raise ValueError("查询时段不足以容纳会议")
+            if self.time_mode == "explicit_interval" and end - start != duration:
+                raise ValueError("指定时段与会议时长不一致")
+        if self.action == "prepare_meeting":
+            if self.title is None:
+                object.__setattr__(self, "title", "待确认会议")
+            elif not self.title.strip():
+                raise ValueError("会议主题不能是空白文本")
+        return self
+
+    @classmethod
+    def from_text(cls, value):
+        return cls.model_validate(json.loads(_strip_json_fence(value)))
+
+    def to_read_plan(self):
+        """由代码选择白名单工具，指定时段使用日程查询做冲突检查。"""
+        if self.action == "clarify":
+            raise ValueError("澄清决定不能执行工具")
+        action = "list_events" if self.action == "list_events" or self.time_mode == "explicit_interval" else "find_free_time"
+        arguments = {
+            "start_at": self.start_at.isoformat(), "end_at": self.end_at.isoformat(),
+            "timezone": self.timezone, "requested_date": self.start_at.date().isoformat(),
+        }
+        if action == "find_free_time":
+            arguments.update(duration_minutes=self.duration_minutes, participants=self.attendees)
+        return CalendarReadPlan(action=action, tool_name=f"calendar.{action}", arguments=arguments)
 
 
 class CalendarReadPlan(BaseModel):

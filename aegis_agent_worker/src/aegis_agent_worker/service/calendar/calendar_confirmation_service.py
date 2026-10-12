@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timedelta
 from hashlib import sha256
 from time import monotonic
+from zoneinfo import ZoneInfo
 from typing import Any
 from uuid import UUID
 
@@ -12,6 +13,7 @@ from sqlalchemy import text
 from aegis_agent_worker.agent.contracts.calendar import (
     CalendarFreeTimeCandidate,
     CalendarMeetingDraftProposal,
+    CalendarDecision,
     extract_calendar_free_time_candidates,
 )
 from aegis_agent_worker.config.database import Database, TenantContext, tenant_transaction
@@ -55,6 +57,7 @@ class CalendarConfirmationService:
         run: ClaimedRun,
         *,
         invocation: ToolInvocation,
+        decision: CalendarDecision | None = None,
     ) -> dict[str, Any]:
         """查询可信空闲候选；本方法不选择时段，也不创建草稿。"""
         if self._tool_execution is None:
@@ -62,6 +65,21 @@ class CalendarConfirmationService:
 
         context = TenantContext(tenant_id=run.tenant_id, user_id=run.user_id)
         execution = await self._tool_execution.execute_read_tool(run, context, invocation)
+        if decision and decision.time_mode == "explicit_interval":
+            if execution.status != "succeeded":
+                return {"confirmation_error": "日历查询不可用，无法核验指定时段，未创建草稿。"}
+            try:
+                summary = explicit_interval_availability(decision, execution.output_summary)
+            except ValueError:
+                return {"confirmation_error": "日历返回的时段数据无法核验，未创建草稿。"}
+            if not summary["available_slots"]:
+                return {"confirmation_error": "指定时段与已有日程冲突，请选择其他时间，未创建草稿。"}
+            candidates, duration_minutes = extract_calendar_free_time_candidates(summary)
+            return {"availability": {
+                "duration_minutes": duration_minutes,
+                "candidates": [item.model_dump(mode="json") for item in candidates],
+                "scheduling_warning": summary.get("scheduling_warning"),
+            }, "tool_context": json.dumps(summary, ensure_ascii=False)}
         candidates, duration_minutes = extract_calendar_free_time_candidates(
             execution.output_summary
         )
@@ -86,20 +104,23 @@ class CalendarConfirmationService:
         selected_slot: CalendarFreeTimeCandidate,
         alternatives: list[CalendarFreeTimeCandidate],
         duration_minutes: int,
+        timezone: str = "Asia/Shanghai",
+        scheduling_warning: str | None = None,
     ) -> dict[str, Any]:
         """将已经过候选集合校验的推荐时段固化为指定时长的待确认会议草稿。"""
         context = TenantContext(tenant_id=run.tenant_id, user_id=run.user_id)
         start_at, end_at = _meeting_interval(selected_slot, duration_minutes)
         recommendation_preview = {
             "selected_slot_id": selected_slot.slot_id,
-            "reason": proposal.reason,
+            "reason": proposal.reason + (f"\n{scheduling_warning}" if scheduling_warning else ""),
+            "scheduling_warning": scheduling_warning,
             "alternative_slots": [
                 {
                     "slot_id": candidate.slot_id,
                     "start_at": alternative_start.isoformat(),
                     "end_at": alternative_end.isoformat(),
-                    "start_at_local": candidate.start_at_local,
-                    "end_at_local": candidate.end_at_local,
+                    "start_at_local": alternative_start.astimezone(ZoneInfo(timezone)).strftime("%Y-%m-%d %H:%M"),
+                    "end_at_local": alternative_end.astimezone(ZoneInfo(timezone)).strftime("%Y-%m-%d %H:%M"),
                 }
                 for candidate in alternatives
                 for alternative_start, alternative_end in [_meeting_interval(candidate, duration_minutes)]
@@ -119,6 +140,7 @@ class CalendarConfirmationService:
                     end_at=end_at,
                     attendees=proposal.attendees,
                     description=proposal.description,
+                    timezone=timezone,
                 )
                 approval_item_id = await _create_approval_item(
                     session,
@@ -129,6 +151,7 @@ class CalendarConfirmationService:
                     end_at=end_at,
                     attendees=proposal.attendees,
                     recommendation_preview=recommendation_preview,
+                    timezone=timezone,
                 )
                 await session.execute(
                     text(
@@ -155,6 +178,8 @@ class CalendarConfirmationService:
                                 "start_at": start_at.isoformat(),
                                 "end_at": end_at.isoformat(),
                                 "attendees": proposal.attendees,
+                                "timezone": timezone,
+                                "scheduling_warning": scheduling_warning,
                                 "recommendation": recommendation_preview,
                             },
                         },
@@ -305,7 +330,7 @@ def _meeting_interval(
     return start_at, end_at
 
 
-async def _create_draft(session, *, run: ClaimedRun, connection_id: UUID, title: str, start_at: datetime, end_at: datetime, attendees: list[str], description: str) -> UUID:
+async def _create_draft(session, *, run: ClaimedRun, connection_id: UUID, title: str, start_at: datetime, end_at: datetime, attendees: list[str], description: str, timezone: str = "Asia/Shanghai") -> UUID:
     result = await session.execute(
         text(
             "INSERT INTO calendar_event_drafts "
@@ -313,7 +338,7 @@ async def _create_draft(session, *, run: ClaimedRun, connection_id: UUID, title:
             "VALUES (:tenant_id, :user_id, :run_id, :connection_id, 'primary', '主日历', :title, "
             ":description, :start_at, :end_at, :timezone, 'pending_approval') RETURNING id"
         ),
-        {"tenant_id": run.tenant_id, "user_id": run.user_id, "run_id": run.id, "connection_id": connection_id, "title": title[:500], "description": description[:4000], "start_at": start_at, "end_at": end_at, "timezone": "Asia/Shanghai"},
+        {"tenant_id": run.tenant_id, "user_id": run.user_id, "run_id": run.id, "connection_id": connection_id, "title": title[:500], "description": description[:4000], "start_at": start_at, "end_at": end_at, "timezone": timezone},
     )
     draft_id = result.mappings().one()["id"]
     for email in sorted(set(attendees)):
@@ -327,8 +352,8 @@ async def _create_draft(session, *, run: ClaimedRun, connection_id: UUID, title:
     return draft_id
 
 
-async def _create_approval_item(session, *, run: ClaimedRun, draft_id: UUID, title: str, start_at: datetime, end_at: datetime, attendees: list[str], recommendation_preview: dict[str, Any]) -> UUID:
-    preview = {"title": title, "start_at": start_at.isoformat(), "end_at": end_at.isoformat(), "attendees": attendees, "recommendation": recommendation_preview}
+async def _create_approval_item(session, *, run: ClaimedRun, draft_id: UUID, title: str, start_at: datetime, end_at: datetime, attendees: list[str], recommendation_preview: dict[str, Any], timezone: str = "Asia/Shanghai") -> UUID:
+    preview = {"title": title, "start_at": start_at.isoformat(), "end_at": end_at.isoformat(), "attendees": attendees, "timezone": timezone, "recommendation": recommendation_preview}
     parameters_hash = sha256(json.dumps(preview, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
     result = await session.execute(
         text(
@@ -340,6 +365,44 @@ async def _create_approval_item(session, *, run: ClaimedRun, draft_id: UUID, tit
         {"tenant_id": run.tenant_id, "user_id": run.user_id, "run_id": run.id, "draft_id": draft_id, "title": f"创建日历事件：{title}"[:256], "preview": json.dumps(preview, ensure_ascii=False), "parameters_hash": parameters_hash},
     )
     return result.mappings().one()["id"]
+
+
+def explicit_interval_availability(decision: CalendarDecision, summary) -> dict:
+    """对已查询的指定范围做确定性冲突检查，不受自动推荐工作时段限制。"""
+    if not isinstance(summary, dict) or not isinstance(summary.get("events"), list):
+        raise ValueError("缺少可信日程列表")
+    query_range = summary.get("query_range", {})
+    if not isinstance(query_range, dict) or not all(isinstance(query_range.get(key), str) for key in ("start_at", "end_at")):
+        raise ValueError("日历查询范围格式无效")
+    if (datetime.fromisoformat(query_range.get("start_at", "")) != decision.start_at
+            or datetime.fromisoformat(query_range.get("end_at", "")) != decision.end_at):
+        raise ValueError("日历查询范围与指定范围不一致")
+    conflict = False
+    for event in summary["events"]:
+        try:
+            start = datetime.fromisoformat(event["start_at"])
+            end = datetime.fromisoformat(event["end_at"])
+            if start.tzinfo is None or end.tzinfo is None or end <= start:
+                raise ValueError("日程时间无效")
+            conflict = conflict or (start < decision.end_at and end > decision.start_at)
+        except (KeyError, TypeError):
+            raise ValueError("日程格式无效") from None
+    if summary.get("events_total", len(summary["events"])) > len(summary["events"]):
+        raise ValueError("日程摘要被截断，不能可靠核验")
+    zone = ZoneInfo(decision.timezone)
+    start, end = decision.start_at.astimezone(zone), decision.end_at.astimezone(zone)
+    warning = None
+    if start.hour < 9 or end.hour > 18 or (end.hour == 18 and (end.minute or end.second)) or start.date() != end.date():
+        warning = "你指定的会议位于非工作时段，请在批准前核对。"
+    return {
+        "duration_minutes": decision.duration_minutes, "display_timezone": decision.timezone,
+        "scheduling_warning": warning,
+        "available_slots": [] if conflict else [{
+            "start_at": start.isoformat(), "end_at": end.isoformat(),
+            "start_at_local": start.strftime("%Y-%m-%d %H:%M"),
+            "end_at_local": end.strftime("%Y-%m-%d %H:%M"),
+        }],
+    }
 
 
 async def _load_approved_draft(session, *, run: ClaimedRun, draft_id: UUID, approval_item_id: UUID):

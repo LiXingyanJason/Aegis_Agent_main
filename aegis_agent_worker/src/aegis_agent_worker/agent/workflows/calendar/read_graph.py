@@ -1,13 +1,14 @@
 """只读日历 LangGraph 子图：生成计划、执行工具并输出结构化结果。"""
 
 from typing import Any
+import json
 from uuid import UUID
 
 from langgraph.graph import END, START, StateGraph
 from pydantic import ValidationError
 
-from aegis_agent_worker.agent.contracts.calendar import CalendarReadPlan, build_calendar_read_artifact
-from aegis_agent_worker.agent.contracts.decision import AgentHandoff
+from aegis_agent_worker.agent.contracts.calendar import CalendarReadPlan, CalendarDecision, build_calendar_read_artifact
+from aegis_agent_worker.agent.workflows.calendar.planning_workflow import CalendarPlanningWorkflow
 from aegis_agent_worker.agent.contracts.common import ToolResultSummary
 from aegis_agent_worker.agent.specialists.calendar_agent import CalendarAgent
 from aegis_agent_worker.agent.workflows.calendar.state import CalendarReadState
@@ -15,6 +16,7 @@ from aegis_agent_worker.config.database import TenantContext
 from aegis_agent_worker.repository.run_repository import ClaimedRun
 from aegis_agent_worker.service.runtime.conversation_artifact_service import ConversationArtifactService
 from aegis_agent_worker.service.tool.tool_execution_service import ToolExecutionService
+from aegis_agent_worker.service.calendar.calendar_confirmation_service import explicit_interval_availability
 
 
 class CalendarReadWorkflow:
@@ -25,17 +27,21 @@ class CalendarReadWorkflow:
         calendar_agent: CalendarAgent,
         tool_execution: ToolExecutionService | None,
         artifact_service: ConversationArtifactService | None = None,
+        planning_audit=None,
     ) -> None:
         self._calendar_agent = calendar_agent
         self._tool_execution = tool_execution
         self._artifact_service = artifact_service
+        self._planning_audit = planning_audit
 
     def build(self) -> Any:
         """构建可嵌入根图的日历只读子图。"""
         graph = StateGraph(CalendarReadState)
+        graph.add_node("calendar_planning", CalendarPlanningWorkflow(self._calendar_agent, self._planning_audit).build())
         graph.add_node("plan_calendar_read", self._plan_calendar_read)
         graph.add_node("execute_calendar_plan", self._execute_calendar_plan)
-        graph.add_edge(START, "plan_calendar_read")
+        graph.add_edge(START, "calendar_planning")
+        graph.add_edge("calendar_planning", "plan_calendar_read")
         graph.add_conditional_edges(
             "plan_calendar_read",
             self._route_after_plan,
@@ -46,28 +52,19 @@ class CalendarReadWorkflow:
 
     async def _plan_calendar_read(self, state: CalendarReadState) -> dict[str, Any]:
         """将专家输出转换为 Pydantic 校验后的只读计划。"""
-        handoff = AgentHandoff.model_validate(state["handoff"]) if state.get("handoff") else None
-        invocation = self._calendar_agent.plan_read(
-            handoff.instruction if handoff else state.get("latest_user_message", ""),
-            action=handoff.intent if handoff else None,
-        )
-        if invocation is None:
-            return {
-                "tool_context": "未识别到可安全执行的日历读取请求，请基于现有会话正常回复。",
-                "tool_result": ToolResultSummary(
-                    status="failed",
-                    tool_name="calendar.unspecified",
-                    summary={"message": "未识别到日历读取请求"},
-                ).model_dump(mode="json"),
-            }
+        if state.get("calendar_planning_error"):
+            return {"plan": {}}
         try:
-            plan = CalendarReadPlan.from_invocation(invocation)
+            decision = CalendarDecision.model_validate(state["calendar_decision"])
+            if decision.action not in {"list_events", "find_free_time"}:
+                raise ValueError("读取流程不允许写入意图")
+            plan = decision.to_read_plan()
         except (ValidationError, ValueError) as error:
             return {
                 "tool_context": "日历查询计划无效，无法安全调用外部日历。",
                 "tool_result": ToolResultSummary(
                     status="failed",
-                    tool_name=invocation.tool_name,
+                    tool_name="calendar.unspecified",
                     summary={"message": str(error)[:500]},
                 ).model_dump(mode="json"),
             }
@@ -106,17 +103,31 @@ class CalendarReadWorkflow:
         execution = await self._tool_execution.execute_read_tool(
             run, context, plan.to_invocation()
         )
+        decision = CalendarDecision.model_validate(state["calendar_decision"])
+        display_plan = plan
+        output_summary = execution.output_summary
+        tool_context = execution.tool_context
+        if decision.action == "find_free_time" and decision.time_mode == "explicit_interval" and execution.status == "succeeded":
+            try:
+                output_summary = explicit_interval_availability(decision, output_summary)
+            except ValueError:
+                return {"calendar_planning_error": "指定时段的日程数据无法核验，请稍后重试。"}
+            display_plan = CalendarReadPlan(
+                action="find_free_time", tool_name="calendar.find_free_time",
+                arguments={**plan.arguments, "duration_minutes": decision.duration_minutes},
+            )
+            tool_context = "以下是指定时段确定性冲突检查结果：" + json.dumps(output_summary, ensure_ascii=False)
         summary = ToolResultSummary(
             status=execution.status,
             tool_name=execution.tool_name,
-            summary=execution.output_summary or {"message": "日历工具未返回可展示结果"},
+            summary=output_summary or {"message": "日历工具未返回可展示结果"},
         )
-        artifact = build_calendar_read_artifact(plan, summary)
+        artifact = build_calendar_read_artifact(display_plan, summary)
         artifacts = [artifact] if artifact is not None else []
         if artifacts and self._artifact_service is not None:
             await self._artifact_service.persist(run, artifacts)
         return {
-            "tool_context": execution.tool_context,
+            "tool_context": tool_context,
             "tool_result": summary.model_dump(mode="json"),
             "artifacts": [artifact.model_dump(mode="json") for artifact in artifacts],
         }

@@ -18,6 +18,9 @@ from aegis_agent_worker.repository.run_repository import ClaimedRun
 from aegis_agent_worker.service.calendar.calendar_confirmation_service import CalendarConfirmationService
 from aegis_agent_worker.tool.contracts import ToolInvocation
 from uuid import UUID
+from datetime import datetime
+from aegis_agent_worker.agent.contracts.calendar import CalendarDecision
+from aegis_agent_worker.agent.workflows.calendar.planning_workflow import CalendarPlanningWorkflow
 from aegis_agent_worker.agent.contracts.decision import AgentHandoff
 
 
@@ -44,20 +47,24 @@ class CalendarConfirmationWorkflow:
         self,
         calendar_agent: CalendarAgent,
         confirmation_service: CalendarConfirmationService | None,
+        planning_audit=None,
     ) -> None:
         self._calendar_agent = calendar_agent
         self._confirmation_service = confirmation_service
+        self._planning_audit = planning_audit
 
     def build(self) -> Any:
         """构建“查询候选→模型推荐→草稿确认→写入”的会议安排流程。"""
         graph = StateGraph(TaskGraphState)
+        graph.add_node("calendar_planning", CalendarPlanningWorkflow(self._calendar_agent, self._planning_audit).build())
         graph.add_node("prepare_calendar_confirmation", self._prepare)
         graph.add_node("query_calendar_availability", self._query_availability)
         graph.add_node("generate_calendar_draft", self._generate_draft)
         graph.add_node("create_calendar_draft", self._create_draft)
         graph.add_node("wait_for_calendar_approval", self._wait)
         graph.add_node("finish_calendar_approval", self._finish)
-        graph.add_edge(START, "prepare_calendar_confirmation")
+        graph.add_edge(START, "calendar_planning")
+        graph.add_edge("calendar_planning", "prepare_calendar_confirmation")
         graph.add_edge("prepare_calendar_confirmation", "query_calendar_availability")
         graph.add_conditional_edges(
             "query_calendar_availability",
@@ -78,6 +85,8 @@ class CalendarConfirmationWorkflow:
         """解析会议请求；后续节点才查询事实候选并生成草稿。"""
         if self._confirmation_service is None:
             return {"confirmation_error": "会议确认服务尚未配置。"}
+        if state.get("calendar_planning_error"):
+            return {"confirmation_error": state["calendar_planning_error"]}
         run = _conversation_run_from_state(state)
         message = state.get("latest_user_message", "")
         if state.get("handoff"):
@@ -86,16 +95,19 @@ class CalendarConfirmationWorkflow:
                 return {"confirmation_error": "会议交接计划无效。"}
             message = handoff.instruction
         try:
-            plan = self._calendar_agent.plan_meeting(message)
+            decision = CalendarDecision.model_validate(state["calendar_decision"])
+            if decision.action != "prepare_meeting":
+                raise ValueError("会议工作流意图无效")
+            plan = decision.to_read_plan()
         except ValueError:
             return {"confirmation_error": "请检查会议日期和起止时间，结束时间须晚于开始时间。未注明时区时按北京时间处理。"}
         return {
             "calendar_meeting_plan": {
-                "title": plan.title,
-                "attendees": plan.attendees,
+                "title": decision.title,
+                "attendees": decision.attendees,
                 "instruction": message,
-                "availability_tool_name": plan.availability_invocation.tool_name,
-                "availability_arguments": plan.availability_invocation.arguments,
+                "availability_tool_name": plan.tool_name,
+                "availability_arguments": plan.arguments,
             }
         }
 
@@ -115,6 +127,7 @@ class CalendarConfirmationWorkflow:
         return await self._confirmation_service.query_available_slots(
             _conversation_run_from_state(state),
             invocation=ToolInvocation(tool_name=tool_name, arguments=arguments),
+            decision=CalendarDecision.model_validate(state["calendar_decision"]),
         )
 
     async def _generate_draft(self, state: TaskGraphState) -> dict[str, Any]:
@@ -161,6 +174,7 @@ class CalendarConfirmationWorkflow:
                 for item in availability.get("candidates", [])
             ]
             proposal = CalendarMeetingDraftProposal.model_validate(raw_proposal)
+            decision = CalendarDecision.model_validate(state["calendar_decision"])
             candidates_by_id = {candidate.slot_id: candidate for candidate in candidates}
             selected_slot = candidates_by_id[proposal.selected_slot_id]
             alternatives = [
@@ -170,6 +184,15 @@ class CalendarConfirmationWorkflow:
             duration_minutes = availability.get("duration_minutes")
             if not isinstance(duration_minutes, int):
                 raise ValueError("会议时长无效")
+            if duration_minutes != decision.duration_minutes:
+                raise ValueError("候选时长不符合原计划")
+            if set(proposal.attendees) != set(decision.attendees):
+                raise ValueError("草稿改变了明确参会人")
+            if decision.time_mode == "explicit_interval" and (
+                datetime.fromisoformat(selected_slot.start_at) != decision.start_at
+                or datetime.fromisoformat(selected_slot.end_at) != decision.end_at
+            ):
+                raise ValueError("草稿改变了指定时段")
         except (KeyError, TypeError, ValueError):
             return {"confirmation_error": "会议草稿数据不完整或未通过校验，尚未创建。请重新发起会议安排。"}
         return await self._confirmation_service.create_recommended_draft(
@@ -178,6 +201,8 @@ class CalendarConfirmationWorkflow:
             selected_slot=selected_slot,
             alternatives=alternatives,
             duration_minutes=duration_minutes,
+            timezone=decision.timezone,
+            scheduling_warning=availability.get("scheduling_warning"),
         )
 
     @staticmethod

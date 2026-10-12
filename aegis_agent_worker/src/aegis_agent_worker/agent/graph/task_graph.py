@@ -187,6 +187,8 @@ class TaskGraph:
 
     async def _generate_reply(self, state: TaskGraphState) -> dict[str, str]:
         """调用模型生成最终回复；步骤记录仍交由生命周期服务处理。"""
+        if state.get("calendar_planning_error"):
+            return {"assistant_content": state["calendar_planning_error"]}
         run = _claimed_run_from_state(state)
         context = TenantContext(tenant_id=run.tenant_id, user_id=run.user_id)
         step_id = await self._dependencies.lifecycle.start_llm_generation(run, context)

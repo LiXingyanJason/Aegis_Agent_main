@@ -60,6 +60,8 @@ class _FakeLLMClient:
             if messages[-1].content == "查看我明天的日程":
                 return '{"decision":"delegate","domain":"calendar","intent":"list_events","instruction":"查看我明天的日程"}'
             return '{"decision":"reply"}'
+        if "日历领域规划助手" in messages[0].content:
+            return '{"action":"list_events","time_mode":"search_window","start_at":"2026-10-13T00:00:00+08:00","end_at":"2026-10-14T00:00:00+08:00"}'
         if self._error is not None:
             raise self._error
         return "这是模型生成的回复。"
@@ -163,7 +165,7 @@ def _calendar_factory(database, repository, gateway=None, tool_calls=None):
         if gateway is not None and tool_calls is not None
         else None
     )
-    return CalendarWorkflowFactory(CalendarAgent(), tool_execution, None)
+    return CalendarWorkflowFactory(CalendarAgent(llm_client=_FakeLLMClient()), tool_execution, None)
 
 
 @pytest.mark.asyncio
