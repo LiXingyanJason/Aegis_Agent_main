@@ -10,6 +10,7 @@ from aegis_agent_worker.agent.contracts.decision import (
     AgentHandoff, MainDecision, ResourceReference, clarify,
 )
 from aegis_agent_worker.agent.graph.state import TaskGraphState
+from aegis_agent_worker.agent.routing.capability_selector import CapabilitySelector, capability_id
 from aegis_agent_worker.observability.telemetry import get_tracer
 from aegis_agent_worker.repository.run_repository import ClaimedRun
 
@@ -19,26 +20,32 @@ class MainDecisionState(TaskGraphState, total=False):
     decision_references: list[dict[str, Any]]
     decision_outcome: str
     decision_duration_ms: int
+    candidate_capabilities: list[str]
+    filter_reason_codes: list[str]
+    route_policy_version: str
 
 
 class MainDecisionWorkflow:
     """LLM 与下一步决策在图层；数据库访问与业务核验委托 Service。"""
 
-    def __init__(self, main_agent, context_service, capabilities):
+    def __init__(self, main_agent, context_service, capabilities, capability_selector=None):
         self._main_agent = main_agent
         self._context_service = context_service
         self._capabilities = tuple(capabilities)
+        self._selector = capability_selector or CapabilitySelector()
 
     def build(self):
         graph = StateGraph(MainDecisionState)
         graph.add_node("load_decision_context", self._load_context)
+        graph.add_node("select_candidate_capabilities", self._select_candidates)
         graph.add_node("infer_main_decision", self._infer)
         graph.add_node("validate_decision_capability", self._validate_capability)
         graph.add_node("validate_decision_target", self._validate_target)
         graph.add_node("assemble_agent_handoff", self._assemble_handoff)
         graph.add_node("record_decision_audit", self._audit)
         graph.add_edge(START, "load_decision_context")
-        graph.add_edge("load_decision_context", "infer_main_decision")
+        graph.add_edge("load_decision_context", "select_candidate_capabilities")
+        graph.add_edge("select_candidate_capabilities", "infer_main_decision")
         graph.add_edge("infer_main_decision", "validate_decision_capability")
         graph.add_conditional_edges(
             "validate_decision_capability", self._route_target,
@@ -56,10 +63,38 @@ class MainDecisionWorkflow:
             references = await self._context_service.load_references(_run(state))
         return {"decision_references": references}
 
+    def _select_candidates(self, state):
+        """只存目录标识，最终候选再次与可信注册目录求交集。"""
+        selected = self._selector.select(
+            self._capabilities, state.get("latest_user_message", ""), state["decision_references"],
+        )
+        requested = set(selected.candidate_ids)
+        candidates = [capability_id(item) for item in self._capabilities if capability_id(item) in requested]
+        reasons = list(selected.reason_codes)
+        if not candidates and self._capabilities:
+            # 软规则不可导致能力消失；意外空筛选恢复目录，绝不直接执行工具。
+            candidates = [capability_id(item) for item in self._capabilities]
+            reasons.append("empty_selection_restore_catalog")
+        return {
+            "candidate_capabilities": candidates, "filter_reason_codes": reasons,
+            "route_policy_version": self._selector.policy_version,
+        }
+
     async def _infer(self, state):
-        """主 Agent 调用模型；非法结构输出改为澄清，模型故障由任务生命周期收尾。"""
+        """
+        主 Agent 调用模型；非法结构输出改为澄清，模型故障由任务生命周期收尾。
+        两层 Capability 决策处理：
+            - CapabilitySelector：用保守规则(字符串匹配)筛选“哪些能力值得交给 LLM 考虑”，不确定时保留全部，不选择最终工作流。
+            - 主 Agent MainDecisionWorkflow：由 LLM 判断最终领域、意图，或者选择澄清／普通回复。
+        """
         started = monotonic()
         outcome = "validated"
+        if not state["candidate_capabilities"]:
+            return {
+                "main_decision": clarify("当前没有可用的领域能力，请稍后重试或联系管理员。")
+                    .model_dump(mode="json"),
+                "decision_outcome": "empty_catalog", "decision_duration_ms": 0,
+            }
         with get_tracer(__name__).start_as_current_span("agent.main.decide") as span:
             span.set_attribute("aegis.run_id", state["run_id"])
             span.set_attribute("gen_ai.provider.name", getattr(self._main_agent, "provider_name", "unknown"))
@@ -67,7 +102,8 @@ class MainDecisionWorkflow:
             try:
                 decision = await self._main_agent.decide(
                     message=state.get("latest_user_message", ""), history=state.get("history", []),
-                    capabilities=[item.model_dump(mode="json") for item in self._capabilities],
+                    capabilities=[item.model_dump(mode="json") for item in self._capabilities
+                                  if capability_id(item) in state["candidate_capabilities"]],
                     references=state["decision_references"],
                 )
                 if decision.decision == "delegate" and decision.domain == "mail" and decision.intent != "query_mail":
@@ -100,6 +136,9 @@ class MainDecisionWorkflow:
             if capability is None:
                 return self._clarification("当前尚不支持这项操作，请选择已有日历或邮件功能。",
                                            "unregistered_capability")
+            if capability_id(capability) not in state["candidate_capabilities"]:
+                return self._clarification("执行方向与当前任务不一致，请明确要处理日历还是邮件。",
+                                           "outside_candidate_set")
             if capability.requires_target and decision.target is None:
                 return self._clarification("请明确选择要处理的邮件。", "missing_target")
         return {}
@@ -131,7 +170,7 @@ class MainDecisionWorkflow:
         workflow = "clarify" if decision.decision == "clarify" else "general_reply"
         if decision.decision == "delegate":
             capability = self._capability(decision)
-            if capability is None:
+            if capability is None or capability_id(capability) not in state["candidate_capabilities"]:
                 raise RuntimeError("未校验的能力不能交接")
             handoff = AgentHandoff(domain=decision.domain, intent=decision.intent,
                                    instruction=decision.instruction, target=decision.target)
@@ -153,6 +192,9 @@ class MainDecisionWorkflow:
             capabilities=self._capabilities,
             model_provider=getattr(self._main_agent, "provider_name", "unknown"),
             model_name=getattr(self._main_agent, "model_name", "unknown"),
+            candidate_capabilities=state.get("candidate_capabilities", []),
+            filter_reason_codes=state.get("filter_reason_codes", []),
+            route_policy_version=state.get("route_policy_version", self._selector.policy_version),
         )
 
     @staticmethod

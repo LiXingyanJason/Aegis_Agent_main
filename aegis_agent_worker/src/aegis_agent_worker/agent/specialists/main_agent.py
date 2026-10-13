@@ -22,7 +22,19 @@ class MainAgent:
         return self._client.model_name
 
     async def decide(self, *, message, history, capabilities, references) -> MainDecision:
-        """在注册能力和服务端候选内决定专家及明确业务目标。"""
+        """
+        在注册能力和服务端候选内决定专家及明确业务目标。
+        将各个领域的能力capabilities注册给主agent
+        主 Agent 根据候选能力、用户输入和必要上下文，提出对应的领域与意图
+        程序校验该决定后，再由 LangGraph 路由到相应子图继续处理
+        若任务有歧义则澄清，普通聊天则直接回复；不是所有输入都会转交领域子图
+        exp:ConversationCapability(
+                domain="calendar",
+                intent="list_events",
+                workflow="calendar_read",
+                description="查看指定范围日程",
+            )
+        """
         prompt = (
             "你是 Aegis 主任务分派助手，只输出符合给定 Schema 的一个 JSON 对象。"
             "从可用能力中选择一个专家；不能选择未注册能力、发送邮件、绕过审批或自行执行工具。"

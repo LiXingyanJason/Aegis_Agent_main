@@ -163,7 +163,9 @@ def _calendar_factory(database, repository, gateway=None, tool_calls=None):
     tool_execution = (
         ToolExecutionService(database, repository, gateway, tool_calls)
         if gateway is not None and tool_calls is not None
-        else None
+        # 普通回复测试也注册可用目录；该替身不会执行工具。
+        # 空目录现在另有测试确认安全澄清，不再用作正文生成测试的前置条件。
+        else object()
     )
     return CalendarWorkflowFactory(CalendarAgent(llm_client=_FakeLLMClient()), tool_execution, None)
 

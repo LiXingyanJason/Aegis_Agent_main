@@ -5,6 +5,12 @@
 页面明确任务和检查点恢复不经过主Agent重新分类；旧关键词Router链、无调用预留Router
 及无用构造参数已移除。现有接口、数据库和恢复行为不变。
 
+阶段4.2已接入`agent/routing/CapabilitySelector`（文件`capability_selector.py`）。
+只对简单明确浏览收敛候选领域，复杂、指代、无信号或跨领域请求保留全部注册能力。
+主Agent只接收候选能力，输出还须通过候选集与注册目录双重检查；连接和审批仍由领域服务校验。
+候选意外为空恢复目录，目录本身为空则澄清。审计新增候选标识、稳定原因码和策略版本，
+无新增数据库迁移，重启Worker即可。
+
 独立消费 Aegis Agent Redis 队列的 Python 服务。它不导入 `Aegis_backend` 的代码；两个服务共享 PostgreSQL 业务事实与 Redis 队列/实时事件协议。
 
 当前任务由 LangGraph 根图执行：根图加载会话上下文、进行意图/工作流路由；日历读取作为 `calendar/read_graph.py` 子图执行，工具审计、事务与 SSE 事件仍由 `service/` 处理。
