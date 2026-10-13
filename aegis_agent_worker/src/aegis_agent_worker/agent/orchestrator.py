@@ -9,7 +9,6 @@ from uuid import UUID
 
 from aegis_agent_worker.agent.graph.graph_runner import GraphRunner
 from aegis_agent_worker.agent.graph.graph_registry import WorkflowRegistrar
-from aegis_agent_worker.agent.graph.router import TaskGraphRouter
 from aegis_agent_worker.agent.graph.task_graph import LLMGraphError, TaskGraph, TaskGraphDependencies
 from aegis_agent_worker.config.database import Database, TenantContext
 from aegis_agent_worker.event.run_event import RunEventPublisher
@@ -75,7 +74,6 @@ class AgentOrchestrator:
                     lifecycle=self._lifecycle,
                     llm_client=llm_client,
                     system_prompt=self._system_prompt,
-                    router=TaskGraphRouter(),
                     workflow_factories=workflow_factories,
                     memory_context_service=memory_context,
                     main_agent=main_agent or MainAgent(llm_client),

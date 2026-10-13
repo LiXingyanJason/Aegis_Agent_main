@@ -26,5 +26,19 @@
     "subject": "Re: 2026 年服务续约确认",
     "body": "李莉，您好：\n\n确认按原方案续约。签约联系人：Jason；预计完成时间：2026-10-09 前。\n\n如需补充其他材料，请随时告知。\n\n谢谢。\nJason",
     "idempotency_key": "mail:4571a6d2-ed89-47c2-8f3d-fda27295515d:1"
+  },
+  {
+    "provider_message_id": "mock-sent-70e1bf230f1a4624855729f5904bbf04",
+    "sent_at": "2026-10-13T04:43:50.013325+00:00",
+    "status": "sent",
+    "recipients": {
+      "to": [
+        "lili@northstar.example.com"
+      ],
+      "cc": []
+    },
+    "subject": "回复：2026 年服务续约确认",
+    "body": "李莉，您好：\n\n感谢您的邮件。首先就我们未能在本周五（2026-10-09）前回复向您致歉。\n\n经确认，我方同意按原方案续约。签约联系人为 Jason，邮箱 jason@example.com；预计完成时间为 2026 年 10 月 20 日。\n\n恳请您接受我方此次逾期回复，并将本次续约确认的有效期宽限至 2026 年 10 月 20 日。若需我方补充任何材料，请随时告知。\n\n谢谢。\nJason",
+    "idempotency_key": "mail:da89a349-a2ce-4ffd-88f8-e21ba0fcfb1c:1"
   }
 ]

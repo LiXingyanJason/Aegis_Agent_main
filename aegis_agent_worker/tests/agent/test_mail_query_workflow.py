@@ -12,7 +12,6 @@ from aegis_agent_worker.agent.contracts.mail import MailQueryPlan, MailListMessa
 from aegis_agent_worker.agent.contracts.decision import MainDecision, ConversationCapability
 from aegis_agent_worker.agent.specialists.mail_agent import MailAgent
 from aegis_agent_worker.agent.graph.task_graph import TaskGraph, TaskGraphDependencies
-from aegis_agent_worker.agent.graph.router import TaskGraphRouter
 from aegis_agent_worker.agent.workflows.mail.query_workflow import MailQueryWorkflow
 from aegis_agent_worker.service.mail.mail_query_service import MailQueryService
 from aegis_agent_worker.service.runtime.conversation_artifact_service import ConversationArtifactService
@@ -212,7 +211,7 @@ async def test_root_mail_query_synchronizes_metadata_filters_and_emits_artifact(
                 domain="mail", intent="query_mail", workflow="mail_query", description="查询"))
     root = TaskGraph(TaskGraphDependencies(
         context_service=Context(), lifecycle=None, llm_client=None, system_prompt="",
-        router=TaskGraphRouter(), workflow_factories=(Factory(),), main_agent=Main(),
+        workflow_factories=(Factory(),), main_agent=Main(),
         decision_context_service=DecisionContext(None, None),
     )).build()
     result = await root.ainvoke(dict(run_id=str(RUN.id), tenant_id=str(RUN.tenant_id),

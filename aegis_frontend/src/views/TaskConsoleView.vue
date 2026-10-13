@@ -12,7 +12,7 @@ const conversations = useConversationStore()
 const router = useRouter()
 const route = useRoute()
 const draftMessage = ref('')
-const conversationTitle = ref('')
+const isTemporaryConversation = ref(false)
 const pendingClientMessageId = ref(null)
 const error = ref('')
 const isPolling = ref(false)
@@ -28,8 +28,10 @@ let pollingInFlight = false
 let streamAbortController = null
 let streamingRunId = null
 let streamRetryTimer = null
+let selectionVersion = 0
 
 const activeConversation = computed(() => conversations.current)
+const isSubmitting = computed(() => conversations.creating || conversations.sending)
 const hasMailCandidates = computed(() => Object.values(conversations.artifactsByRun)
   .some((artifacts) => artifacts.some((artifact) => artifact.artifact_type === 'mail_candidates')))
 
@@ -217,13 +219,19 @@ async function loadHistory() {
 }
 
 async function restoreConversation(conversationId, syncUrl = true) {
+  const selection = ++selectionVersion
   stopRunTracking()
   stopInputPolling()
+  isTemporaryConversation.value = false
+  draftMessage.value = ''
+  pendingClientMessageId.value = null
   inputFollowup.value = ''
   error.value = ''
   try {
     const detail = await conversations.loadConversation(conversationId)
+    if (!detail || selection !== selectionVersion) return
     await loadArtifactsForConversation(detail)
+    if (selection !== selectionVersion) return
     draftMessage.value = ''
     pendingClientMessageId.value = null
     const activeRun = detail.runs?.find(isTrackableRun)
@@ -236,30 +244,38 @@ async function restoreConversation(conversationId, syncUrl = true) {
     }
     await scrollMessagesToBottom()
   } catch (cause) {
-    error.value = cause.response?.data?.detail || cause.message || '恢复会话失败。'
+    if (selection === selectionVersion) {
+      error.value = cause.response?.data?.detail || cause.message || '恢复会话失败。'
+    }
   }
 }
 
 async function startNewConversation() {
+  if (isSubmitting.value) return
+  ++selectionVersion
   stopRunTracking()
+  stopInputPolling()
   error.value = ''
-  try {
-    await conversations.start(conversationTitle.value.trim())
-    conversationTitle.value = ''
-    draftMessage.value = ''
-    pendingClientMessageId.value = null
-    await router.replace({ query: { conversation_id: conversations.current.conversation_id } })
-  } catch (cause) {
-    error.value = cause.response?.data?.detail || cause.message || '创建会话失败。'
-  }
+  inputFollowup.value = ''
+  conversations.clearCurrent()
+  isTemporaryConversation.value = true
+  draftMessage.value = ''
+  pendingClientMessageId.value = null
+  await router.replace({ name: 'tasks' })
 }
 
 async function sendMessage() {
   const content = draftMessage.value.trim()
-  if (!content || !activeConversation.value) return
-  const conversationId = activeConversation.value.conversation_id
+  if (!content || (!activeConversation.value && !isTemporaryConversation.value) || isSubmitting.value) return
   error.value = ''
   try {
+    if (isTemporaryConversation.value) {
+      const title = content.replace(/\s+/g, ' ').slice(0, 200)
+      await conversations.start(title)
+      isTemporaryConversation.value = false
+      await router.replace({ name: 'tasks', query: { conversation_id: conversations.current.conversation_id } })
+    }
+    const conversationId = conversations.current.conversation_id
     pendingClientMessageId.value ??= crypto.randomUUID()
     const result = await conversations.send(content, pendingClientMessageId.value)
     draftMessage.value = ''
@@ -395,6 +411,7 @@ async function signOut() {
 }
 
 onMounted(async () => {
+  conversations.clearCurrent()
   await loadHistory()
   const conversationId = route.query.conversation_id
   if (typeof conversationId === 'string' && conversationId) {
@@ -406,6 +423,10 @@ watch(() => route.query.conversation_id, (conversationId) => {
   if (typeof conversationId === 'string' && conversationId
     && conversationId !== activeConversation.value?.conversation_id) {
     void restoreConversation(conversationId, false)
+  } else if (!conversationId && !isTemporaryConversation.value) {
+    ++selectionVersion
+    stopRunTracking()
+    conversations.clearCurrent()
   }
 })
 
@@ -435,22 +456,18 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
     <section id="task-console" class="content">
       <header class="page-header">
         <div>
-          <h1>{{ activeConversation?.title || '任务对话' }}</h1>
-          <p class="muted">{{ activeConversation ? `会话 ID：${activeConversation.conversation_id}` : '从左侧选择一条历史对话，或创建新的任务。' }}</p>
+          <h1>{{ isTemporaryConversation ? '新对话' : activeConversation?.title || '任务对话' }}</h1>
+          <p class="muted">{{ isTemporaryConversation ? '发送第一条消息后才会创建会话，并以这条消息作为标题。' : activeConversation ? `会话 ID：${activeConversation.conversation_id}` : '从左侧选择一条历史对话，或开始新对话。' }}</p>
         </div>
         <span class="badge success">● 身份已验证</span>
       </header>
 
       <div class="task-workspace">
         <aside class="conversation-history" aria-label="历史对话">
-          <div class="new-title-editor">
-            <label for="conversation-title">对话标题</label>
-            <el-input id="conversation-title" v-model="conversationTitle" maxlength="200" placeholder="例如：明日项目同步" />
-            <el-button class="new-chat-button" type="primary" :loading="conversations.creating" @click="startNewConversation">
-              <span>＋</span> 新建对话
-            </el-button>
-            <p>可选，不填写时使用“新对话”。</p>
-          </div>
+          <button class="new-chat-entry" :class="{ active: isTemporaryConversation }" type="button" :disabled="isSubmitting" @click="startNewConversation">
+            <span class="new-chat-icon" aria-hidden="true">＋</span>
+            <span>新建对话</span>
+          </button>
           <p class="conversation-history-label">历史对话</p>
           <div v-loading="conversations.loadingHistory" class="history-scroll">
             <button
@@ -459,6 +476,7 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
               class="history-item"
               :class="{ active: activeConversation?.conversation_id === conversation.conversation_id }"
               type="button"
+              :disabled="isSubmitting"
               @click="restoreConversation(conversation.conversation_id)"
             >
               <span class="history-title">{{ conversation.title }}</span>
@@ -472,15 +490,15 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
           <article v-loading="conversations.loadingDetail" class="card conversation-card">
             <div class="card-head">
               <div>
-                <h2>{{ activeConversation ? '已恢复的历史对话' : '开始新的任务' }}</h2>
-                <p class="muted">{{ activeConversation ? '已恢复该会话的完整可见消息。' : '选择一条历史会话，或在左侧创建新会话。' }}</p>
+                <h2>{{ isTemporaryConversation ? '新对话' : activeConversation ? '已恢复的历史对话' : '开始新的任务' }}</h2>
+                <p class="muted">{{ isTemporaryConversation ? '输入并发送第一条消息后，这条对话才会保存到历史记录。' : activeConversation ? '已恢复该会话的完整可见消息。' : '选择一条历史会话，或点击左侧加号开始新对话。' }}</p>
               </div>
             </div>
 
             <el-alert v-if="error" class="conversation-error" :title="error" type="error" :closable="false" show-icon />
             <RunInputPanel v-if="hasMailCandidates" :key="inputPanelKey" @answered="resumeInputRun" @cancelled="cancelInputRun" />
             <p v-if="inputFollowup" class="mail-input-followup">{{ inputFollowup }} <router-link v-if="!inputPollingRunId" :to="{ name: 'mail-management' }">打开邮件管理</router-link></p>
-            <div v-if="activeConversation" ref="messagesElement" class="messages">
+            <div v-if="activeConversation || isTemporaryConversation" ref="messagesElement" class="messages">
               <template v-for="item in conversations.messages" :key="item.message_id">
                 <div class="message" :class="item.role">
                   <div class="avatar">{{ item.role === 'user' ? '你' : 'A' }}</div>
@@ -539,7 +557,8 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
                   </div>
                 </template>
               </template>
-              <div v-if="conversations.messages.length === 0 && !conversations.runs.some(meetingPreview)" class="empty-messages">此会话暂无可见消息。</div>
+              <div v-if="isTemporaryConversation" class="empty-messages">新对话尚未创建。发送第一条消息后才会保存。</div>
+              <div v-else-if="conversations.messages.length === 0 && !conversations.runs.some(meetingPreview)" class="empty-messages">此会话暂无可见消息。</div>
               <div v-if="conversations.latestSubmission" class="queued-notice">
                 <b>{{ isRunActive ? '任务已提交，正在处理' : '任务状态：' + conversations.latestSubmission.status }}</b>
                 <span>任务 ID：{{ conversations.latestSubmission.run_id }}</span>
@@ -548,12 +567,12 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
             <div v-else class="empty-state">
               <div class="empty-mark">⌁</div>
               <h3>选择历史对话或开始新任务</h3>
-              <p>进入页面后已加载当前用户的历史会话；在左侧填写标题并点击“新建对话”即可创建新会话。</p>
+              <p>进入页面后已加载当前用户的历史会话；点击左侧加号开始新对话，发送第一条消息后才会保存。</p>
             </div>
 
             <form class="new-conversation" @submit.prevent="sendMessage">
-              <el-input v-model="draftMessage" maxlength="8000" placeholder="输入任务，例如：帮我整理今天的邮件" aria-label="输入任务" :disabled="!activeConversation || isRunActive" />
-              <el-button native-type="submit" type="primary" :loading="conversations.sending" :disabled="!activeConversation || isRunActive">发送</el-button>
+              <el-input v-model="draftMessage" maxlength="8000" placeholder="输入任务，例如：帮我整理今天的邮件" aria-label="输入任务" :disabled="(!activeConversation && !isTemporaryConversation) || isRunActive || isSubmitting" />
+              <el-button native-type="submit" type="primary" :loading="isSubmitting" :disabled="(!activeConversation && !isTemporaryConversation) || isRunActive || isSubmitting || !draftMessage.trim()">发送</el-button>
             </form>
           </article>
 

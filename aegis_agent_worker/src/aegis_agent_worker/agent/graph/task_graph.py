@@ -7,7 +7,6 @@ from uuid import UUID
 from langgraph.graph import END, START, StateGraph
 
 from aegis_agent_worker.agent.graph.graph_registry import GraphRegistry, WorkflowRegistrar
-from aegis_agent_worker.agent.graph.router import TaskGraphRouter
 from aegis_agent_worker.agent.graph.state import TaskGraphState
 from aegis_agent_worker.config.database import TenantContext
 from aegis_agent_worker.llm.client import LLMError, LLMMessage, OpenAICompatibleClient
@@ -29,7 +28,6 @@ class TaskGraphDependencies:
     lifecycle: RunLifecycleService
     llm_client: OpenAICompatibleClient
     system_prompt: str
-    router: TaskGraphRouter
     workflow_factories: tuple[WorkflowRegistrar, ...]
     memory_context_service: MemoryContextService | None = None
     main_agent: MainAgent | None = None
@@ -57,6 +55,8 @@ class TaskGraph:
             factory.register(registry)
         registered_workflows = registry.names()
         self._capabilities = registry.capabilities()
+        # 生产对话能力唯一来源：领域Factory注册的ConversationCapability。
+        # 显式页面任务按数据库run_type直达；审批/问答恢复由GraphRunner.resume恢复检查点。
 
         graph = StateGraph(TaskGraphState)
         graph.add_node("select_run_workflow", self._select_run_workflow)

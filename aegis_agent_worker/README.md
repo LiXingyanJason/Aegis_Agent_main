@@ -1,5 +1,10 @@
 # Aegis Agent Worker
 
+阶段4.1的生产路由、双入口和恢复回归基线见
+[路由基线说明](文档/06-主决策路由与双入口回归基线.md)。对话能力来自领域Factory注册，
+页面明确任务和检查点恢复不经过主Agent重新分类；旧关键词Router链、无调用预留Router
+及无用构造参数已移除。现有接口、数据库和恢复行为不变。
+
 独立消费 Aegis Agent Redis 队列的 Python 服务。它不导入 `Aegis_backend` 的代码；两个服务共享 PostgreSQL 业务事实与 Redis 队列/实时事件协议。
 
 当前任务由 LangGraph 根图执行：根图加载会话上下文、进行意图/工作流路由；日历读取作为 `calendar/read_graph.py` 子图执行，工具审计、事务与 SSE 事件仍由 `service/` 处理。

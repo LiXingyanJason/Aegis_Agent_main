@@ -9,7 +9,6 @@ from langgraph.checkpoint.memory import MemorySaver
 
 from aegis_agent_worker.agent.contracts.decision import MainDecision, ConversationCapability
 from aegis_agent_worker.agent.graph.state import TaskGraphState
-from aegis_agent_worker.agent.graph.router import TaskGraphRouter
 from aegis_agent_worker.agent.graph.task_graph import TaskGraph, TaskGraphDependencies
 from aegis_agent_worker.agent.specialists.main_agent import MainAgent
 from aegis_agent_worker.repository.run_repository import ClaimedRun
@@ -166,7 +165,7 @@ async def test_root_delegates_handoff_and_resume_skips_main_agent():
     factory = Factory()
     graph = TaskGraph(TaskGraphDependencies(
         context_service=Context(), lifecycle=None, llm_client=None, system_prompt="",
-        router=TaskGraphRouter(), workflow_factories=(factory,),
+        workflow_factories=(factory,),
         main_agent=main, decision_context_service=service,
     )).build(checkpointer=MemorySaver())
     state = dict(run_id=str(RUN.id), tenant_id=str(RUN.tenant_id), user_id=str(RUN.user_id),

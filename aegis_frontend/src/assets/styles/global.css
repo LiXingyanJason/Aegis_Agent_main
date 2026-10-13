@@ -27,10 +27,11 @@ h1, h2, h3, p { margin-top: 0; }
 .history-title { display: block; line-height: 18px; }
 .messages > * { flex-shrink: 0; }
 .history-time { display: block; line-height: 16px; }
-.new-chat-button { font-size: 14px; letter-spacing: 0; }
-.new-title-editor { display: grid; gap: 7px; flex: none; margin-top: 14px; padding: 11px; border-radius: 8px; background: #f4f8fd; }
-.new-title-editor label { color: #344054; font-size: 12px; font-weight: 700; }
-.new-title-editor p { margin: 0; color: #667085; font-size: 11px; line-height: 1.45; }
+.new-chat-entry { display: flex; width: 100%; align-items: center; gap: 10px; flex: none; margin-top: 10px; padding: 10px; border: 0; border-radius: 8px; background: transparent; color: #344054; font-size: 13px; font-weight: 700; text-align: left; cursor: pointer; }
+.new-chat-entry:hover, .new-chat-entry.active { background: #eaf3ff; color: #1c5ba7; }
+.new-chat-entry:disabled { opacity: .55; cursor: not-allowed; }
+.new-chat-icon { display: grid; width: 27px; height: 27px; flex: none; place-items: center; border: 1px solid #c4d7ef; border-radius: 8px; background: #f5f9ff; color: #266dcc; font-size: 23px; font-weight: 400; line-height: 1; }
+.history-item:disabled { opacity: .55; cursor: not-allowed; }
 .creation-confirmation { flex: 1; color: #667085; font-size: 13px; line-height: 32px; }
 .queued-notice { display: grid; gap: 4px; margin: 2px 0; padding: 12px 14px; border: 1px solid #f4d5a4; border-radius: 9px; background: #fff4e4; color: #76470c; font-size: 13px; line-height: 1.45; }
 .queued-notice span { color: #8a5b1c; font-size: 12px; overflow-wrap: anywhere; }

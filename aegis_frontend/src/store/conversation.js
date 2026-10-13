@@ -19,10 +19,20 @@ export const useConversationStore = defineStore('conversation', {
     latestSubmission: null,
     loadingHistory: false,
     loadingDetail: false,
+    currentRequestKey: 0,
     creating: false,
     sending: false,
   }),
   actions: {
+    clearCurrent() {
+      this.currentRequestKey += 1
+      this.current = null
+      this.messages = []
+      this.runs = []
+      this.artifactsByRun = {}
+      this.latestSubmission = null
+      this.loadingDetail = false
+    },
     async loadHistory() {
       this.loadingHistory = true
       try {
@@ -33,9 +43,11 @@ export const useConversationStore = defineStore('conversation', {
       }
     },
     async loadConversation(conversationId) {
+      const requestKey = ++this.currentRequestKey
       this.loadingDetail = true
       try {
         const detail = await getConversationDetail(conversationId)
+        if (requestKey !== this.currentRequestKey) return null
         this.current = detail
         this.messages = detail.messages ?? []
         this.runs = detail.runs ?? []
@@ -43,7 +55,7 @@ export const useConversationStore = defineStore('conversation', {
         this.latestSubmission = null
         return detail
       } finally {
-        this.loadingDetail = false
+        if (requestKey === this.currentRequestKey) this.loadingDetail = false
       }
     },
     async start(title) {
