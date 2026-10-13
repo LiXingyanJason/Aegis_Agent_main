@@ -82,7 +82,7 @@ class MainDecisionWorkflow:
 
     async def _infer(self, state):
         """
-        主 Agent 调用模型；非法结构输出改为澄清，模型故障由任务生命周期收尾。
+        主 Agent 调用模型；非法结构输出改为澄清，模型故障由任务生命周期收尾。性能优化层
         两层 Capability 决策处理：
             - CapabilitySelector：用保守规则(字符串匹配)筛选“哪些能力值得交给 LLM 考虑”，不确定时保留全部，不选择最终工作流。
             - 主 Agent MainDecisionWorkflow：由 LLM 判断最终领域、意图，或者选择澄清／普通回复。

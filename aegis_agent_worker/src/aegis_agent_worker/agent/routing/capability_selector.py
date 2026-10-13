@@ -21,7 +21,7 @@ class CapabilitySelection:
 class CapabilitySelector:
     """
     两层 Capability 决策处理：
-        - CapabilitySelector：用保守规则(字符串匹配)筛选“哪些能力值得交给 LLM 考虑”，不确定时保留全部，不选择最终工作流。
+        - CapabilitySelector：用保守规则(字符串匹配)筛选“哪些能力值得交给 LLM 考虑”，不确定时保留全部，不选择最终工作流。性能优化层
         - 主 Agent MainDecisionWorkflow：由 LLM 判断最终领域、意图，或者选择澄清／普通回复。
     """
     policy_version = "capability-selector-v1"
