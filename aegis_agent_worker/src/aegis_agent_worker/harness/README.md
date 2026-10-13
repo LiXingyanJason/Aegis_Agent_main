@@ -4,7 +4,10 @@ Harness负责“允许执行什么、最多执行多少、如何限制并记录�
 
 | 位置 | 职责 |
 | --- | --- |
-| `policy.py` | 工具白名单、模型／工具次数、执行时限及字符上限 |
+| `policies/execution.py` | 工具白名单、模型／工具次数、执行时限及字符上限 |
+| `policies/workflow.py` | 主决策读取／轮次、邮件收集轮次等局部限制 |
+| `policies/output.py` | 有界修复、只读重试、输出大小与提示词裁剪 |
+| `policy_provider.py` | 完整策略包版本及旧版本恢复；policy.py仅是旧导入兼容 |
 | `context.py` | 当前run及本次消费开始时间，使用ContextVar随协程传播 |
 | `executor.py` | 事务编排、原子预算检查、超时及审计收尾，不编写SQL |
 | `exceptions.py` | 稳定错误码与安全错误文本 |
@@ -29,7 +32,7 @@ Orchestrator → executor.scope(run)
 
 ## 扩展边界
 
-- 调整工具范围或预算：修改／注入`TaskExecutionPolicy`，模型不能改变策略。
+- 调整工具范围或预算：注册新的PolicyBundle版本并保留旧版本，模型不能改变策略。
 - 新增预算／审计持久化：扩展`ExecutionRepository`，Executor允许注入仓库以独立测试。
 - 新模型供应商：修改原始LLMClient，保持`GuardedLLMClient`外层包装。
 - 参数、连接归属、外部写入审批：仍由ToolGateway和领域业务服务检查。
@@ -38,3 +41,7 @@ Orchestrator → executor.scope(run)
 
 此重构不改变API、Redis消息或数据库表，不新增迁移。旧`service/runtime/execution_harness.py`
 已拆分删除，内部导入已全部迁移。修改后重启Worker即可。
+
+局部常量已集中管理，运行期从scope绑定的run策略包读取，不由模型或请求覆盖。
+首次任务固定run_execution_budgets.policy_version，恢复沿用原版及已有计数，无新增迁移。
+详见[集中策略说明](../../../文档/07-执行与工作流限制集中策略.md)。

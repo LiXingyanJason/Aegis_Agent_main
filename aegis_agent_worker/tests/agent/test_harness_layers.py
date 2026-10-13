@@ -39,7 +39,7 @@ class Repository:
         self.reservations = []
         self.started = []
     async def ensure_budget(self, session, run, version):
-        pass
+        return version
     async def add_active_time(self, session, run, elapsed):
         self.elapsed.append(elapsed)
     async def reserve_call(self, session, run, **kwargs):

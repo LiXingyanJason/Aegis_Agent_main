@@ -43,7 +43,8 @@ class Session:
     async def execute(self,sql,args):
         sql=str(sql)
         if "INSERT INTO run_execution_budgets" in sql:
-            self.db.budgets.setdefault(args["id"],dict(model_calls=0,tool_calls=0,active_ms=0))
+            row = self.db.budgets.setdefault(args["id"],dict(model_calls=0,tool_calls=0,active_ms=0,policy_version=args["policy"]))
+            return Result({"policy_version": row["policy_version"]})
         elif "UPDATE run_execution_budgets" in sql:
             row=self.db.budgets[args["id"]]
             if "maximum" in args:

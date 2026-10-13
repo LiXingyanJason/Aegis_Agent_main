@@ -16,6 +16,7 @@ from aegis_agent_worker.agent.contracts.calendar import (
 )
 from aegis_agent_worker.llm.client import LLMError, LLMMessage, OpenAICompatibleClient
 from pydantic import ValidationError
+from aegis_agent_worker.harness.policy_provider import DEFAULT_POLICIES
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +60,7 @@ class CalendarAgent:
         self,
         timezone_name: str = "Asia/Shanghai",
         llm_client: OpenAICompatibleClient | None = None,
+        policy_provider=None,
     ) -> None:
         """以用户所在时区解释“今天”“明天”等相对日期。"""
         try:
@@ -67,6 +69,7 @@ class CalendarAgent:
             # 配置不正确时仍使用中国项目本地开发的默认时区，避免相对日期悄悄退回 UTC。
             self._timezone = ZoneInfo("Asia/Shanghai")
         self._llm_client = llm_client
+        self._policies = policy_provider or DEFAULT_POLICIES
 
     @property
     def provider_name(self):
@@ -115,18 +118,19 @@ class CalendarAgent:
             LLMMessage(role="system", content=prompt),
             LLMMessage(role="user", content=user_content[:4000]),
         ]
-        for attempt in range(2):
+        limits = self._policies.current().output
+        for attempt in range(limits.max_repairs + 1):
             response = await self._llm_client.complete(messages)
             try:
                 return self._validate_calendar_response(response, user_content, handoff, expected)
             except ValueError as error:
                 issues = calendar_validation_issues(error)
                 logger.warning("日历规划校验失败：attempt=%s，issues=%s", attempt + 1, issues)
-                if attempt == 1:
+                if attempt >= limits.max_repairs:
                     raise CalendarPlanValidationError("CALENDAR_PLAN_INVALID", issues) from None
                 # 单次受限格式修复；所有原始约束仍重新验证，绝不默认执行首个时段。
                 messages.extend([
-                    LLMMessage(role="assistant", content=response[:12000]),
+                    LLMMessage(role="assistant", content=response[:limits.repair_response_chars]),
                     LLMMessage(role="user", content=(
                         f"上次输出未通过校验，字段错误为 {json.dumps(issues, ensure_ascii=False)}。"
                         "请依据原始用户要求重新输出完整 JSON；不能改变允许动作、明确时段或时长。"

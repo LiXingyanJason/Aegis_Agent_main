@@ -8,7 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aegis_agent_worker.config.database import Database, TenantContext, tenant_transaction
 from aegis_agent_worker.harness.context import bind_execution, get_execution, reset_execution
 from aegis_agent_worker.harness.exceptions import HarnessError
-from aegis_agent_worker.harness.policy import TaskExecutionPolicy
+from aegis_agent_worker.harness.policies.execution import TaskExecutionPolicy
+from aegis_agent_worker.harness.policy_provider import PolicyProvider, PolicyBundle, DEFAULT_POLICIES
 from aegis_agent_worker.repository.execution_repository import ExecutionRepository
 from aegis_agent_worker.repository.run_repository import ClaimedRun
 
@@ -18,10 +19,18 @@ class HarnessExecutor:
     def __init__(
         self, database: Database, policy: TaskExecutionPolicy | None = None,
         repository: ExecutionRepository | None = None,
+        policy_provider: PolicyProvider | None = None,
     ) -> None:
         self._database = database
-        self.policy = policy or TaskExecutionPolicy()
+        if policy is not None and policy_provider is not None:
+            raise ValueError("不能同时注入单一策略和策略Provider")
+        self._policies = policy_provider or (PolicyProvider((PolicyBundle(execution=policy),), policy.version)
+                                             if policy is not None else DEFAULT_POLICIES)
         self._repository = repository or ExecutionRepository()
+
+    @property
+    def policy(self):
+        return self._policies.current().execution
 
     @asynccontextmanager
     async def _session(self, run: ClaimedRun) -> AsyncIterator[AsyncSession]:
@@ -35,8 +44,9 @@ class HarnessExecutor:
     async def scope(self, run: ClaimedRun) -> AsyncIterator[None]:
         """划定一次消费的边界，持久化真实耗时，供恢复/限时判断使用。"""
         async with self._session(run) as session:
-            await self._repository.ensure_budget(session, run, self.policy.version)
-        token = bind_execution(run)
+            version = await self._repository.ensure_budget(session, run, self._policies.default_version)
+            profile = self._policies.resolve(version)
+        token = bind_execution(run, profile)
         try:
             yield
         finally:

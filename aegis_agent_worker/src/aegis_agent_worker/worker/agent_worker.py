@@ -38,6 +38,7 @@ from aegis_agent_worker.service.mail.mail_collection_service import MailCollecti
 from aegis_agent_worker.service.mail.mail_revision_service import MailRevisionService
 from aegis_agent_worker.service.runtime.card_context_service import CardContextService
 from aegis_agent_worker.service.runtime.main_context_tool_service import MainContextToolService
+from aegis_agent_worker.harness.policy_provider import PolicyProvider
 from aegis_agent_worker.service.mail.mail_planning_service import MailPlanningService
 from aegis_agent_worker.service.memory.memory_context_service import MemoryContextService
 from aegis_agent_worker.service.runtime.conversation_artifact_service import ConversationArtifactService
@@ -58,13 +59,14 @@ async def run_worker() -> None:
         # SQLAlchemy 使用 asyncpg URL；LangGraph 的 AsyncPostgresSaver 使用 psycopg URL。
         async with AsyncPostgresSaver.from_conn_string(settings.database_psycopg_url) as checkpointer:
             await checkpointer.setup() # 建立checkpointer数据库表，我们通过run_id关联每一个checkpointer
-            harness = HarnessExecutor(database)
+            policies = PolicyProvider()
+            harness = HarnessExecutor(database, policy_provider=policies)
             llm_client = GuardedLLMClient(OpenAICompatibleClient(settings), harness)
             events = RunEventPublisher(redis)
             runs = AgentRunRepository()
             input_requests=InputRequestService(database,runs,events)
             memory_context = MemoryContextService(database)
-            cards = CardContextService(database)
+            cards = CardContextService(database, policy_provider=policies)
             tools = create_default_tool_gateway(settings,harness=harness,card_context=cards)
             tool_calls = ToolCallRepository()
             tool_execution = ToolExecutionService(database, runs, tools, tool_calls, events)
@@ -73,7 +75,7 @@ async def run_worker() -> None:
                 database, runs, tool_execution, events, tools, tool_calls
             )
             calendar_workflows = CalendarWorkflowFactory(
-                calendar_agent=CalendarAgent(settings.app_timezone, llm_client),
+                calendar_agent=CalendarAgent(settings.app_timezone, llm_client, policy_provider=policies),
                 tool_execution=tool_execution,
                 confirmation_service=calendar_confirmation,
                 artifact_service=artifact_service,
@@ -84,7 +86,7 @@ async def run_worker() -> None:
             mail_workflows = MailWorkflowFactory(
                 mail_tasks=mail_tasks,
                 mail_send=mail_send,
-                mail_agent=MailAgent(llm_client, settings.app_timezone),
+                mail_agent=MailAgent(llm_client, settings.app_timezone, policy_provider=policies),
                 memory_context=memory_context,
                 query_service=MailQueryService(database, runs, tools, events),
                 artifact_service=artifact_service,
@@ -102,7 +104,7 @@ async def run_worker() -> None:
                 checkpointer=checkpointer,
                 mail_tasks=mail_tasks,
                 memory_context=memory_context,
-                main_agent=MainAgent(llm_client, settings.app_timezone),
+                main_agent=MainAgent(llm_client, settings.app_timezone, policy_provider=policies),
                 decision_context_service=DecisionContextService(database, runs, events),
                 harness=harness,
                 input_requests=input_requests,

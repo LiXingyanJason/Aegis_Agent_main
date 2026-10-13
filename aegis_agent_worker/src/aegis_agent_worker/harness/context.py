@@ -5,12 +5,14 @@ from time import monotonic
 
 from aegis_agent_worker.harness.exceptions import HarnessError
 from aegis_agent_worker.repository.run_repository import ClaimedRun
+from typing import Any
 
 
 @dataclass(frozen=True)
 class ExecutionContext:
     run: ClaimedRun
     started_at: float
+    policy_bundle: Any
 
     @property
     def elapsed_seconds(self) -> float:
@@ -22,8 +24,12 @@ _runtime: ContextVar[ExecutionContext | None] = ContextVar(
 )
 
 
-def bind_execution(run: ClaimedRun) -> Token:
-    return _runtime.set(ExecutionContext(run=run, started_at=monotonic()))
+def bind_execution(run: ClaimedRun, policy_bundle) -> Token:
+    return _runtime.set(ExecutionContext(run=run, started_at=monotonic(), policy_bundle=policy_bundle))
+
+
+def peek_execution() -> ExecutionContext | None:
+    return _runtime.get()
 
 
 def reset_execution(token: Token) -> None:

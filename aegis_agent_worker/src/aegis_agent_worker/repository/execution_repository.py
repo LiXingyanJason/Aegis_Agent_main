@@ -9,12 +9,16 @@ from aegis_agent_worker.repository.run_repository import ClaimedRun
 
 
 class ExecutionRepository:
-    async def ensure_budget(self, session: AsyncSession, run: ClaimedRun, version: str) -> None:
-        """恢复时保留既有预算，不重置次数和耗时。"""
-        await session.execute(text("""
+    async def ensure_budget(self, session: AsyncSession, run: ClaimedRun, version: str) -> str:
+        """首次固定策略包版本；恢复返回原版本，不重置次数／耗时或改写版本。"""
+        result = await session.execute(text("""
             INSERT INTO run_execution_budgets(run_id,tenant_id,user_id,policy_version)
-            VALUES(:id,:tenant,:user,:policy) ON CONFLICT(run_id) DO NOTHING
+            VALUES(:id,:tenant,:user,:policy) ON CONFLICT(run_id) DO UPDATE SET run_id=EXCLUDED.run_id
+            WHERE run_execution_budgets.tenant_id=EXCLUDED.tenant_id
+              AND run_execution_budgets.user_id=EXCLUDED.user_id
+            RETURNING policy_version
         """), dict(id=run.id, tenant=run.tenant_id, user=run.user_id, policy=version))
+        return result.mappings().one()["policy_version"]
 
     async def add_active_time(self, session: AsyncSession, run: ClaimedRun, elapsed_ms: int) -> None:
         await session.execute(text("""

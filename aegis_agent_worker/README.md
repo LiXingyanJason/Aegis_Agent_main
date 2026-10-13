@@ -24,6 +24,10 @@ CardContextToolHandler→CardContextService读取当前run的站内卡片。
 工具只支持mail_candidates，不返回邮件正文／凭据、不调用外部邮箱／日历。
 旧审批和补充回答恢复节点保持不变；先让当前消费结束再重启Worker，无需迁移或删除Checkpoint。
 
+全局／局部／输出限制现已集中到harness/policies，由PolicyProvider按run固定的策略包版本提供。
+默认harness-v1数值不变；恢复不会因新的默认策略获得额外额度。
+修改限制须注册新版本并保留旧定义，见[执行与工作流限制集中策略](文档/07-执行与工作流限制集中策略.md)。
+
 独立消费 Aegis Agent Redis 队列的 Python 服务。它不导入 `Aegis_backend` 的代码；两个服务共享 PostgreSQL 业务事实与 Redis 队列/实时事件协议。
 
 当前任务由 LangGraph 根图执行：根图加载会话上下文、进行意图/工作流路由；日历读取作为 `calendar/read_graph.py` 子图执行，工具审计、事务与 SSE 事件仍由 `service/` 处理。

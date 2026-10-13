@@ -8,12 +8,14 @@ from aegis_agent_worker.config.database import TenantContext, tenant_transaction
 from aegis_agent_worker.repository.conversation_card_repository import ConversationCardRepository
 from aegis_agent_worker.repository.conversation_artifact_repository import normalize_artifact_payload
 from aegis_agent_worker.tool.contracts import ToolError, ToolContext
+from aegis_agent_worker.harness.policy_provider import DEFAULT_POLICIES
 
 
 class CardContextService:
-    def __init__(self, database, repository=None):
+    def __init__(self, database, repository=None, policy_provider=None):
         self._database = database
         self._repository = repository or ConversationCardRepository()
+        self._policies = policy_provider or DEFAULT_POLICIES
 
     async def read(self, context, tool_name, arguments):
         args = (CardsListArgs if tool_name == "conversation.cards.list" else CardsGetArgs).model_validate(arguments)
@@ -62,14 +64,16 @@ class CardContextService:
                             safe.update(email_id=str(email_id), source_version=version,
                                         subject=str(item.get("subject") or "")[:200])
                         output["items"].append(safe)
-                if len(json.dumps(output, ensure_ascii=False).encode()) > 12000:
+                if len(json.dumps(output, ensure_ascii=False).encode()) > self._policies.current().output.card_result_bytes:
                     raise ToolError("CARD_CONTEXT_TOO_LARGE", "卡片上下文过大")
                 return self._safe_output(CardSnapshot, output)
 
-    @staticmethod
-    def _safe_output(schema, output):
+    def _safe_output(self, schema, output):
         try:
-            return schema.model_validate(output).model_dump(mode="json", exclude_none=True)
+            payload = schema.model_validate(output).model_dump(mode="json", exclude_none=True)
+            if len(json.dumps(payload, ensure_ascii=False).encode()) > self._policies.current().output.card_result_bytes:
+                raise ToolError("CARD_CONTEXT_TOO_LARGE", "卡片上下文过大")
+            return payload
         except ValidationError:
             raise ToolError("CARD_INVALID", "卡片安全输出未通过校验，请重新查询") from None
 

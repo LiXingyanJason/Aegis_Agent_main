@@ -33,6 +33,7 @@ class DecisionContextService:
         candidate_capabilities=None, filter_reason_codes=None, route_policy_version=None,
         repair_count=0, validation_issue_codes=None,
         context_read_count=0, referenced_cards=None,
+        execution_policy_version=None,
     ):
         """持久化脱敏审计事件，事务提交后发布 SSE 通知。"""
         payload = {
@@ -47,6 +48,7 @@ class DecisionContextService:
             "validation_issue_codes": list(validation_issue_codes or []),
             "context_read_count": context_read_count,
             "referenced_cards": list(referenced_cards or []),
+            "execution_policy_version": execution_policy_version,
             "decision": decision.decision if decision else None,
             "domain": decision.domain if decision else None,
             "intent": decision.intent if decision else None,

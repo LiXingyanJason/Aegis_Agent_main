@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aegis_agent_worker.repository.tool_repository import ProviderConnectionRepository
 from aegis_agent_worker.tool.contracts import ToolContext, ToolError, ToolInvocation, ToolResult
 from aegis_agent_worker.tool.registry import RegisteredTool, ToolRegistry
+from aegis_agent_worker.harness.policy_provider import DEFAULT_POLICIES
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,10 +31,12 @@ class ToolGateway:
         registry: ToolRegistry,
         connections: ProviderConnectionRepository | None = None,
         harness=None,
+        policy_provider=None,
     ) -> None:
         self._registry = registry
         self._connections = connections or ProviderConnectionRepository()
         self._harness = harness
+        self._policies = policy_provider or DEFAULT_POLICIES
 
     def get_definition(self, tool_name: str):
         """读取已注册定义，供调用审计记录使用。"""
@@ -95,16 +98,17 @@ class ToolGateway:
         arguments = {"__tool_name": prepared.registered.definition.name, **prepared.arguments}
         if self._harness is None:
             return await prepared.registered.handler.invoke(prepared.context, arguments)
-        for attempt in range(2):
+        limits = self._policies.current().output
+        for attempt in range(limits.read_tool_retries + 1):
             try:
                 async with self._harness.attempt("tool", prepared.registered.definition.name):
                     result = await prepared.registered.handler.invoke(prepared.context, dict(arguments))
                     import json
-                    if len(json.dumps(result.response_payload,ensure_ascii=False).encode()) > 2_000_000:
+                    if len(json.dumps(result.response_payload,ensure_ascii=False).encode()) > limits.tool_result_bytes:
                         raise ToolError("TOOL_OUTPUT_TOO_LARGE", "工具结果超过允许大小")
                     return result
             except ToolError as error:
-                if (attempt or prepared.registered.definition.risk_level != "read"
+                if (attempt >= limits.read_tool_retries or prepared.registered.definition.risk_level != "read"
                         or error.code not in {"TOOL_UNAVAILABLE","EMAIL_TOOL_UNAVAILABLE"}):
                     raise
                 await asyncio.sleep(0.2)

@@ -10,12 +10,14 @@ from aegis_agent_worker.agent.workflows.mail.planning_workflow import mail_run
 from aegis_agent_worker.service.mail.mail_collection_service import safe_evidence
 from aegis_agent_worker.harness.exceptions import HarnessError
 from aegis_agent_worker.tool.contracts import ToolError
+from aegis_agent_worker.harness.policy_provider import DEFAULT_POLICIES
 
 
 class MailCollectionWorkflow:
     """邮件起草前 有界信息收集 """
-    def __init__(self,agent,tasks,tools,inputs):
+    def __init__(self,agent,tasks,tools,inputs,policy_provider=None):
         self._agent,self._tasks,self._tools,self._inputs=agent,tasks,tools,inputs
+        self._policies = policy_provider or DEFAULT_POLICIES
     def build(self):
         graph=StateGraph(TaskGraphState)
         graph.add_node("decide_information",self._decide)
@@ -37,7 +39,8 @@ class MailCollectionWorkflow:
 
     async def _decide(self,state):
         rounds=state.get("collection_round",0)
-        if rounds>=5: # 轮次预算
+        profile = self._policies.current(state)
+        if rounds>=profile.mail_collection.max_rounds: # 轮次预算
             raise HarnessError("REACT_BUDGET_EXCEEDED","信息收集轮次已耗尽，尚未生成草稿")
         source=await self._tasks.load_reply_source(mail_run(state)) # 加载 source,核验版本一致性
         if source["source_version"]!=state["mail_decision"]["target"]["source_version"]:
@@ -45,16 +48,18 @@ class MailCollectionWorkflow:
         # 组装给模型的上下文
         metadata={key:str(source.get(key) or "") for key in ("provider_message_id","subject","instruction")}
         metadata["key_points"]=source.get("key_points") or []
-        metadata["remaining_decision_rounds"]=5-rounds
+        metadata["remaining_decision_rounds"]=profile.mail_collection.max_rounds-rounds
         decision=await self._agent.collect_information(source=metadata,evidence=state.get("collected_evidence",[]),
                                                        answers=state.get("user_answers",[]))
-        return {"collection_decision":decision.model_dump(mode="json"),"collection_round":rounds+1}
+        return {"collection_decision":decision.model_dump(mode="json"),"collection_round":rounds+1,
+                "execution_policy_version": profile.version}
 
     async def _read(self,state):
         """
         执行工具读取工具
         提出调用计划 ToolInvocation，程序校验后执行
         """
+        profile = self._policies.current(state)
         run=mail_run(state)
         source=await self._tasks.load_reply_source(run)
         decision=ReActDecision.model_validate(state["collection_decision"])
@@ -76,17 +81,19 @@ class MailCollectionWorkflow:
             data["summary"]=await self._agent.summarize_evidence(raw)
         evidence.append({"tool_name":decision.tool_name,"arguments":decision.arguments,
                          "source_hash":self._hash(raw),"data":data})
-        if len(json.dumps(evidence,ensure_ascii=False).encode())>12000:
+        if len(json.dumps(evidence,ensure_ascii=False).encode())>profile.mail_collection.max_evidence_bytes:
             raise HarnessError("CONTEXT_BUDGET_EXCEEDED","补充上下文过大")
         return {"collected_evidence":evidence}
 
     async def _prepare(self,state):
+        self._policies.current(state)
         question=state["collection_decision"]["question"]
         request=await self._inputs.prepare(mail_run(state),question)
         return {"input_request":request,"input_request_id":request["question_id"],"waiting_input":True}
 
     def _wait(self,state):
         """暂停等回答节点"""
+        self._policies.current(state)
         value=interrupt(state["input_request"])
         if not isinstance(value,dict) or value.get("question_id")!=state["input_request_id"]:
             raise HarnessError("INPUT_CONFLICT","回答与当前问题不匹配")
@@ -97,6 +104,7 @@ class MailCollectionWorkflow:
 
     async def _verify(self,state):
         """等待后重新检查直接依赖的邮件和日历事实；变化时结束，不继续使用旧内容。"""
+        self._policies.current(state)
         run=mail_run(state)
         source=await self._tasks.load_reply_source(run)
         for item in state.get("collected_evidence",[]):

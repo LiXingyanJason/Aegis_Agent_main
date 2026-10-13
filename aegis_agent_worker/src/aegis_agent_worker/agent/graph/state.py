@@ -11,6 +11,7 @@ class TaskGraphState(TypedDict, total=False):
     user_id: str
     conversation_id: str
     run_type: str
+    execution_policy_version: str  # 代码固定的策略包版本，模型不可填写
     history: list[dict[str, Any]]
     latest_user_message: str
     memory_context: str

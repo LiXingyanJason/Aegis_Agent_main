@@ -15,6 +15,7 @@ from aegis_agent_worker.agent.routing.capability_selector import CapabilitySelec
 from aegis_agent_worker.agent.specialists.main_agent import MainDecisionOutputError
 from aegis_agent_worker.agent.contracts.context import MainContextReadRequest, CONTEXT_SCHEMAS
 from aegis_agent_worker.tool.contracts import ToolError
+from aegis_agent_worker.harness.policy_provider import DEFAULT_POLICIES
 from aegis_agent_worker.observability.telemetry import get_tracer
 from aegis_agent_worker.repository.run_repository import ClaimedRun
 
@@ -39,12 +40,13 @@ class MainDecisionState(TaskGraphState, total=False):
 class MainDecisionWorkflow:
     """LLM 与下一步决策在图层；数据库访问与业务核验委托 Service。"""
 
-    def __init__(self, main_agent, context_service, capabilities, capability_selector=None, context_tools=None):
+    def __init__(self, main_agent, context_service, capabilities, capability_selector=None, context_tools=None, policy_provider=None):
         self._main_agent = main_agent
         self._context_service = context_service
         self._capabilities = tuple(capabilities)
         self._selector = capability_selector or CapabilitySelector()
         self._context_tools = context_tools
+        self._policies = policy_provider or DEFAULT_POLICIES
 
     def build(self):
         graph = StateGraph(MainDecisionState)
@@ -78,7 +80,8 @@ class MainDecisionWorkflow:
         """不预取邮件引用；只在模型提出只读请求后加载卡片。"""
         return {"decision_references": [], "context_results": [], "context_request": {},
                 "context_round": 0, "context_read_count": 0, "context_error": False,
-                "repair_count": 0, "validation_issue_codes": [], "decision_duration_ms": 0}
+                "repair_count": 0, "validation_issue_codes": [], "decision_duration_ms": 0,
+                "execution_policy_version": self._policies.current(state).version}
 
     def _select_candidates(self, state):
         """只存目录标识，最终候选再次与可信注册目录求交集。"""
@@ -106,13 +109,14 @@ class MainDecisionWorkflow:
         """
         started = monotonic()
         outcome = "validated"
+        policy = self._policies.current(state).main_context
         if not state["candidate_capabilities"]:
             return {
                 "main_decision": clarify("当前没有可用的领域能力，请稍后重试或联系管理员。")
                     .model_dump(mode="json"),
                 "decision_outcome": "empty_catalog", "decision_duration_ms": 0,
             }
-        if state.get("context_round", 0) >= 3:
+        if state.get("context_round", 0) >= policy.max_rounds:
             return {**self._clarification("上下文读取轮次已达到上限，请明确选择卡片或重新查询。",
                                          "context_budget_exceeded"), "context_request": {}}
         with get_tracer(__name__).start_as_current_span("agent.main.decide") as span:
@@ -128,7 +132,7 @@ class MainDecisionWorkflow:
                 )
                 if self._context_tools is not None: # 告诉模型有哪些工具和已取得的信息
                     kwargs.update(context_tools={name: schema.model_json_schema() for name, schema in CONTEXT_SCHEMAS.items()},
-                        context_results=state.get("context_results", []), remaining_context_reads=2-state.get("context_read_count", 0))
+                        context_results=state.get("context_results", []), remaining_context_reads=max(0, policy.max_reads-state.get("context_read_count", 0)))
                 # 调用主 Agent 判断下一步
                 # 返回值可能是： MainContextReadRequest：需要读取卡片。
                 #             MainDecision：已经决定交接、回复或澄清。
@@ -136,7 +140,7 @@ class MainDecisionWorkflow:
                 if isinstance(decision, MainContextReadRequest):
                     metadata = self._metadata(state)
                     # 如果请求读取卡片，检查局部额度
-                    if self._context_tools is None or state.get("context_read_count", 0) >= 2:
+                    if self._context_tools is None or state.get("context_read_count", 0) >= policy.max_reads:
                         return {**self._clarification("卡片读取不可用或已达到上限，请明确选择邮件或重新查询。",
                             "context_budget_exceeded"), "context_request": {}, **metadata,
                             "decision_duration_ms": state.get("decision_duration_ms", 0)+round((monotonic()-started)*1000)}
@@ -176,6 +180,7 @@ class MainDecisionWorkflow:
     async def _read_context(self, state):
         """实际读取卡片节点"""
         # 还原并校验请求
+        profile = self._policies.current(state)  # 先核对恢复策略，再允许工具执行。
         request = MainContextReadRequest.model_validate(state["context_request"])
         try:
             # 执行只读工具
@@ -185,7 +190,7 @@ class MainDecisionWorkflow:
                          "context_read_failed"), "context_error": True, "context_request": {},
                     "context_read_count": state["context_read_count"]+1}
         results = [*state["context_results"], payload] # 成功结果追加到已有上下文
-        if len(json.dumps(results, ensure_ascii=False).encode()) > 24000:
+        if len(json.dumps(results, ensure_ascii=False).encode()) > profile.main_context.max_context_bytes:
             return {**self._clarification("卡片上下文过大，请缩小范围后重试。", "context_read_failed"),
                     "context_error": True, "context_request": {}}
         return {"context_results": results, "context_request": {},
@@ -278,6 +283,7 @@ class MainDecisionWorkflow:
             repair_count=state.get("repair_count", 0),
             validation_issue_codes=state.get("validation_issue_codes", []),
             context_read_count=state.get("context_read_count", 0),
+            execution_policy_version=self._policies.current(state).version,
             referenced_cards=[{key: item[key] for key in ("card_id", "query_id", "status") if key in item}
                               for item in state.get("context_results", []) if "card_id" in item],
         )
