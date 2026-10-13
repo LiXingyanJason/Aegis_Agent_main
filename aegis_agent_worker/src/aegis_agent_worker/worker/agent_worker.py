@@ -36,6 +36,8 @@ from aegis_agent_worker.service.mail.mail_task_service import MailTaskService
 from aegis_agent_worker.service.mail.mail_query_service import MailQueryService
 from aegis_agent_worker.service.mail.mail_collection_service import MailCollectionService
 from aegis_agent_worker.service.mail.mail_revision_service import MailRevisionService
+from aegis_agent_worker.service.runtime.card_context_service import CardContextService
+from aegis_agent_worker.service.runtime.main_context_tool_service import MainContextToolService
 from aegis_agent_worker.service.mail.mail_planning_service import MailPlanningService
 from aegis_agent_worker.service.memory.memory_context_service import MemoryContextService
 from aegis_agent_worker.service.runtime.conversation_artifact_service import ConversationArtifactService
@@ -62,7 +64,8 @@ async def run_worker() -> None:
             runs = AgentRunRepository()
             input_requests=InputRequestService(database,runs,events)
             memory_context = MemoryContextService(database)
-            tools = create_default_tool_gateway(settings,harness=harness)
+            cards = CardContextService(database)
+            tools = create_default_tool_gateway(settings,harness=harness,card_context=cards)
             tool_calls = ToolCallRepository()
             tool_execution = ToolExecutionService(database, runs, tools, tool_calls, events)
             artifact_service = ConversationArtifactService(database, runs, events)
@@ -103,6 +106,7 @@ async def run_worker() -> None:
                 decision_context_service=DecisionContextService(database, runs, events),
                 harness=harness,
                 input_requests=input_requests,
+                main_context_tools=MainContextToolService(database, runs, tools, cards, events),
             )
             log_event(logger, logging.INFO, "agent_worker_started", queue_name=settings.agent_queue_name)
             while True:

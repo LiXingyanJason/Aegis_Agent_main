@@ -59,6 +59,7 @@ class AgentOrchestrator:
         decision_context_service: DecisionContextService | None = None,
         harness=None,
         input_requests=None,
+        main_context_tools=None,
     ) -> None:
         """组装根图及其依赖；允许测试注入服务或预构建运行器。"""
         run_repository = runs or AgentRunRepository()
@@ -80,6 +81,7 @@ class AgentOrchestrator:
                     decision_context_service=decision_context_service or DecisionContextService(
                         database, run_repository, events,
                     ),
+                    main_context_tools=main_context_tools,
                 )
             ).build(checkpointer=checkpointer)
         )

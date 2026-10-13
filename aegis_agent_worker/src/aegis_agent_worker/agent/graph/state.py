@@ -17,6 +17,7 @@ class TaskGraphState(TypedDict, total=False):
     intent: str # 意图
     workflow: str
     main_decision: dict[str, Any]
+    reply_context: list[dict[str, Any]]  # 仅只读卡片安全结果，不能证明外部业务已执行
     handoff: dict[str, Any]
     # 领域 Agent 产生、且已经过 Pydantic 校验的受限执行计划。
     plan: dict[str, Any]

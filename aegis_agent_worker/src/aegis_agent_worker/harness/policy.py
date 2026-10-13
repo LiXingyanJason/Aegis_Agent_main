@@ -19,6 +19,7 @@ class TaskExecutionPolicy:
             "conversation": {
                 "calendar.list_events", "calendar.find_free_time",
                 "calendar.create_event", "mail.messages.list",
+                "conversation.cards.list", "conversation.cards.get",
             },
             "mail_extraction": {"mail.messages.get"},
             "mail_reply_draft": {

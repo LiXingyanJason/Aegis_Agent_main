@@ -16,6 +16,14 @@
 validation_issue_codes，不保存非法响应和含敏感值的校验异常。邮件“第N封”仅对最近有效卡片顺序解析，
 缺失／过期／位置或版本不符则澄清，不能用收件箱排序替代。修改后重启Worker，无新增迁移。
 
+阶段4.3A已将卡片指代改为按需内部工具：conversation.cards.list/get。
+主Agent可提出read_context请求，主决策子图通过MainContextToolService→ToolGateway→Harness→
+CardContextToolHandler→CardContextService读取当前run的站内卡片。
+不自动预取邮箱引用、不用_mail_ordinal解析自然语言；模型输出card_reference后按快照及当前版本解析target。
+每次主决策最多2次卡片读取、3轮模型决策（格式修复每轮最多1次），总预算仍不重置。
+工具只支持mail_candidates，不返回邮件正文／凭据、不调用外部邮箱／日历。
+旧审批和补充回答恢复节点保持不变；先让当前消费结束再重启Worker，无需迁移或删除Checkpoint。
+
 独立消费 Aegis Agent Redis 队列的 Python 服务。它不导入 `Aegis_backend` 的代码；两个服务共享 PostgreSQL 业务事实与 Redis 队列/实时事件协议。
 
 当前任务由 LangGraph 根图执行：根图加载会话上下文、进行意图/工作流路由；日历读取作为 `calendar/read_graph.py` 子图执行，工具审计、事务与 SSE 事件仍由 `service/` 处理。

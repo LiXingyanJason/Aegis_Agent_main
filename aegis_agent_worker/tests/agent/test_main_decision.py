@@ -74,7 +74,32 @@ def workflow_state(**extra):
 
 async def decide(main, service, capabilities, **state):
     """通过实际 LangGraph 子图执行决策，不把推理塞回 Service。"""
-    return await MainDecisionWorkflow(main, service, capabilities).build().ainvoke(workflow_state(**state))
+    from aegis_agent_worker.agent.contracts.context import MainContextReadRequest
+    class Tools:
+        async def execute(self, run, request):
+            refs = await service.load_references(run)
+            return {"card_id": str(UUID(int=90)), "query_id": str(UUID(int=91)), "status": "valid",
+                    "items": [{"email_id": item["id"], "source_version": item["source_version"],
+                               "position": item["position"], "status": "valid"} for item in refs]}
+        async def resolve(self, run, reference, results):
+            refs = await service.load_references(run)
+            item = next((r for r in refs if r["position"] == reference.position), None)
+            if item is None: return None
+            from aegis_agent_worker.agent.contracts.decision import ResourceReference
+            return await service.validate_reference(run, ResourceReference.model_validate(
+                {key: item[key] for key in ("resource_type", "id", "source_version")}))
+    if isinstance(main.decision, MainDecision) and main.decision.target is not None:
+        original = main.decide
+        read = False
+        async def read_then_decide(**kwargs):
+            nonlocal read
+            if not read:
+                read = True
+                return MainContextReadRequest(action="read_context", tool_name="conversation.cards.get",
+                                              arguments={"selector": "latest"})
+            return await original(**kwargs)
+        main.decide = read_then_decide
+    return await MainDecisionWorkflow(main, service, capabilities, context_tools=Tools()).build().ainvoke(workflow_state(**state))
 
 
 CAPABILITIES = (

@@ -8,11 +8,19 @@ from aegis_agent_worker.tool.email.mcp_client import EmailMCPClient
 from aegis_agent_worker.tool.contracts import ToolDefinition
 from aegis_agent_worker.tool.gateway import ToolGateway
 from aegis_agent_worker.tool.registry import ToolRegistry
+from aegis_agent_worker.tool.context.handler import CardContextToolHandler
+from aegis_agent_worker.agent.contracts.context import CONTEXT_SCHEMAS
 
 
-def create_default_tool_gateway(settings: Settings, harness=None) -> ToolGateway:
+def create_default_tool_gateway(settings: Settings, harness=None, card_context=None) -> ToolGateway:
     """注册日历、邮件 MCP 工具及各自的连接权限要求。"""
     registry = ToolRegistry()
+    if card_context is not None:
+        context_handler = CardContextToolHandler(card_context)
+        for name, schema in CONTEXT_SCHEMAS.items():
+            registry.register(ToolDefinition(name=name, version="1.0", risk_level="read",
+                mcp_server="aegis-internal", description="读取当前会话已展示卡片的安全上下文，不能查询邮箱或写入。",
+                argument_schema=schema), context_handler)
     handler = CalendarMCPToolHandler(CalendarMCPClient(settings))
     registry.register(
         ToolDefinition(

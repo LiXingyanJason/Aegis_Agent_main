@@ -21,7 +21,7 @@ class DecisionContextService:
                 return await method(session, run, *args)
 
     async def load_references(self, run):
-        """读取供主决策使用的脱敏业务引用。"""
+        """旧引用读取兼容；生产主决策已改用卡片只读工具，不再调用此方法。"""
         return await self._read(run, self._repository.list_references)
 
     async def validate_reference(self, run, reference):
@@ -32,6 +32,7 @@ class DecisionContextService:
         self, run, *, decision, outcome, duration_ms, capabilities, model_provider, model_name,
         candidate_capabilities=None, filter_reason_codes=None, route_policy_version=None,
         repair_count=0, validation_issue_codes=None,
+        context_read_count=0, referenced_cards=None,
     ):
         """持久化脱敏审计事件，事务提交后发布 SSE 通知。"""
         payload = {
@@ -44,6 +45,8 @@ class DecisionContextService:
             "route_policy_version": route_policy_version,
             "repair_count": repair_count,
             "validation_issue_codes": list(validation_issue_codes or []),
+            "context_read_count": context_read_count,
+            "referenced_cards": list(referenced_cards or []),
             "decision": decision.decision if decision else None,
             "domain": decision.domain if decision else None,
             "intent": decision.intent if decision else None,

@@ -193,3 +193,21 @@ def test_root_dependencies_no_longer_expose_legacy_router():
     """根图只接收主决策依赖，不再暴露无用的关键词router构造参数。"""
     from dataclasses import fields
     assert "router" not in {field.name for field in fields(TaskGraphDependencies)}
+
+
+@pytest.mark.asyncio
+async def test_rebuilding_root_with_context_tools_preserves_pending_approval_checkpoint():
+    """重建根图并安装新上下文依赖后，旧待审批检查点仍恢复原子图，不重做主分类。"""
+    saver = MemorySaver()
+    main = Main(MainDecision(decision="delegate", domain="calendar", intent="arrange_meeting", instruction="会议"))
+    context, audit, factory = Context(), DecisionContext(), Factory()
+    def build(tools=None):
+        return TaskGraph(TaskGraphDependencies(context_service=context, lifecycle=Lifecycle(), llm_client=LLM(),
+            system_prompt="基线", workflow_factories=(factory,), main_agent=main, decision_context_service=audit,
+            main_context_tools=tools)).build(checkpointer=saver)
+    state, config = initial()
+    assert (await build().ainvoke(state, config))["__interrupt__"]
+    class ForbiddenTools:
+        async def execute(self, *args): raise AssertionError("恢复不应读取卡片")
+    restored = await build(ForbiddenTools()).ainvoke(Command(resume="approved"), config)
+    assert restored["assistant_content"] == "已批准" and main.calls == context.loads == 1

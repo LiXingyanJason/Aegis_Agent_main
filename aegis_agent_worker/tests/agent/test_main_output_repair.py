@@ -50,7 +50,19 @@ def state(message="帮我处理任务"):
 
 async def infer(client, message="帮我处理任务", service=None):
     service = service or Service()
-    graph = MainDecisionWorkflow(MainAgent(client), service, CAPS).build()
+    class Tools:
+        async def execute(self, run, request):
+            return {"card_id": str(UUID(int=90)), "query_id": str(UUID(int=91)), "status": "valid",
+                    "items": [{"email_id": r["id"], "source_version": r["source_version"],
+                        "position": r.get("position"), "status": "valid"} for r in service.references
+                        if r.get("position")]}
+        async def resolve(self, run, reference, results):
+            r = next((r for r in service.references if r.get("position") == reference.position), None)
+            if r is None: return None
+            from aegis_agent_worker.agent.contracts.decision import ResourceReference
+            return await service.validate_reference(run, ResourceReference.model_validate({
+                key: r[key] for key in ("resource_type", "id", "source_version")}))
+    graph = MainDecisionWorkflow(MainAgent(client), service, CAPS, context_tools=Tools()).build()
     return await graph.ainvoke(state(message)), service
 
 
@@ -127,23 +139,27 @@ def mail_target(id=9, version="v1"):
     ([reference()], mail_target(99), True, "clarify"),
     ([reference()], mail_target(version="v0"), True, "clarify"),
     ([reference()], mail_target(), False, "clarify"),
-    ([reference(), reference(10, 2)], mail_target(10), True, "clarify"),
+    # 自然语言序号由模型理解，不再让正则替模型解析；结构化card_reference选中第一位置。
+    ([reference(), reference(10, 2)], mail_target(10).replace('"instruction":"查询"',
+        '"instruction":"查询","card_reference":{"card_id":"'+str(UUID(int=90))+'","query_id":"'+str(UUID(int=91))+'","position":1}'), True, "clarify"),
     ([reference()], '{"decision":"delegate","domain":"mail","intent":"query_mail","instruction":"查询"}', True, "clarify"),
 ])
 async def test_ordinal_must_match_recent_card_and_current_version(refs, output, current, expected):
     """序号不能解析为另一张有效卡片、伪造目标或过期快照；缺target不能重新查列表替代。"""
-    result, _ = await infer(Client([output]), "查看第一封邮件", Service(refs, current))
+    read = '{"action":"read_context","tool_name":"conversation.cards.get","arguments":{"selector":"latest"}}'
+    result, _ = await infer(Client([read, output]), "查看第一封邮件", Service(refs, current))
     assert result["workflow"] == expected
     assert bool(result["handoff"]) == (expected == "mail_query")
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("refs", [[], [{"resource_type": "email", "id": str(UUID(int=9)), "source_version": "v1"}]])
-async def test_missing_card_ordinal_never_uses_inbox_fallback_or_calls_model(refs):
-    """空／过期卡片和收件箱无position引用均不冒充第一封。"""
-    client = Client([])
+async def test_missing_card_reference_never_uses_inbox_fallback(refs):
+    """模型按需读卡片后，空卡片和无position引用均不冒充第一封。"""
+    read = '{"action":"read_context","tool_name":"conversation.cards.get","arguments":{"selector":"latest"}}'
+    client = Client([read, mail_target()])
     result, _ = await infer(client, "查看第一封邮件", Service(refs))
-    assert result["workflow"] == "clarify" and not client.calls
+    assert result["workflow"] == "clarify" and len(client.calls) == 2
 
 
 @pytest.mark.asyncio

@@ -5,6 +5,7 @@ from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+from aegis_agent_worker.agent.contracts.context import CardReference
 
 Domain = Literal["calendar", "mail"]
 Intent = Literal["list_events", "find_free_time", "arrange_meeting", "query_mail", "extract_mail", "draft_mail_reply"]
@@ -42,6 +43,7 @@ class MainDecision(BaseModel):
     instruction: str = Field(default="", max_length=2000)
     target: ResourceReference | None = None
     clarification_question: str | None = Field(default=None, min_length=1, max_length=500)
+    card_reference: CardReference | None = None
 
     @model_validator(mode="after")
     def validate_combination(self):
@@ -52,6 +54,8 @@ class MainDecision(BaseModel):
             expected = "mail" if self.intent in {"query_mail", "extract_mail", "draft_mail_reply"} else "calendar"
             if self.domain != expected:
                 raise ValueError("领域与意图不匹配")
+            if self.card_reference is not None and (expected != "mail" or self.intent != "query_mail"):
+                raise ValueError("卡片引用仅用于邮件导航")
             if self.intent in {"extract_mail", "draft_mail_reply"} and (self.target is None or self.target.resource_type != "email"):
                 raise ValueError("邮件交接必须指向一封明确邮件")
             if self.target and expected == "mail" and (not self.target.source_version or self.target.version is not None):
@@ -61,7 +65,7 @@ class MainDecision(BaseModel):
             if expected == "calendar" and self.target is not None:
                 raise ValueError("当前日历能力不支持修改已有对象")
         else:
-            if self.domain or self.intent or self.target or self.instruction:
+            if self.domain or self.intent or self.target or self.instruction or self.card_reference:
                 raise ValueError("澄清和普通回复不能携带执行计划")
             if (self.decision == "clarify") != bool(self.clarification_question):
                 raise ValueError("澄清问题与决策不一致")
