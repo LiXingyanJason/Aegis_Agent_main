@@ -12,9 +12,11 @@ import {
   requestMailReplyDraft,
   requestMailSendConfirmation,
   updateMailDraft,
+  requestDraftRevision,
 } from '../api/mail'
 import { useAuthStore } from '../store/auth'
-import { subscribeRunEvents } from '../api/run'
+import { subscribeRunEvents, getRunDetail } from '../api/run'
+import RunInputPanel from '../components/RunInputPanel.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -36,6 +38,131 @@ const draftDetailLoading = ref(false)
 const draftSaving = ref(false)
 const draftError = ref('')
 const draftForm = ref(null)
+const aiInstruction = ref('')
+const aiRevising = ref(false)
+let revisionAbort
+let savedDraftSnapshot = ''
+let revisionRequest = null
+const resumedPolls = new Map()
+
+function stopBackgroundPoll(runId) {
+  if (resumedPolls.has(runId)) window.clearInterval(resumedPolls.get(runId))
+  resumedPolls.delete(runId)
+}
+
+function startBackgroundPoll(runId) {
+  if (resumedPolls.has(runId)) return
+  async function check() {
+    try {
+      const result = await getRunDetail(runId)
+      if (['completed', 'failed', 'cancelled', 'waiting_input'].includes(result.status)) {
+        stopBackgroundPoll(runId)
+        if (result.status === 'completed') await loadDrafts()
+        if (result.status === 'failed') draftsError.value = result.error_message || '起草失败。'
+        for (const [emailId, operation] of Object.entries(mailOperations.value)) {
+          if (operation.runId !== runId) continue
+          setOperation(emailId, {
+            ...operation, status: result.status,
+            error: result.status === 'failed' ? result.error_message || '邮件任务执行失败。' : '',
+          })
+        }
+      }
+    } catch { /* 短暂网络失败保留下次查询。 */ }
+  }
+  resumedPolls.set(runId, window.setInterval(() => { void check() }, 1500))
+  void check()
+}
+
+function resumeBackground(runId) {
+  const entry = Object.entries(mailOperations.value).find(([, operation]) => operation.runId === runId)
+  if (entry) {
+    const [emailId, operation] = entry
+    setOperation(emailId, { ...operation, status: 'running', error: '' })
+    void streamMailRun(runId, emailId, operation.type)
+  } else {
+    startBackgroundPoll(runId)
+  }
+}
+
+function cancelBackground(runId) {
+  streamControllers.get(runId)?.abort()
+  streamControllers.delete(runId)
+  stopBackgroundPoll(runId)
+  for (const [emailId, operation] of Object.entries(mailOperations.value)) {
+    if (operation.runId === runId) setOperation(emailId, { ...operation, status: 'failed', error: '起草任务已取消或补充问题已过期。' })
+  }
+}
+
+async function waitForDraftRevision(runId, draftId, signal) {
+  const streamController = new AbortController()
+  const abortStream = () => streamController.abort()
+  signal.addEventListener('abort', abortStream, { once: true })
+  const streamTimeout = window.setTimeout(abortStream, 15000)
+  let completed = false
+  let failure = ''
+  try {
+    await subscribeRunEvents(runId, {
+      signal: streamController.signal,
+      onEvent: (event) => {
+        const payload = event.data?.payload ?? {}
+        if (event.event === 'mail_draft_revision_completed' && payload.draft_id === draftId) {
+          completed = true
+          streamController.abort()
+        } else if (event.event === 'run_failed') {
+          failure = payload.error_message || payload.message || '草稿修改失败。'
+          streamController.abort()
+        }
+      },
+    })
+  } catch {
+    // SSE 不可用时仍可通过任务状态完成本次修改。
+  } finally {
+    window.clearTimeout(streamTimeout)
+    signal.removeEventListener('abort', abortStream)
+  }
+  if (failure) throw new Error(failure)
+  if (completed || signal.aborted) return completed
+
+  const start = Date.now()
+  while (!signal.aborted) {
+    const result = await getRunDetail(runId)
+    if (result.status === 'completed') return true
+    if (['failed', 'cancelled'].includes(result.status)) throw new Error(result.error_message || '草稿修改未完成。')
+    if (Date.now() - start > 180000) throw new Error('尚未收到修改结果，请稍后刷新草稿。')
+    await new Promise((resolve) => window.setTimeout(resolve, 1500))
+  }
+  return false
+}
+
+async function reviseDraft() {
+  if (!draftForm.value || !aiInstruction.value.trim() || aiRevising.value) return
+  // 先保存手工编辑，模型只能基于服务端最新版本修改。
+  if (!await saveDraft()) return
+  aiRevising.value = true
+  draftError.value = ''
+  const draftId = draftForm.value.draft_id
+  const instruction = aiInstruction.value.trim()
+  if (revisionRequest?.draftId !== draftId || revisionRequest?.version !== draftForm.value.version
+    || revisionRequest?.instruction !== instruction) {
+    revisionRequest = { draftId, version: draftForm.value.version, instruction, clientId: crypto.randomUUID() }
+  }
+  revisionAbort = new AbortController()
+  try {
+    const task = await requestDraftRevision(draftId, {
+      expected_version: revisionRequest.version, instruction,
+      client_request_id: revisionRequest.clientId,
+    })
+    if (await waitForDraftRevision(task.run_id, draftId, revisionAbort.signal)) {
+      const saved = await getMailDraft(draftId)
+      draftForm.value = { ...saved, toText: (saved.to ?? []).join(', '), ccText: (saved.cc ?? []).join(', ') }
+      savedDraftSnapshot = JSON.stringify(draftPayload())
+      revisionRequest = null
+      aiInstruction.value = ''
+      await loadDrafts()
+    }
+  } catch (cause) { draftError.value = errorDetail(cause)?.message || cause.message }
+  finally { aiRevising.value = false; revisionAbort = null }
+}
 const confirmingDraftId = ref(null)
 const sendConfirmationError = ref('')
 const extractionsByEmail = ref({})
@@ -264,6 +391,11 @@ async function streamMailRun(runId, emailId, kind) {
           draftsLoaded.value = false
           await loadDrafts()
           setOperation(emailId, { type: kind, status: 'completed', runId, error: '' })
+          controller.abort()
+        }
+        if (event.event === 'input_required') {
+          setOperation(emailId, { type: kind, status: 'waiting_input', runId, error: '' })
+          controller.abort()
         }
         if (event.event === 'run_failed') {
           setOperation(emailId, {
@@ -272,15 +404,23 @@ async function streamMailRun(runId, emailId, kind) {
             runId,
             error: payload.error_message ?? payload.message ?? '邮件任务执行失败。',
           })
+          controller.abort()
+        }
+        if (event.event === 'run_cancelled') {
+          setOperation(emailId, { type: kind, status: 'cancelled', runId, error: '' })
+          controller.abort()
         }
       },
     })
   } catch (cause) {
     if (!controller.signal.aborted) {
-      setOperation(emailId, { type: kind, status: 'failed', runId, error: cause.message || '实时任务连接失败。' })
+      startBackgroundPoll(runId)
     }
   } finally {
-    if (streamControllers.get(runId) === controller) streamControllers.delete(runId)
+    if (streamControllers.get(runId) === controller) {
+      streamControllers.delete(runId)
+      if (!controller.signal.aborted && ['running', 'submitting'].includes(operationFor(emailId)?.status)) startBackgroundPoll(runId)
+    }
   }
 }
 
@@ -323,6 +463,9 @@ async function refreshCurrentTab() {
 }
 
 async function openDraft(draftId) {
+  aiInstruction.value = ''
+  savedDraftSnapshot = ''
+  revisionRequest = null
   draftDetailLoading.value = true
   draftError.value = ''
   draftDialogVisible.value = true
@@ -334,6 +477,7 @@ async function openDraft(draftId) {
       toText: (draft.to ?? []).join(', '),
       ccText: (draft.cc ?? []).join(', '),
     }
+    savedDraftSnapshot = JSON.stringify(draftPayload())
   } catch (cause) {
     draftError.value = errorDetail(cause)?.message || cause.message || '加载草稿详情失败。'
   } finally {
@@ -341,27 +485,37 @@ async function openDraft(draftId) {
   }
 }
 
+function draftPayload() {
+  return {
+    to: splitRecipients(draftForm.value.toText),
+    cc: splitRecipients(draftForm.value.ccText),
+    subject: draftForm.value.subject,
+    body: draftForm.value.body,
+  }
+}
+
 async function saveDraft() {
-  if (!draftForm.value || draftForm.value.status !== 'draft') return
+  if (!draftForm.value || draftForm.value.status !== 'draft') return false
+  const payload = draftPayload()
+  if (JSON.stringify(payload) === savedDraftSnapshot) return true
   draftSaving.value = true
   draftError.value = ''
   try {
-    const saved = await updateMailDraft(draftForm.value.draft_id, {
-      to: splitRecipients(draftForm.value.toText),
-      cc: splitRecipients(draftForm.value.ccText),
-      subject: draftForm.value.subject,
-      body: draftForm.value.body,
-    })
+    const saved = await updateMailDraft(draftForm.value.draft_id, payload)
     draftForm.value = {
       ...saved,
       toText: (saved.to ?? []).join(', '),
       ccText: (saved.cc ?? []).join(', '),
     }
+    savedDraftSnapshot = JSON.stringify(draftPayload())
+    revisionRequest = null
     const index = drafts.value.findIndex((item) => item.draft_id === saved.draft_id)
     if (index >= 0) drafts.value[index] = saved
     await loadDrafts()
+    return true
   } catch (cause) {
     draftError.value = errorDetail(cause)?.message || cause.message || '保存草稿失败。'
+    return false
   } finally {
     draftSaving.value = false
   }
@@ -403,6 +557,8 @@ onMounted(async () => {
   }
 })
 onBeforeUnmount(() => {
+  revisionAbort?.abort()
+  for (const timer of resumedPolls.values()) window.clearInterval(timer)
   for (const controller of streamControllers.values()) controller.abort()
   streamControllers.clear()
 })
@@ -449,6 +605,7 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="mail-card-body">
+          <RunInputPanel @answered="resumeBackground" @cancelled="cancelBackground" />
           <div class="mail-tabs" role="tablist" aria-label="邮件分区">
             <button class="mail-tab" :class="{ active: activeTab === 'received' }" type="button" @click="selectTab('received')">
               收到 <span>{{ receivedCount }}</span>
@@ -508,7 +665,7 @@ onBeforeUnmount(() => {
                           <el-button
                             size="small"
                             :loading="operationFor(message.email_id)?.type === 'reply' && ['submitting', 'running'].includes(operationFor(message.email_id)?.status)"
-                            :disabled="operationFor(message.email_id)?.status === 'running'"
+                            :disabled="['submitting', 'running', 'waiting_input'].includes(operationFor(message.email_id)?.status)"
                             @click="requestReplyDraft(message)"
                           >起草回复</el-button>
                           <el-input
@@ -544,11 +701,12 @@ onBeforeUnmount(() => {
                           size="small"
                           type="primary"
                           :loading="operationFor(message.email_id)?.type === 'extraction' && ['submitting', 'running'].includes(operationFor(message.email_id)?.status)"
-                          :disabled="operationFor(message.email_id)?.status === 'running'"
+                          :disabled="['submitting', 'running', 'waiting_input'].includes(operationFor(message.email_id)?.status)"
                           @click="requestExtraction(message)"
                         >{{ extractionFor(message.email_id) ? '重新生成摘要' : '生成摘要' }}</el-button>
                         <el-button class="mail-detail-button" size="small" @click="openMailDetail(message)">邮件详情</el-button>
                         <p v-if="operationFor(message.email_id)?.status === 'running'" class="mail-progress">任务已提交，正在处理…</p>
+                        <p v-if="operationFor(message.email_id)?.status === 'waiting_input'" class="mail-progress">任务等待补充信息，请填写上方问题。</p>
                         <p v-if="operationFor(message.email_id)?.status === 'failed'" class="mail-error">{{ operationFor(message.email_id)?.error }}</p>
                       </td>
                     </tr>
@@ -660,31 +818,40 @@ onBeforeUnmount(() => {
       </article>
     </section>
 
-    <el-dialog v-model="draftDialogVisible" title="邮件草稿" width="min(720px, calc(100vw - 32px))" destroy-on-close>
+    <el-dialog v-model="draftDialogVisible" class="mail-draft-dialog" title="邮件草稿" width="min(720px, calc(100vw - 32px))" :close-on-click-modal="!aiRevising" :close-on-press-escape="!aiRevising" :show-close="!aiRevising" destroy-on-close>
       <div v-loading="draftDetailLoading">
         <el-alert v-if="draftError" :title="draftError" type="error" :closable="false" show-icon />
         <template v-else-if="draftForm">
           <p class="draft-version">草稿 v{{ draftForm.version }} · {{ draftStatus(draftForm.status) }}</p>
+          <p v-if="aiRevising" class="muted">正在按要求修改正文，完成后会重新读取草稿供你核对；不会自动发送。</p>
           <el-form label-position="top">
             <el-form-item label="收件人">
-              <el-input v-model="draftForm.toText" :disabled="draftForm.status !== 'draft'" placeholder="多个地址以逗号分隔" />
+              <el-input v-model="draftForm.toText" :disabled="draftForm.status !== 'draft' || aiRevising || draftSaving" placeholder="多个地址以逗号分隔" />
             </el-form-item>
             <el-form-item label="抄送">
-              <el-input v-model="draftForm.ccText" :disabled="draftForm.status !== 'draft'" placeholder="多个地址以逗号分隔，可留空" />
+              <el-input v-model="draftForm.ccText" :disabled="draftForm.status !== 'draft' || aiRevising || draftSaving" placeholder="多个地址以逗号分隔，可留空" />
             </el-form-item>
             <el-form-item label="主题">
-              <el-input v-model="draftForm.subject" :disabled="draftForm.status !== 'draft'" />
+              <el-input v-model="draftForm.subject" :disabled="draftForm.status !== 'draft' || aiRevising || draftSaving" />
             </el-form-item>
             <el-form-item label="正文">
-              <el-input v-model="draftForm.body" type="textarea" :rows="10" :disabled="draftForm.status !== 'draft'" />
+              <el-input v-model="draftForm.body" type="textarea" :rows="10" :disabled="draftForm.status !== 'draft' || aiRevising || draftSaving" />
+            </el-form-item>
+            <el-form-item v-if="draftForm.status === 'draft'" label="AI 修改要求（仅修改正文）">
+              <el-input v-model="aiInstruction" type="textarea" :rows="2" maxlength="2000" :disabled="aiRevising" placeholder="例如：语气正式一点，保留原有事实" />
             </el-form-item>
           </el-form>
           <p v-if="draftForm.status !== 'draft'" class="muted">此草稿当前状态不允许编辑。</p>
         </template>
       </div>
       <template #footer>
-        <el-button @click="draftDialogVisible = false">关闭</el-button>
-        <el-button v-if="draftForm?.status === 'draft'" type="primary" :loading="draftSaving" @click="saveDraft">保存草稿</el-button>
+        <div class="draft-dialog-actions">
+          <el-button v-if="draftForm?.status === 'draft'" :loading="aiRevising" :disabled="!aiInstruction.trim() || draftSaving || draftDetailLoading || aiRevising" @click="reviseDraft">保存并按要求修改</el-button>
+          <div class="draft-dialog-actions-right">
+            <el-button :disabled="aiRevising" @click="draftDialogVisible = false">关闭</el-button>
+            <el-button v-if="draftForm?.status === 'draft'" type="primary" :loading="draftSaving" :disabled="aiRevising" @click="saveDraft">保存草稿</el-button>
+          </div>
+        </div>
       </template>
     </el-dialog>
 
@@ -726,13 +893,13 @@ onBeforeUnmount(() => {
               <el-button
                 size="small"
                 :loading="operationFor(selectedMail.email_id)?.type === 'extraction' && ['submitting', 'running'].includes(operationFor(selectedMail.email_id)?.status)"
-                :disabled="operationFor(selectedMail.email_id)?.status === 'running'"
+                :disabled="['submitting', 'running', 'waiting_input'].includes(operationFor(selectedMail.email_id)?.status)"
                 @click="requestExtraction(selectedMail)"
               >{{ extractionFor(selectedMail.email_id) ? '重新生成摘要' : '生成摘要' }}</el-button>
               <el-button
                 size="small"
                 :loading="operationFor(selectedMail.email_id)?.type === 'reply' && ['submitting', 'running'].includes(operationFor(selectedMail.email_id)?.status)"
-                :disabled="operationFor(selectedMail.email_id)?.status === 'running'"
+                :disabled="['submitting', 'running', 'waiting_input'].includes(operationFor(selectedMail.email_id)?.status)"
                 @click="requestReplyDraft(selectedMail)"
               >起草回复</el-button>
             </div>

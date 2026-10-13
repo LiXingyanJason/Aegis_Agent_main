@@ -1,5 +1,25 @@
 import http from './http'
 
+export async function listInputRequests(runId) {
+  const response = await http.get(runId ? '/runs/' + runId + '/input-requests' : '/input-requests')
+  return response.data.data
+}
+
+export async function answerInputRequest(questionId, payload) {
+  const response = await http.post('/input-requests/' + questionId + '/answers', payload)
+  return response.data.data
+}
+
+export async function cancelInputRequest(questionId) {
+  const response = await http.post('/input-requests/' + questionId + '/cancel')
+  return response.data.data
+}
+
+export async function requestDraftRevision(draftId, payload) {
+  const response = await http.post('/mail/drafts/' + draftId + '/revision-requests', payload)
+  return response.data.data
+}
+
 export async function listMailMessages() {
   const response = await http.get('/mail/messages')
   return response.data.data

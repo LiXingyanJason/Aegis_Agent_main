@@ -28,7 +28,7 @@ class GraphRunner:
             self._config(run.id),
         )
 
-    async def resume(self, run_id: str, decision: str) -> TaskGraphState:
+    async def resume(self, run_id: str, decision: str | dict) -> TaskGraphState:
         """供后续人工审批工作流以同一 thread_id 恢复执行。"""
         # 在让 LangGraph 从之前暂停的位置继续执行
         # Command(resume=decision):表示向 LangGraph 的暂停点传入恢复值。

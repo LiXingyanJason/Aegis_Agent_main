@@ -12,6 +12,12 @@ class LLMError(RuntimeError):
     """模型服务不可用、超时或返回格式异常时抛出。"""
 
 
+class LLMOutputError(LLMError):
+    """请求成功但模型响应不可用；允许上层进行一次受预算约束的修复。"""
+
+    code = "MODEL_OUTPUT_INVALID"
+
+
 @dataclass(frozen=True, slots=True)
 class LLMMessage:
     """发送给模型的一条标准聊天消息。"""
@@ -39,6 +45,13 @@ class OpenAICompatibleClient:
 
     async def complete(self, messages: list[LLMMessage]) -> str:
         """调用配置模型，并返回最终文本回复。"""
+        return await self._complete(messages, json_mode=False)
+
+    async def complete_json(self, messages: list[LLMMessage]) -> str:
+        """请求 JSON 对象；业务 Schema 仍由 Agent 本地校验。"""
+        return await self._complete(messages, json_mode=True)
+
+    async def _complete(self, messages: list[LLMMessage], *, json_mode: bool) -> str:
         # DeepSeek 的 Chat API 兼容 OpenAI Chat Completions 请求与响应格式，复用同一客户端。
         if self._settings.model_provider.lower() not in {
             "openai",
@@ -59,6 +72,7 @@ class OpenAICompatibleClient:
                         {"role": message.role, "content": message.content} for message in messages
                     ],
                     "temperature": 0.2,
+                    **({"response_format": {"type": "json_object"}} if json_mode else {}),
                 },
             )
             response.raise_for_status()
@@ -72,7 +86,7 @@ class OpenAICompatibleClient:
         try:
             content = payload["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as error:
-            raise LLMError("模型服务返回格式无效") from error
+            raise LLMOutputError("模型服务返回格式无效") from error
         if not isinstance(content, str) or not content.strip():
-            raise LLMError("模型服务未返回有效文本")
+            raise LLMOutputError("模型服务未返回有效文本")
         return content.strip()

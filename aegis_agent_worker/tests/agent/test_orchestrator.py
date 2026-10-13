@@ -248,3 +248,21 @@ async def test_orchestrator_marks_graph_llm_step_failed_when_model_fails() -> No
     assert result.status == "failed"
     assert repository.failed is not None
     assert repository.failed["step_id"] == UUID("734977f1-0a41-4b4f-b9bd-0e960de6f9d2")
+
+
+@pytest.mark.asyncio
+async def test_mail_output_failure_preserves_specific_error_code():
+    """邮件格式修复耗尽时数据库与Worker返回明确错误码，不归入通用执行异常。"""
+    from aegis_agent_worker.agent.specialists.mail_agent import MailAgentError
+    run = ClaimedRun(id=UUID(int=1), tenant_id=UUID(int=2), user_id=UUID(int=3),
+                     conversation_id=None, run_type="mail_reply_draft")
+    repository = _FakeRunRepository(run)
+    class Runner:
+        async def invoke(self, run):
+            raise MailAgentError("模型输出连续两次未通过校验")
+    orchestrator = AgentOrchestrator(
+        _FakeDatabase(), _FakeLLMClient(), repository, graph_runner=Runner(),
+    )
+    result = await orchestrator.execute(run.id)
+    assert result.status == "failed" and result.error_code == "MODEL_OUTPUT_INVALID"
+    assert repository.failed["error_code"] == "MODEL_OUTPUT_INVALID"

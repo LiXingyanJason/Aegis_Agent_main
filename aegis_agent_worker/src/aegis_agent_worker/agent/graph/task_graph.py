@@ -74,6 +74,9 @@ class TaskGraph:
         graph.add_node("clarify", self._clarify)
 
         run_routes = {"conversation": "load_context"}
+        if "mail_draft_revision" in registered_workflows:
+            run_routes["mail_draft_revision"]="mail_draft_revision"
+            graph.add_edge("mail_draft_revision",END)
         if "mail_extraction" in registered_workflows:
             run_routes["mail_extraction"] = "mail_extraction"
         if "mail_reply_draft" in registered_workflows:
@@ -138,6 +141,7 @@ class TaskGraph:
             "mail_extraction": "mail_extraction",
             "mail_reply_draft": "mail_reply_draft",
             "mail_send": "mail_send_confirmation",
+            "mail_draft_revision":"mail_draft_revision",
         }
         return {"workflow": mapping.get(run_type, "conversation")}
 

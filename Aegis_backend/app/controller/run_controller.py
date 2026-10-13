@@ -20,7 +20,7 @@ from app.vo.run_vo import RunDetailVO, RunStepDetailVO
 router = APIRouter(prefix="/runs", tags=["runs"])
 _run_service = RunService()
 
-_terminal_event_types = {"run_completed", "run_failed"}
+_terminal_event_types = {"run_completed", "run_failed", "run_cancelled"}
 
 
 @router.get("/{run_id}")

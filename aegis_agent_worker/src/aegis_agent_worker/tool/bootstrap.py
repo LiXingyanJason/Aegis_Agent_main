@@ -10,7 +10,7 @@ from aegis_agent_worker.tool.gateway import ToolGateway
 from aegis_agent_worker.tool.registry import ToolRegistry
 
 
-def create_default_tool_gateway(settings: Settings) -> ToolGateway:
+def create_default_tool_gateway(settings: Settings, harness=None) -> ToolGateway:
     """注册日历、邮件 MCP 工具及各自的连接权限要求。"""
     registry = ToolRegistry()
     handler = CalendarMCPToolHandler(CalendarMCPClient(settings))
@@ -87,4 +87,4 @@ def create_default_tool_gateway(settings: Settings) -> ToolGateway:
         ),
         email_handler,
     )
-    return ToolGateway(registry)
+    return ToolGateway(registry, harness=harness)

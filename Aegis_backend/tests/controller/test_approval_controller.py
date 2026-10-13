@@ -87,7 +87,8 @@ def _app(session: _Session) -> FastAPI:
 def test_approve_pending_item_registers_resume_after_commit() -> None:
     """测试批准会登记提交后恢复 Worker 的任务，不在控制器内直接执行。"""
     session = _Session([
-        _Result({"id": APPROVAL_ID, "run_id": RUN_ID, "status": "pending", "expired": False}),
+        _Result({"id": APPROVAL_ID, "run_id": RUN_ID, "status": "pending", "expired": False,
+                 "run_type":"conversation","run_status":"waiting_confirmation"}),
         _Result(),
         _Result(),
     ])

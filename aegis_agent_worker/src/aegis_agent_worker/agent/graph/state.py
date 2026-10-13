@@ -44,4 +44,11 @@ class TaskGraphState(TypedDict, total=False):
     mail_query_error: str
     mail_decision: dict[str, Any]
     mail_planning_error: str
+    collection_decision: dict[str, Any]
+    collected_evidence: list[dict[str, Any]]
+    user_answers: list[str]
+    collection_round: int
+    waiting_input: bool
+    input_request_id: str
+    input_request: dict[str, Any]
     mail_workflow_completed: bool

@@ -12,6 +12,7 @@ from aegis_agent_worker.service.mail.mail_send_service import MailSendService
 from aegis_agent_worker.service.mail.mail_task_service import MailTaskService
 from aegis_agent_worker.service.memory.memory_context_service import MemoryContextService
 from aegis_agent_worker.agent.workflows.mail.query_workflow import MailQueryWorkflow
+from aegis_agent_worker.agent.workflows.mail.revision_workflow import MailRevisionWorkflow
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,9 +26,14 @@ class MailWorkflowFactory:
     query_service: object | None = None
     artifact_service: object | None = None
     planning_audit: object | None = None
+    collection_service: object | None = None
+    input_requests: object | None = None
+    revision_service: object | None = None
 
     def register(self, registry: GraphRegistry) -> None:
         """注册邮件派生任务与确认发送子图。"""
+        if self.revision_service is not None:
+            registry.register("mail_draft_revision",MailRevisionWorkflow(self.mail_agent,self.revision_service).build())
         if self.query_service is not None and self.artifact_service is not None:
             registry.register("mail_query", MailQueryWorkflow(self.mail_agent, self.query_service,
                                                              self.artifact_service, self.planning_audit).build())
@@ -41,6 +47,7 @@ class MailWorkflowFactory:
             "mail_reply_draft",
             MailReplyDraftWorkflow(
                 self.mail_tasks, self.mail_agent, self.memory_context, self.planning_audit,
+                self.collection_service,self.input_requests,
             ).build(),
         )
         registry.register(

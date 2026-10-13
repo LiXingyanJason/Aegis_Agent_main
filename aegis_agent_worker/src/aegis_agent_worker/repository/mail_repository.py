@@ -69,7 +69,7 @@ class MailTaskRepository:
         """读取回复起草请求、原邮件快照和可选摘要结果。"""
         result = await session.execute(
             text(
-                "SELECT rr.email_id, rr.extraction_id, rr.instruction, em.connection_id, "
+                "SELECT rr.email_id, rr.extraction_id, rr.instruction, em.subject, em.connection_id, "
                 "em.provider_message_id, em.source_version, me.key_points, me.due_date_candidates "
                 "FROM mail_reply_draft_requests rr JOIN email_messages em ON em.id = rr.email_id "
                 "LEFT JOIN mail_extractions me ON me.id = rr.extraction_id "
@@ -208,6 +208,9 @@ class MailTaskRepository:
                 text("UPDATE mail_reply_draft_requests SET status = 'failed' WHERE run_id = :run_id AND tenant_id = :tenant_id"),
                 {"run_id": run_id, "tenant_id": tenant_id},
             )
+        if run_type=="mail_draft_revision":
+            await session.execute(text("UPDATE mail_draft_revision_requests SET status='failed' WHERE run_id=:run AND tenant_id=:tenant"),
+                                  dict(run=run_id,tenant=tenant_id))
         # 邮件任务的 LLM 步骤由 MailTaskService 创建；失败时不能遗留 running 状态。
         await session.execute(
             text(

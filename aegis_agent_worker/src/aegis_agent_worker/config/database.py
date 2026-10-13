@@ -52,6 +52,7 @@ class Database:
         self.engine: AsyncEngine = create_async_engine(
             settings.database_async_url,
             echo=settings.database_echo,  # 是否输出 SQL 日志
+            hide_parameters=True,  # 异常和 SQL 日志不暴露正文、补充回答等绑定参数
             pool_pre_ping=True,  # 连接池取出连接前，先检查它是否仍可用
         )
         self.session_factory = async_sessionmaker(self.engine, expire_on_commit=False)  # 异步会话工厂

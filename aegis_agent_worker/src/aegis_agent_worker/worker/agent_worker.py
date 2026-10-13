@@ -3,6 +3,10 @@
 import asyncio
 import logging
 import sys
+import json
+from aegis_agent_worker.harness.executor import HarnessExecutor
+from aegis_agent_worker.llm.guarded_client import GuardedLLMClient
+from aegis_agent_worker.service.runtime.input_request_service import InputRequestService
 from time import monotonic
 
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
@@ -30,6 +34,8 @@ from aegis_agent_worker.service.calendar.calendar_planning_service import Calend
 from aegis_agent_worker.service.mail.mail_send_service import MailSendService
 from aegis_agent_worker.service.mail.mail_task_service import MailTaskService
 from aegis_agent_worker.service.mail.mail_query_service import MailQueryService
+from aegis_agent_worker.service.mail.mail_collection_service import MailCollectionService
+from aegis_agent_worker.service.mail.mail_revision_service import MailRevisionService
 from aegis_agent_worker.service.mail.mail_planning_service import MailPlanningService
 from aegis_agent_worker.service.memory.memory_context_service import MemoryContextService
 from aegis_agent_worker.service.runtime.conversation_artifact_service import ConversationArtifactService
@@ -50,11 +56,13 @@ async def run_worker() -> None:
         # SQLAlchemy 使用 asyncpg URL；LangGraph 的 AsyncPostgresSaver 使用 psycopg URL。
         async with AsyncPostgresSaver.from_conn_string(settings.database_psycopg_url) as checkpointer:
             await checkpointer.setup() # 建立checkpointer数据库表，我们通过run_id关联每一个checkpointer
-            llm_client = OpenAICompatibleClient(settings)
+            harness = HarnessExecutor(database)
+            llm_client = GuardedLLMClient(OpenAICompatibleClient(settings), harness)
             events = RunEventPublisher(redis)
             runs = AgentRunRepository()
+            input_requests=InputRequestService(database,runs,events)
             memory_context = MemoryContextService(database)
-            tools = create_default_tool_gateway(settings)
+            tools = create_default_tool_gateway(settings,harness=harness)
             tool_calls = ToolCallRepository()
             tool_execution = ToolExecutionService(database, runs, tools, tool_calls, events)
             artifact_service = ConversationArtifactService(database, runs, events)
@@ -78,6 +86,9 @@ async def run_worker() -> None:
                 query_service=MailQueryService(database, runs, tools, events),
                 artifact_service=artifact_service,
                 planning_audit=MailPlanningService(database, runs, events),
+                collection_service=MailCollectionService(database,runs,tools,events),
+                input_requests=input_requests,
+                revision_service=MailRevisionService(database,runs,events),
             )
             orchestrator = AgentOrchestrator(
                 database,
@@ -90,6 +101,8 @@ async def run_worker() -> None:
                 memory_context=memory_context,
                 main_agent=MainAgent(llm_client, settings.app_timezone),
                 decision_context_service=DecisionContextService(database, runs, events),
+                harness=harness,
+                input_requests=input_requests,
             )
             log_event(logger, logging.INFO, "agent_worker_started", queue_name=settings.agent_queue_name)
             while True:
@@ -107,8 +120,12 @@ async def run_worker() -> None:
                 try:
                     with get_tracer(__name__).start_as_current_span("agent.consume", context=queued_message.context):
                         result = await orchestrator.execute(
-                            run_id, resume_decision=queued_message.resume_decision
+                            run_id, resume_decision=queued_message.resume_decision,
+                            resume_input_id=queued_message.resume_input_id,
                         )
+                    if result.status == "failed":
+                        await redis.rpush(settings.agent_queue_name+":dead-letter",
+                                          json.dumps({"run_id":str(run_id),"error_code":result.error_code}))
                     log_event(logger, logging.INFO, "agent_run_finished", run_id=run_id, status=result.status, error_code=result.error_code, duration_ms=round((monotonic() - started_at) * 1000))
                 except Exception:
                     log_event(logger, logging.ERROR, "agent_run_unhandled_error", run_id=run_id)

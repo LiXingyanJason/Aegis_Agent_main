@@ -12,6 +12,9 @@ from app.controller.mail_controller import router as mail_router
 from app.controller.todo_controller import router as todo_router
 from app.controller.memory_controller import router as memory_router
 from app.controller.calendar_controller import router as calendar_router
+from app.controller.agent_input_controller import router as agent_input_router
+from app.service.agent_input_service import AgentInputService
+from app.event.run_event import RunEventPublisher
 from app.integration.calendar_mcp_client import CalendarMCPClient
 from app.service.calendar_service import CalendarService
 from app.config.database import Database
@@ -44,6 +47,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.identity_service = IdentityService(settings)
     app.state.mail_service = MailService(EmailMCPClient(settings))
     app.state.calendar_service = CalendarService(database, CalendarMCPClient(settings))
+    app.state.agent_input_service=AgentInputService(publisher=RunEventPublisher(redis))
     try:
         yield
     finally:
@@ -60,6 +64,7 @@ app.include_router(mail_router)
 app.include_router(todo_router)
 app.include_router(memory_router)
 app.include_router(calendar_router)
+app.include_router(agent_input_router)
 
 
 @app.get("/health", tags=["system"])

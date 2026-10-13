@@ -29,6 +29,7 @@ class ToolDefinition:
     # 工具不得自行查询任意外部账户；需要连接时由 Gateway 按此声明校验归属、状态与 scope。
     connection_providers: tuple[str, ...] = ()
     required_connection_scope: str | None = None
+    argument_schema: Any | None = None
 
 
 @dataclass(frozen=True, slots=True)

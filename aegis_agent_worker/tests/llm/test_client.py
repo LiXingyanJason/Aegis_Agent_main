@@ -1,6 +1,7 @@
 """模型客户端的测试。"""
 
 import httpx
+import json
 import pytest
 
 from aegis_agent_worker.config.settings import Settings
@@ -70,3 +71,20 @@ async def test_openai_compatible_client_supports_deepseek_provider() -> None:
         reply = await client.complete([LLMMessage(role="user", content="测试")])
 
     assert reply == "可以处理。"
+
+
+@pytest.mark.asyncio
+async def test_json_mode_is_opt_in_and_rejects_empty_output():
+    """结构化请求显式启用JSON对象约束，普通聊天不变，空JSON响应可受控修复。"""
+    from aegis_agent_worker.llm.client import LLMOutputError
+    requests = []
+    async def handler(request):
+        requests.append(json.loads(request.content))
+        return httpx.Response(200, json={"choices": [{"message": {"content": " "}}]})
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http_client:
+        client = OpenAICompatibleClient(_settings(), http_client)
+        for method in (client.complete, client.complete_json):
+            with pytest.raises(LLMOutputError):
+                await method([LLMMessage(role="system", content="只输出 JSON")])
+    assert "response_format" not in requests[0]
+    assert requests[1]["response_format"] == {"type": "json_object"}

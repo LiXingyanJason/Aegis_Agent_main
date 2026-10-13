@@ -34,6 +34,27 @@
 
 ## 本地启动
 
+### 阶段3部署与联调
+
+先在 Aegis_backend 执行 `python -m alembic upgrade head`，迁移至 `008_agent_harness`，再重启API与Worker。无需新增依赖或环境变量，使用现有模型／Redis／MCP配置。预算记录和用户补充状态存入新表；模型调用、工具尝试和活跃耗时跨恢复保留。
+
+当前默认上限：10次模型调用、6次工具尝试、120秒活跃时间、5轮ReAct决策；模型单次60秒、工具20秒。输入上下文上限48000字符、模型输出80000字符；这是字符预算，不是实际Token计费。工具输出额外受字节限制。等待用户不计时，问题24小时过期。
+
+Harness已按职责分层：`harness/`管理策略、上下文和执行编排，
+`repository/execution_repository.py`管理SQL，`llm/guarded_client.py`包装模型调用。
+详见[Harness说明](src/aegis_agent_worker/harness/README.md)。原`service/runtime/execution_harness.py`
+已拆分删除；补充问答仍保留在运行期业务服务。API、数据库与默认预算不变，无新增迁移。
+
+信息收集与恢复后的事实核验，每次工具调用都创建独立 `reply_collect_<UUID>` 步骤键，分别关联 `tool_calls`。不要复用固定 `reply_collect`，也不要移除 `run_steps(run_id, step_key)` 唯一约束；修复不需要数据库迁移，重启 Worker 后重新提交失败任务即可。
+
+邮件信息收集、摘要、回复生成及草稿修改使用 `response_format={"type":"json_object"}` 请求 JSON 输出（[DeepSeek 官方说明](https://api-docs.deepseek.com/guides/json_mode/)），再由本地业务 Schema 校验。JSON mode 不等于业务校验。文字、空响应或非法字段最多修复一次，两次调用均计入 Harness 预算；网络错误、权限错误、预算耗尽不进行格式修复。不支持 JSON mode 的兼容供应商会返回受控调用失败，不静默关闭约束。连续校验失败使用 `MODEL_OUTPUT_INVALID`；不保存／回传原始非法输出，不继续生成草稿或执行工具。修改后只需重启 Worker，无新增迁移或前端要求，失败的旧任务需重新提交。
+
+起草回复先进行有界只读信息收集，可查相关邮件及当前用户日历；缺少价格等信息时发布 input_required 并暂停，前端提交回答后以相同 run_id 恢复。主对话仍只返回邮件卡片，ReAct从卡片“起草回复”按钮启动。完整正文只在读取／生成节点局部使用，图状态保存安全摘要。
+
+草稿窗口 AI 修改通过 revision-requests 创建独立任务，只改已保存draft状态草稿正文；保存前后都核验版本。版本冲突、模型失败不会覆盖原文。pending_approval和已发送草稿不允许AI原地修改。
+
+失败任务的 run_id／error_code 写到队列名加 `:dead-letter` 的Redis List，不自动重放外部写入。当前仍是BLPOP消费；进程在取出任务后崩溃的队列回收及Redis Streams未实现，需要运维结合数据库检查恢复，不能把List宣称为已保证可靠交付。
+
 1. 在本目录复制 `.env.example` 为 `.env`，填入数据库、Redis、模型配置。
 2. 安装依赖：`D:\anaconda\envs\Aegis\python.exe -m pip install -e ".[dev]"`
 3. 启动：`D:\anaconda\envs\Aegis\python.exe -m aegis_agent_worker`

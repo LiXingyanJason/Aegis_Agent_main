@@ -10,6 +10,7 @@ import {
 import { getRunDetail, subscribeRunEvents } from '../api/run'
 
 const props = defineProps({ artifact: { type: Object, required: true } })
+const emit = defineEmits(['input-required'])
 const router = useRouter()
 const payload = computed(() => props.artifact.payload ?? {})
 const items = computed(() => Array.isArray(payload.value.items) ? payload.value.items : [])
@@ -60,7 +61,7 @@ function operationFor(emailId) {
 }
 
 function isBusy(emailId) {
-  return ['submitting', 'running'].includes(operationFor(emailId)?.status)
+  return ['submitting', 'running', 'waiting_input'].includes(operationFor(emailId)?.status)
 }
 
 function setOperation(emailId, operation) {
@@ -112,6 +113,12 @@ async function pollRun(runId, emailId, kind) {
   if (!active || !pollTimers.has(runId)) return
   try {
     const run = await getRunDetail(runId)
+    if (run.status === 'waiting_input') {
+      setOperation(emailId, { kind, status: 'waiting_input', run_id: runId, message: '请补充起草所需信息。' })
+      emit('input-required')
+      stopRun(runId)
+      return
+    }
     if (!active || !pollTimers.has(runId)) return
     if (run.status === 'failed') {
       setOperation(emailId, { kind, status: 'failed', message: run.error_message || '邮件任务执行失败。' })
@@ -174,6 +181,10 @@ async function streamRun(runId, emailId, kind) {
           stopRun(runId)
         } else if (event.event === 'run_failed') {
           setOperation(emailId, { kind, status: 'failed', message: eventPayload.error_message || eventPayload.message || '邮件任务执行失败。' })
+          stopRun(runId)
+        } else if (event.event === 'input_required') {
+          setOperation(emailId, { kind, status: 'waiting_input', run_id: runId, message: '请补充起草所需信息。' })
+          emit('input-required')
           stopRun(runId)
         } else if (event.event === 'run_completed' && operationFor(emailId)?.status === 'running') {
           setOperation(emailId, {

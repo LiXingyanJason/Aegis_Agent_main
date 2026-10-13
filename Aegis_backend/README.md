@@ -1,5 +1,9 @@
 # Aegis PA 后端
 
+阶段3新增迁移 `008_agent_harness`。更新代码后先执行 `python -m alembic upgrade head`，再重启API和Worker。新接口包括本人补充问题列表、提交／取消回答，以及草稿AI正文修改请求，具体契约见根目录第01期-接口设计.md的3.4。
+
+新增 `waiting_input` 任务状态和 `mail_draft_revision` 类型。补充回答与批准接口互相独立；后端只存储、校验并投递任务，模型与工具仍由Worker执行。迁移包含RLS预算表、调用审计、输入请求和修改请求表；本次未自动执行实际数据库DDL。
+
 ## 本地开发环境
 
 后端使用 Python 3.12、FastAPI、SQLAlchemy Async、PostgreSQL、Redis 和 Keycloak OIDC。

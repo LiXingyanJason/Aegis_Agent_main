@@ -1,6 +1,9 @@
 """工具网关：白名单校验、日历连接解析和处理器分发。"""
 
 from dataclasses import dataclass
+import asyncio
+from pydantic import ValidationError
+from aegis_agent_worker.tool.argument_schemas import SCHEMAS
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,9 +29,11 @@ class ToolGateway:
         self,
         registry: ToolRegistry,
         connections: ProviderConnectionRepository | None = None,
+        harness=None,
     ) -> None:
         self._registry = registry
         self._connections = connections or ProviderConnectionRepository()
+        self._harness = harness
 
     def get_definition(self, tool_name: str):
         """读取已注册定义，供调用审计记录使用。"""
@@ -47,6 +52,16 @@ class ToolGateway:
     ) -> PreparedToolInvocation:
         """校验白名单、确认策略与工具声明的外部连接。"""
         registered = self._registry.get(invocation.tool_name)
+        if any(key.startswith("__") or key.startswith("aegis_") for key in invocation.arguments):
+            raise ToolError("TOOL_INVALID_ARGUMENTS", "工具参数不能覆盖内部上下文")
+        schema = registered.definition.argument_schema or SCHEMAS.get(invocation.tool_name)
+        if self._harness is not None and schema is None:
+            raise ToolError("TOOL_SCHEMA_REQUIRED","该工具尚未声明参数契约")
+        try:
+            arguments = (schema.model_validate(invocation.arguments).model_dump(mode="json",exclude_none=True)
+                         if schema else dict(invocation.arguments))
+        except ValidationError as error:
+            raise ToolError("TOOL_INVALID_ARGUMENTS", "工具参数未通过校验") from error
         if registered.definition.risk_level != "read" and not allow_confirmed_write:
             raise ToolError("TOOL_POLICY_BLOCKED", "该外部写入操作尚未获得用户确认")
         connection_id = None
@@ -72,10 +87,24 @@ class ToolGateway:
         return PreparedToolInvocation(
             registered=registered,
             context=ToolContext(tenant_id=tenant_id, user_id=user_id, run_id=run_id, connection_id=connection_id),
-            arguments=dict(invocation.arguments),
+            arguments=arguments,
         )
 
     async def invoke(self, prepared: PreparedToolInvocation) -> ToolResult:
         """执行已准备调用；工具名仅在内部注入给共享 MCP 处理器。"""
         arguments = {"__tool_name": prepared.registered.definition.name, **prepared.arguments}
-        return await prepared.registered.handler.invoke(prepared.context, arguments)
+        if self._harness is None:
+            return await prepared.registered.handler.invoke(prepared.context, arguments)
+        for attempt in range(2):
+            try:
+                async with self._harness.attempt("tool", prepared.registered.definition.name):
+                    result = await prepared.registered.handler.invoke(prepared.context, dict(arguments))
+                    import json
+                    if len(json.dumps(result.response_payload,ensure_ascii=False).encode()) > 2_000_000:
+                        raise ToolError("TOOL_OUTPUT_TOO_LARGE", "工具结果超过允许大小")
+                    return result
+            except ToolError as error:
+                if (attempt or prepared.registered.definition.risk_level != "read"
+                        or error.code not in {"TOOL_UNAVAILABLE","EMAIL_TOOL_UNAVAILABLE"}):
+                    raise
+                await asyncio.sleep(0.2)

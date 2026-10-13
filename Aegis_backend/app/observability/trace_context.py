@@ -18,15 +18,20 @@ class QueuedRunMessage:
     run_id: UUID
     context: Context
     resume_decision: str | None = None
+    resume_input_id: UUID | None = None
 
 
-def serialize_run_message(run_id: UUID, *, resume_decision: str | None = None) -> str:
+def serialize_run_message(run_id: UUID, *, resume_decision: str | None = None, resume_input_id: UUID | None = None) -> str:
     """把当前请求的 W3C traceparent 与任务标识一起写入 Redis。"""
     carrier: dict[str, str] = {}
     TraceContextTextMapPropagator().inject(carrier)
     if resume_decision not in {None, "approved", "rejected"}:
         raise ValueError("resume_decision 必须是 approved 或 rejected")
     payload = {"run_id": str(run_id)}
+    if resume_input_id is not None:
+        if resume_decision is not None:
+            raise ValueError("补充回答与审批恢复不能混用")
+        payload["resume_input_id"] = str(resume_input_id)
     if resume_decision is not None:
         payload["resume_decision"] = resume_decision
     for key in ("traceparent", "tracestate"):
@@ -50,8 +55,11 @@ def deserialize_run_message(raw_message: str) -> QueuedRunMessage:
         if isinstance((value := payload.get(key)), str)
     }
     resume_decision = payload.get("resume_decision")
+    input_id = UUID(payload["resume_input_id"]) if payload.get("resume_input_id") else None
+    if input_id and resume_decision:
+        raise ValueError("恢复消息类型冲突")
     if resume_decision not in {None, "approved", "rejected"}:
         raise ValueError("Agent 队列消息包含无效 resume_decision")
     return QueuedRunMessage(
-        run_id=UUID(payload["run_id"]), context=extract(carrier), resume_decision=resume_decision
+        run_id=UUID(payload["run_id"]), context=extract(carrier), resume_decision=resume_decision, resume_input_id=input_id
     )

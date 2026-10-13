@@ -98,6 +98,7 @@ h1, h2, h3, p { margin-top: 0; }
 .mail-content { min-width: 0; min-height: 0; flex: 1; }
 .mail-card { display: flex; min-height: 0; flex: 1; flex-direction: column; overflow: hidden; }
 .mail-card-body { display: flex; min-height: 0; flex: 1; flex-direction: column; padding: 20px; }
+.mail-card-body > .run-input-panel { flex: none; max-height: 35%; overflow-y: auto; }
 .mail-panel { display: flex; min-height: 0; flex: 1; flex-direction: column; }
 .mail-tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid #d9e1ec; }
 .mail-tab { padding: 10px 13px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #536176; font-weight: 700; }
@@ -133,6 +134,12 @@ h1, h2, h3, p { margin-top: 0; }
 .mail-coming-soon h2 { margin: 0; color: #344054; }
 .mail-coming-soon p { max-width: 460px; margin: 0; line-height: 1.6; }
 .draft-version { margin: 0 0 16px; color: #667085; font-size: 13px; }
+.mail-draft-dialog { display: flex; max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); flex-direction: column; margin: 24px auto !important; overflow: hidden; }
+.mail-draft-dialog .el-dialog__header, .mail-draft-dialog .el-dialog__footer { flex: none; }
+.mail-draft-dialog .el-dialog__body { min-height: 0; overflow-y: auto; }
+.draft-dialog-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; text-align: left; }
+.draft-dialog-actions-right { display: flex; gap: 10px; margin-left: auto; }
+.draft-dialog-actions-right .el-button + .el-button { margin-left: 0; }
 .mail-detail-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px 22px; padding: 15px; border-radius: 9px; background: #f7f9fc; }
 .mail-detail-meta div { display: grid; gap: 3px; min-width: 0; }.mail-detail-meta span { color: #667085; font-size: 12px; }.mail-detail-meta b { overflow-wrap: anywhere; color: #344054; font-size: 13px; font-weight: 650; }
 .mail-detail-notice { margin-top: 16px; padding: 12px 14px; border: 1px solid #f4d5a4; border-radius: 9px; background: #fff4e4; color: #76470c; font-size: 13px; line-height: 1.55; }

@@ -13,6 +13,8 @@ from aegis_agent_worker.service.mail.mail_task_service import MailTaskService
 from aegis_agent_worker.service.memory.memory_context_service import MemoryContextService
 from aegis_agent_worker.agent.workflows.mail.planning_workflow import MailPlanningWorkflow, finish_mail_planning
 from aegis_agent_worker.agent.contracts.mail import MailDecision
+from aegis_agent_worker.agent.workflows.mail.collection_workflow import MailCollectionWorkflow
+from aegis_agent_worker.harness.exceptions import HarnessError
 
 
 class MailReplyDraftWorkflow:
@@ -24,11 +26,14 @@ class MailReplyDraftWorkflow:
         mail_agent: MailAgent,
         memory_context: MemoryContextService | None = None,
         planning_audit=None,
+        collection_service=None,
+        input_requests=None,
     ) -> None:
         self._mail_tasks = mail_tasks
         self._mail_agent = mail_agent
         self._memory_context = memory_context
         self._planning_audit = planning_audit
+        self._collection_service,self._inputs=collection_service,input_requests
 
     def build(self) -> Any:
         """构建“任务预检 → 起草并保存回复”的邮件回复图。"""
@@ -43,7 +48,13 @@ class MailReplyDraftWorkflow:
             lambda state: "finish" if state.get("mail_planning_error") else "execute",
             {"finish": "finish_mail_planning", "execute": "ensure_mail_reply_draft_ready"})
         graph.add_edge("finish_mail_planning", END)
-        graph.add_edge("ensure_mail_reply_draft_ready", "generate_mail_reply_draft")
+        if self._collection_service is not None and self._inputs is not None:
+            graph.add_node("collect_reply_information",MailCollectionWorkflow(
+                self._mail_agent,self._mail_tasks,self._collection_service,self._inputs).build())
+            graph.add_edge("ensure_mail_reply_draft_ready","collect_reply_information")
+            graph.add_edge("collect_reply_information","generate_mail_reply_draft")
+        else:
+            graph.add_edge("ensure_mail_reply_draft_ready", "generate_mail_reply_draft")
         graph.add_edge("generate_mail_reply_draft", END)
         return graph.compile()
 
@@ -67,6 +78,8 @@ class MailReplyDraftWorkflow:
         if decision.instruction and decision.instruction != instruction:
             instruction += "\n邮件专家规划要求：" + decision.instruction
         email = await self._mail_tasks.read_mail(run, source)
+        if email.get("source_version") is not None and email["source_version"]!=source.get("source_version"):
+            raise HarnessError("MAIL_SOURCE_CHANGED","邮件来源已变化，请重新起草")
         memory_prompt = None
         if self._memory_context is not None:
             selected = await self._memory_context.select_for_run(
@@ -76,11 +89,15 @@ class MailReplyDraftWorkflow:
             )
             memory_prompt = self._memory_context.format_system_context(selected)
         step_id = await self._mail_tasks.start_generation_step(run, "正在起草回复")
+        extra={}
+        if self._collection_service is not None:
+            extra["supplemental_context"]={"evidence":state.get("collected_evidence",[]),"user_answers":state.get("user_answers",[])}
         reply = await self._mail_agent.generate_reply_draft(
             email,
             key_points=source.get("key_points"),
             instruction=instruction,
             memory_context=memory_prompt,
+            **extra,
         )
         draft_id = await self._mail_tasks.save_reply_draft(run, source=source, reply=reply, step_id=step_id)
         if run.conversation_id is not None:

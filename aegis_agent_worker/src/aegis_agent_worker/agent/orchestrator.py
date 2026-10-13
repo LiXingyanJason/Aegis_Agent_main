@@ -3,6 +3,8 @@
 import asyncio
 import logging
 from dataclasses import dataclass
+from contextlib import nullcontext
+from aegis_agent_worker.harness.exceptions import HarnessError
 from uuid import UUID
 
 from aegis_agent_worker.agent.graph.graph_runner import GraphRunner
@@ -12,6 +14,7 @@ from aegis_agent_worker.agent.graph.task_graph import LLMGraphError, TaskGraph, 
 from aegis_agent_worker.config.database import Database, TenantContext
 from aegis_agent_worker.event.run_event import RunEventPublisher
 from aegis_agent_worker.llm.client import LLMError, OpenAICompatibleClient
+from aegis_agent_worker.agent.specialists.mail_agent import MailAgentError
 from aegis_agent_worker.repository.run_repository import AgentRunRepository
 from aegis_agent_worker.service.mail.mail_task_service import MailTaskService
 from aegis_agent_worker.service.memory.memory_context_service import MemoryContextService
@@ -55,11 +58,14 @@ class AgentOrchestrator:
         memory_context: MemoryContextService | None = None,
         main_agent: MainAgent | None = None,
         decision_context_service: DecisionContextService | None = None,
+        harness=None,
+        input_requests=None,
     ) -> None:
         """组装根图及其依赖；允许测试注入服务或预构建运行器。"""
         run_repository = runs or AgentRunRepository()
         self._llm_client = llm_client
         self._mail_tasks = mail_tasks
+        self._harness,self._input_requests=harness,input_requests
         self._lifecycle = lifecycle or RunLifecycleService(database, run_repository, events)
         self._context_service = context_service or ConversationContextService(database, run_repository)
         self._graph_runner = graph_runner or GraphRunner(
@@ -80,10 +86,15 @@ class AgentOrchestrator:
             ).build(checkpointer=checkpointer)
         )
 
-    async def execute(self, run_id: UUID, *, resume_decision: str | None = None) -> AgentExecutionResult:
+    async def execute(self, run_id: UUID, *, resume_decision: str | None = None, resume_input_id: UUID | None = None) -> AgentExecutionResult:
         """领取任务、执行根图，并返回 Worker 所需的最终状态。"""
         # 判断 Redis 消息是否包含审批决定
-        if resume_decision is None:
+        input_value=None
+        if resume_input_id is not None:
+            if resume_decision is not None or self._input_requests is None:
+                raise ValueError("补充恢复上下文无效")
+            run,input_value=await self._input_requests.claim(run_id,resume_input_id)
+        elif resume_decision is None:
             # 没有 resume_decision 时，是普通新任务。原子更新数据库、记录模型供应商、模型名称、开始时间和 run_started 事件
             """
                 run 是一个class ClaimedRun: 对象               
@@ -115,14 +126,23 @@ class AgentOrchestrator:
                 → Checkpointer 从 PostgreSQL 读取该 run_id 的图快照
                 → 从 interrupt(...) 之后继续执行。
             """
-            if resume_decision is not None:
-                # 审批后的恢复任务：由 Checkpointer 按 run_id 恢复到 interrupt 之后。
-                state = await self._graph_runner.resume(str(run.id), resume_decision)
-            else:
-                # 首次提交的普通任务：从根图的 START 节点开始执行。
-                state = await self._graph_runner.invoke(run)
+            async with self._harness.scope(run) if self._harness else nullcontext():
+                if input_value is not None:
+                    state=await self._graph_runner.resume(str(run.id),input_value)
+                elif resume_decision is not None:
+                    # 审批后的恢复任务：由 Checkpointer 按 run_id 恢复到 interrupt 之后。
+                    state = await self._graph_runner.resume(str(run.id), resume_decision)
+                else:
+                    # 首次提交的普通任务：从根图的 START 节点开始执行。
+                    state = await self._graph_runner.invoke(run)
                 # 执行时框架遇到暂停点，自动帮我们用当前run_id存Checkpointer，并返回interrupt
             if state.get("__interrupt__"): # 图执行到审批暂停点时，LangGraph 返回 __interrupt__
+                question=next((item.value for item in state["__interrupt__"]
+                               if isinstance(item.value,dict) and item.value.get("question_id")),None)
+                # 嵌套子图尚未完成，内部 State 更新不会立即回写父图；使用中断载荷判断类型。
+                if question is not None:
+                    await self._input_requests.mark_ready(run,UUID(question["question_id"]))
+                    return AgentExecutionResult(status="waiting_input")
                 return AgentExecutionResult(status="waiting_confirmation")
             # 邮件后台子图会自行保存领域结果及 run_completed 事件，不写入对话消息。
             if state.get("mail_workflow_completed"):
@@ -142,8 +162,13 @@ class AgentOrchestrator:
             return AgentExecutionResult(status="completed")
         except asyncio.CancelledError:
             raise
+        except HarnessError as error:
+            if self._mail_tasks is not None:
+                await self._mail_tasks.mark_failed(run,str(error))
+            await self._lifecycle.fail_run(run,step_id=step_id,error_code=error.code,error_message=str(error))
+            return AgentExecutionResult(status="failed",error_code=error.code,error_message=str(error))
         except LLMGraphError as error:
-            if run.run_type in {"mail_extraction", "mail_reply_draft", "conversation"} and self._mail_tasks is not None:
+            if run.run_type in {"mail_extraction", "mail_reply_draft", "mail_draft_revision", "conversation"} and self._mail_tasks is not None:
                 await self._mail_tasks.mark_failed(run, str(error))
             await self._lifecycle.fail_run(
                 run,
@@ -154,8 +179,15 @@ class AgentOrchestrator:
             return AgentExecutionResult(
                 status="failed", error_code="LLM_UNAVAILABLE", error_message=str(error)
             )
+        except MailAgentError as error:
+            if self._mail_tasks is not None:
+                await self._mail_tasks.mark_failed(run, str(error))
+            await self._lifecycle.fail_run(
+                run, step_id=step_id, error_code=error.code, error_message=str(error),
+            )
+            return AgentExecutionResult(status="failed", error_code=error.code, error_message=str(error))
         except LLMError as error:
-            if run.run_type in {"mail_extraction", "mail_reply_draft", "conversation"} and self._mail_tasks is not None:
+            if run.run_type in {"mail_extraction", "mail_reply_draft", "mail_draft_revision", "conversation"} and self._mail_tasks is not None:
                 await self._mail_tasks.mark_failed(run, str(error))
             await self._lifecycle.fail_run(
                 run,
@@ -169,7 +201,7 @@ class AgentOrchestrator:
         except Exception:
             # 仅写入 Worker 本地日志以帮助开发排错；数据库和接口仍使用脱敏错误文本。
             logger.exception("Agent 执行失败：run_id=%s", run.id)
-            if run.run_type in {"mail_extraction", "mail_reply_draft", "conversation"} and self._mail_tasks is not None:
+            if run.run_type in {"mail_extraction", "mail_reply_draft", "mail_draft_revision", "conversation"} and self._mail_tasks is not None:
                 await self._mail_tasks.mark_failed(run, "任务执行失败")
             await self._lifecycle.fail_run(
                 run,

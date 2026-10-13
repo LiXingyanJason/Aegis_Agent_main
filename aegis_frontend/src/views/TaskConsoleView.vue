@@ -1,8 +1,9 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { subscribeRunEvents } from '../api/run'
+import { getRunDetail, subscribeRunEvents } from '../api/run'
 import MailCandidateCard from '../components/MailCandidateCard.vue'
+import RunInputPanel from '../components/RunInputPanel.vue'
 import { useAuthStore } from '../store/auth'
 import { useConversationStore } from '../store/conversation'
 
@@ -17,6 +18,10 @@ const error = ref('')
 const isPolling = ref(false)
 const isRunActive = ref(false)
 const messagesElement = ref(null)
+const inputPanelKey = ref(0)
+const inputFollowup = ref('')
+let inputPollTimer = null
+let inputPollingRunId = null
 let pollTimer = null
 let pollingRunId = null
 let pollingInFlight = false
@@ -25,6 +30,48 @@ let streamingRunId = null
 let streamRetryTimer = null
 
 const activeConversation = computed(() => conversations.current)
+const hasMailCandidates = computed(() => Object.values(conversations.artifactsByRun)
+  .some((artifacts) => artifacts.some((artifact) => artifact.artifact_type === 'mail_candidates')))
+
+function stopInputPolling() {
+  if (inputPollTimer !== null) window.clearInterval(inputPollTimer)
+  inputPollTimer = null
+  inputPollingRunId = null
+}
+
+async function pollInputRun(runId) {
+  if (inputPollingRunId !== runId) return
+  try {
+    const run = await getRunDetail(runId)
+    if (inputPollingRunId !== runId) return
+    if (run.status === 'completed') {
+      inputFollowup.value = '起草任务已完成，请在邮件管理的“保存草稿”中核对，邮件不会自动发送。'
+      stopInputPolling()
+    } else if (['failed', 'cancelled'].includes(run.status)) {
+      inputFollowup.value = run.error_message || '起草任务未完成，请重新发起。'
+      stopInputPolling()
+    } else if (run.status === 'waiting_input') {
+      inputFollowup.value = '任务仍需补充信息，请回答下方的新问题。'
+      inputPanelKey.value += 1
+      stopInputPolling()
+    }
+  } catch {
+    // 临时网络错误不改变后端任务状态，下次轮询继续。
+  }
+}
+
+function resumeInputRun(runId) {
+  stopInputPolling()
+  inputFollowup.value = '补充信息已提交，正在继续起草…'
+  inputPollingRunId = runId
+  inputPollTimer = window.setInterval(() => { void pollInputRun(runId) }, 1500)
+  void pollInputRun(runId)
+}
+
+function cancelInputRun() {
+  stopInputPolling()
+  inputFollowup.value = '起草任务已取消或补充问题已过期。'
+}
 
 function formatTime(value) {
   if (!value) return '暂无消息'
@@ -171,6 +218,8 @@ async function loadHistory() {
 
 async function restoreConversation(conversationId, syncUrl = true) {
   stopRunTracking()
+  stopInputPolling()
+  inputFollowup.value = ''
   error.value = ''
   try {
     const detail = await conversations.loadConversation(conversationId)
@@ -360,7 +409,7 @@ watch(() => route.query.conversation_id, (conversationId) => {
   }
 })
 
-onBeforeUnmount(() => stopRunTracking())
+onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
 </script>
 
 <template>
@@ -429,6 +478,8 @@ onBeforeUnmount(() => stopRunTracking())
             </div>
 
             <el-alert v-if="error" class="conversation-error" :title="error" type="error" :closable="false" show-icon />
+            <RunInputPanel v-if="hasMailCandidates" :key="inputPanelKey" @answered="resumeInputRun" @cancelled="cancelInputRun" />
+            <p v-if="inputFollowup" class="mail-input-followup">{{ inputFollowup }} <router-link v-if="!inputPollingRunId" :to="{ name: 'mail-management' }">打开邮件管理</router-link></p>
             <div v-if="activeConversation" ref="messagesElement" class="messages">
               <template v-for="item in conversations.messages" :key="item.message_id">
                 <div class="message" :class="item.role">
@@ -444,7 +495,7 @@ onBeforeUnmount(() => stopRunTracking())
                   class="message artifact-message"
                 >
                   <div class="avatar">A</div>
-                  <MailCandidateCard v-if="artifact.artifact_type === 'mail_candidates'" :artifact="artifact" />
+                  <MailCandidateCard v-if="artifact.artifact_type === 'mail_candidates'" :artifact="artifact" @input-required="inputPanelKey += 1" />
                   <div v-else class="artifact-card">
                     <div class="artifact-heading">
                       <b>{{ artifactTitle(artifact) }}</b>
@@ -589,3 +640,9 @@ onBeforeUnmount(() => stopRunTracking())
     </section>
   </main>
 </template>
+
+<style scoped>
+.conversation-card > .run-input-panel { flex: none; margin: 10px 20px; max-height: 35%; overflow-y: auto; }
+.mail-input-followup { flex: none; margin: 8px 20px; color: #345d8d; font-size: 12px; }
+.mail-input-followup a { color: #266dcc; }
+</style>
