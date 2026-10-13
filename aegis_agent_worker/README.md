@@ -11,6 +11,11 @@
 候选意外为空恢复目录，目录本身为空则澄清。审计新增候选标识、稳定原因码和策略版本，
 无新增数据库迁移，重启Worker即可。
 
+阶段4.3：主Agent调用JSON mode并进行MainDecision校验，格式错误最多修复一次，两次均计预算。
+连续失败转澄清而非默认执行；网络／预算错误不按格式错误重试。主路由审计新增repair_count和
+validation_issue_codes，不保存非法响应和含敏感值的校验异常。邮件“第N封”仅对最近有效卡片顺序解析，
+缺失／过期／位置或版本不符则澄清，不能用收件箱排序替代。修改后重启Worker，无新增迁移。
+
 独立消费 Aegis Agent Redis 队列的 Python 服务。它不导入 `Aegis_backend` 的代码；两个服务共享 PostgreSQL 业务事实与 Redis 队列/实时事件协议。
 
 当前任务由 LangGraph 根图执行：根图加载会话上下文、进行意图/工作流路由；日历读取作为 `calendar/read_graph.py` 子图执行，工具审计、事务与 SSE 事件仍由 `service/` 处理。

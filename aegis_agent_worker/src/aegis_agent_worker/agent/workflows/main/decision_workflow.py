@@ -2,6 +2,7 @@
 
 from time import monotonic
 from typing import Any
+import re
 from uuid import UUID
 
 from langgraph.graph import START, END, StateGraph
@@ -11,6 +12,7 @@ from aegis_agent_worker.agent.contracts.decision import (
 )
 from aegis_agent_worker.agent.graph.state import TaskGraphState
 from aegis_agent_worker.agent.routing.capability_selector import CapabilitySelector, capability_id
+from aegis_agent_worker.agent.specialists.main_agent import MainDecisionOutputError
 from aegis_agent_worker.observability.telemetry import get_tracer
 from aegis_agent_worker.repository.run_repository import ClaimedRun
 
@@ -23,6 +25,8 @@ class MainDecisionState(TaskGraphState, total=False):
     candidate_capabilities: list[str]
     filter_reason_codes: list[str]
     route_policy_version: str
+    repair_count: int
+    validation_issue_codes: list[dict[str, str]]
 
 
 class MainDecisionWorkflow:
@@ -95,6 +99,13 @@ class MainDecisionWorkflow:
                     .model_dump(mode="json"),
                 "decision_outcome": "empty_catalog", "decision_duration_ms": 0,
             }
+        ordinal = _mail_ordinal(state.get("latest_user_message", ""))
+        if ordinal is not None and (ordinal < 1 or not any(
+            item.get("resource_type") == "email" and item.get("position") == ordinal
+            for item in state["decision_references"]
+        )):
+            return {**self._clarification("最近邮件卡片中没有有效的对应序号，请重新查询并选择邮件。",
+                                         "invalid_mail_ordinal"), "decision_duration_ms": 0}
         with get_tracer(__name__).start_as_current_span("agent.main.decide") as span:
             span.set_attribute("aegis.run_id", state["run_id"])
             span.set_attribute("gen_ai.provider.name", getattr(self._main_agent, "provider_name", "unknown"))
@@ -112,16 +123,21 @@ class MainDecisionWorkflow:
                         decision="delegate", domain="mail", intent="query_mail",
                         instruction=decision.instruction, target=decision.target,
                     )
+            except MainDecisionOutputError:
+                outcome = "invalid_output"
+                decision = clarify("主决策结果未通过校验，请重新说明要查询日历、安排会议还是查看邮件。")
             except ValueError:
                 outcome = "invalid_output"
                 decision = clarify("暂时无法确定要执行的任务，请说明要查询日历、安排会议，还是处理哪一封邮件。")
             except Exception:
                 # 记录模型不可用且不产生工具调用；异常由现有生命周期服务分类处理。
-                await self._record(state, None, "model_failed", round((monotonic() - started) * 1000))
+                metadata = getattr(self._main_agent, "output_metadata", {})
+                await self._record({**state, **metadata}, None, "model_failed", round((monotonic() - started) * 1000))
                 raise
         return {
             "main_decision": decision.model_dump(mode="json"), "decision_outcome": outcome,
             "decision_duration_ms": round((monotonic() - started) * 1000),
+            **getattr(self._main_agent, "output_metadata", {"repair_count": 0, "validation_issue_codes": []}),
         }
 
     def _capability(self, decision):
@@ -132,6 +148,10 @@ class MainDecisionWorkflow:
         """模型只允许选择当前领域工厂显式声明的能力。"""
         decision = MainDecision.model_validate(state["main_decision"])
         if decision.decision == "delegate":
+            ordinal = _mail_ordinal(state.get("latest_user_message", ""))
+            if ordinal is not None and decision.domain == "mail" and decision.target is None:
+                return self._clarification("请从最近邮件卡片中选择对应邮件，不能用邮箱列表代替序号目标。",
+                                           "invalid_mail_ordinal")
             capability = self._capability(decision)
             if capability is None:
                 return self._clarification("当前尚不支持这项操作，请选择已有日历或邮件功能。",
@@ -155,6 +175,9 @@ class MainDecisionWorkflow:
                         if item["id"] == str(decision.target.id)
                         and item["resource_type"] == decision.target.resource_type), None)
         resolved = None
+        ordinal = _mail_ordinal(state.get("latest_user_message", ""))
+        if ordinal is not None and (offered is None or offered.get("position") != ordinal):
+            return self._clarification("该邮件不对应最近卡片中的指定序号，请重新选择。", "invalid_mail_ordinal")
         if offered is not None:
             resolved = await self._context_service.validate_reference(_run(state), decision.target)
         if resolved is None:
@@ -195,6 +218,8 @@ class MainDecisionWorkflow:
             candidate_capabilities=state.get("candidate_capabilities", []),
             filter_reason_codes=state.get("filter_reason_codes", []),
             route_policy_version=state.get("route_policy_version", self._selector.policy_version),
+            repair_count=state.get("repair_count", 0),
+            validation_issue_codes=state.get("validation_issue_codes", []),
         )
 
     @staticmethod
@@ -206,3 +231,29 @@ def _run(state):
     """从可信根图状态还原当前会话任务归属。"""
     return ClaimedRun(id=UUID(state["run_id"]), tenant_id=UUID(state["tenant_id"]),
                       user_id=UUID(state["user_id"]), conversation_id=UUID(state["conversation_id"]))
+
+
+def _mail_ordinal(message):
+    """序号仅对最近卡片有效；多个序号先澄清，不按收件箱顺序猜测。"""
+    # 完整主题中可能包含“第一封”，不能把标题文字当成卡片指代。
+    text = re.sub(r'"[^"\n]*"|“[^”\n]*”|《[^》\n]*》', "", message)
+    subject = re.search(r"(?:主题|标题)(?:为|是|叫|[:：])", text)
+    if subject:
+        text = text[:subject.start()]
+    values = re.findall(r"第([一二三四五六七八九十百零两\d]+)封", text)
+    if not values:
+        return None
+    numbers = {"一": 1, "二": 2, "两": 2, "三": 3, "四": 4, "五": 5,
+               "六": 6, "七": 7, "八": 8, "九": 9, "十": 10}
+    def parse(value):
+        if value.isdecimal():
+            return int(value) if len(value) <= 3 else -1
+        if value in numbers:
+            return numbers[value]
+        if value.startswith("十") and value[1:] in numbers:
+            return 10 + numbers[value[1:]]
+        if value == "二十":
+            return 20
+        return -1
+    parsed = {parse(value) for value in values}
+    return next(iter(parsed)) if len(parsed) == 1 else -1

@@ -42,6 +42,11 @@ class GuardedLLMClient:
             flags.append("instruction_override_pattern")
         # 占用模型预算并进入审计上下文
         async with self._harness.attempt("model", self.model_name, risk_flags=flags):
+            # json_mode=True，需要 JSON 输出。等价于
+            # if json_mode:
+            #     complete = self._client.complete_json   # 没有就退回 complete
+            # else:
+            #     complete = self._client.complete
             complete = (getattr(self._client, "complete_json", self._client.complete)
                         if json_mode else self._client.complete)
             result = await complete(messages)  # 真正调用模型

@@ -1,17 +1,34 @@
 """主决策 Agent：只提出受限交接，不访问数据库或执行工具。"""
 
 import json
+from contextvars import ContextVar
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from aegis_agent_worker.agent.contracts.decision import MainDecision
-from aegis_agent_worker.llm.client import LLMMessage
+from pydantic import ValidationError
+from aegis_agent_worker.llm.client import LLMMessage, LLMOutputError
+
+
+class MainDecisionOutputError(ValueError):
+    """连续校验失败的安全诊断，不包含原始响应和Pydantic输入值。"""
+    def __init__(self, issue_codes):
+        super().__init__("主决策输出连续两次未通过校验")
+        self.issue_codes = issue_codes
+        self.repair_count = 1
 
 
 class MainAgent:
     def __init__(self, llm_client, timezone_name="Asia/Shanghai"):
         self._client = llm_client
         self._timezone = ZoneInfo(timezone_name)
+        # 同一个Agent可被并发任务复用，审计元数据不可用共享普通属性存储。
+        # 保存当前协程中，主 Agent 本次模型调用的审计信息
+        self._output_metadata = ContextVar("main_output_metadata", default=None)
+
+    @property
+    def output_metadata(self):
+        return self._output_metadata.get() or {"repair_count": 0, "validation_issue_codes": []}
 
     @property
     def provider_name(self):
@@ -62,15 +79,62 @@ class MainAgent:
             f"最近对话：{json.dumps(history[-8:], ensure_ascii=False)[:12000]}\n"
             f"本次用户要求：{message[:4000]}"
         )
-        result = await self._client.complete([
+        messages = [
             LLMMessage(role="system", content=prompt),
             LLMMessage(role="user", content=message[:4000]),
-        ])
-        text = result.strip()
-        if text.startswith("```") and text.endswith("```"):
-            text = "\n".join(text.splitlines()[1:-1])
-        payload = json.loads(text)
-        if isinstance(payload, dict) and payload.get("domain") == "mail" and payload.get("decision") == "delegate":
-            if payload.get("intent") in {"extract_mail", "draft_mail_reply"}:
-                payload["intent"] = "query_mail"
-        return MainDecision.model_validate(payload)
+        ]
+        self._output_metadata.set({"repair_count": 0, "validation_issue_codes": []})
+        # 测试/旧适配器可使用文本方法，生产GuardedLLMClient提供complete_json且计入预算。
+        # 优先取 self._client.complete_json（模型返回 JSON 对象）；
+        # 如果客户端没实现 complete_json，回退到 self._client.complete。
+        complete = getattr(self._client, "complete_json", self._client.complete)
+        issues = []
+        for attempt in range(2): # 循环上限：最多两次调用 修复循环 首次格式／Schema 错误 → 补充安全修复提示，再调用一次。
+            try:
+                result = await complete(messages)
+                decision = _parse_decision(result)
+                self._output_metadata.set({"repair_count": attempt, "validation_issue_codes": issues})
+                return decision
+            # 只捕获输出校验错误,网络错误是 LLMError，预算耗尽是 HarnessError，不在这里被捕获，所以不会进入修复循环，而是向外抛出
+            except (ValidationError, json.JSONDecodeError, LLMOutputError, ValueError) as error:
+                # 只摘取可信错误类型和白名单字段路径，禁止附msg/input/ctx/url或原始输出。
+                issues = _safe_issues(error)
+                self._output_metadata.set({"repair_count": attempt, "validation_issue_codes": issues})
+                if attempt:
+                    raise MainDecisionOutputError(issues) from None
+                self._output_metadata.set({"repair_count": 1, "validation_issue_codes": issues})
+                messages = [*messages, LLMMessage(
+                    role="system", content="上次结果未通过JSON／Schema校验。安全诊断：" +
+                    json.dumps(issues, ensure_ascii=False) +
+                    "。请基于原始任务重新输出一个合法JSON对象，遵守原Schema和能力范围；"
+                    "不输出Markdown或思维过程，不编造引用、不扩增能力、不批准写入。",
+                )]
+
+
+def _parse_decision(result):
+    if not isinstance(result, str) or not result.strip():
+        raise ValueError("empty_output")
+    text = result.strip()
+    if text.startswith("```"):
+        if not text.endswith("```") or "\n" not in text:
+            raise ValueError("invalid_json_fence")
+        text = "\n".join(text.splitlines()[1:-1])
+    payload = json.loads(text)
+    # 先验证原输出，不能通过改写动作替模型修补非法组合。
+    decision = MainDecision.model_validate(payload)
+    if decision.decision == "delegate" and decision.domain == "mail" and decision.intent != "query_mail":
+        decision = MainDecision(decision="delegate", domain="mail", intent="query_mail",
+                                instruction=decision.instruction, target=decision.target)
+    return decision
+
+
+def _safe_issues(error):
+    if isinstance(error, ValidationError):
+        allowed = set(MainDecision.model_fields) | {"resource_type", "id", "source_version"}
+        return [
+            {"path": ".".join(str(part) if part in allowed else "field" for part in item["loc"]),
+             "type": item["type"]}
+            for item in error.errors(include_input=False, include_context=False, include_url=False)[:8]
+        ]
+    return [{"path": "", "type": "invalid_json" if isinstance(error, json.JSONDecodeError)
+             else "invalid_output"}]

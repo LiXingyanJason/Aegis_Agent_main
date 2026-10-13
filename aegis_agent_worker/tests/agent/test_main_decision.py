@@ -47,7 +47,7 @@ class FakeMain:
 
 class FakeRepository:
     async def list_references(self, session, run):
-        return [{"resource_type": "email", "id": str(EMAIL_ID), "source_version": "v1", "label": "续约"}]
+        return [{"resource_type": "email", "id": str(EMAIL_ID), "source_version": "v1", "label": "续约", "position": 1}]
 
     async def resolve_reference(self, session, run, reference):
         if reference.id == EMAIL_ID and reference.source_version == "v1":

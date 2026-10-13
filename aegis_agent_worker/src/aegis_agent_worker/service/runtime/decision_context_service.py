@@ -31,6 +31,7 @@ class DecisionContextService:
     async def record_decision(
         self, run, *, decision, outcome, duration_ms, capabilities, model_provider, model_name,
         candidate_capabilities=None, filter_reason_codes=None, route_policy_version=None,
+        repair_count=0, validation_issue_codes=None,
     ):
         """持久化脱敏审计事件，事务提交后发布 SSE 通知。"""
         payload = {
@@ -41,6 +42,8 @@ class DecisionContextService:
             "candidate_capabilities": list(candidate_capabilities or []),
             "filter_reason_codes": list(filter_reason_codes or []),
             "route_policy_version": route_policy_version,
+            "repair_count": repair_count,
+            "validation_issue_codes": list(validation_issue_codes or []),
             "decision": decision.decision if decision else None,
             "domain": decision.domain if decision else None,
             "intent": decision.intent if decision else None,
