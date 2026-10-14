@@ -407,3 +407,4 @@ def _strip_json_fence(value: str) -> str:
 def _is_email(value: str) -> bool:
     """以最小且可预测的规则校验一期会议参会人邮箱。"""
     return bool(re.fullmatch(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,63}", value))
+
