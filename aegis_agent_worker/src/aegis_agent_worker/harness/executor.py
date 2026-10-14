@@ -1,5 +1,4 @@
 """通用执行编排：上下文、策略、预算、超时和审计；不含SQL或模型通信。"""
-import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -8,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aegis_agent_worker.config.database import Database, TenantContext, tenant_transaction
 from aegis_agent_worker.harness.context import bind_execution, get_execution, reset_execution
 from aegis_agent_worker.harness.exceptions import HarnessError
+from aegis_agent_worker.harness.timeout import execution_timeout
 from aegis_agent_worker.harness.policies.execution import TaskExecutionPolicy
 from aegis_agent_worker.harness.policy_provider import PolicyProvider, PolicyBundle, DEFAULT_POLICIES
 from aegis_agent_worker.repository.execution_repository import ExecutionRepository
@@ -83,7 +83,7 @@ class HarnessExecutor:
         code, status = None, "succeeded"
         audit = {}
         try:  # 执行 + 超时控制；等待模型/工具时不持有数据库事务。
-            async with asyncio.timeout(min(self.policy.call_timeout(kind), max(0.01, remaining))):
+            async with execution_timeout(min(self.policy.call_timeout(kind), max(0.01, remaining))):
                 yield audit
         except BaseException as error:
             status, code = "failed", getattr(error, "code", "EXECUTION_FAILED")

@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 
-from pydantic import AnyHttpUrl, SecretStr
+from pydantic import AnyHttpUrl, SecretStr, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -37,6 +37,39 @@ class Settings(BaseSettings):
     agent_worker_poll_timeout_seconds: int = 5
     app_timezone: str = "Asia/Shanghai"
     knowledge_query_enabled: bool = False  # 6.1默认关闭：无真实索引时不将Mock能力提供给主Agent
+    embedding_enabled: bool = False
+    embedding_provider: str | None = Field(default=None, max_length=64)
+    embedding_api_base: AnyHttpUrl | None = None
+    embedding_api_key: SecretStr | None = None
+    embedding_model: str | None = Field(default=None, max_length=128)
+    embedding_model_version: str | None = Field(default=None, max_length=64)
+    embedding_dimensions: int = Field(default=1536, ge=1, le=2000)
+    embedding_send_dimensions: bool = False
+    embedding_request_timeout_seconds: float = Field(default=30, gt=0, le=120)
+    embedding_external_queries_allowed: bool = False
+    qdrant_enabled: bool = False  # 连接配置预备；索引/检索适配在6.3/6.4接入
+    qdrant_url: AnyHttpUrl | None = None
+    qdrant_api_key: SecretStr | None = None
+    qdrant_write_api_key: SecretStr | None = None
+    qdrant_collection: str = Field(default="aegis_knowledge_v1", pattern=r"^[a-zA-Z0-9_-]{1,128}$")
+    qdrant_request_timeout_seconds: float = Field(default=10, gt=0, le=60)
+
+    @model_validator(mode="after")
+    def validate_qdrant(self):
+        if self.qdrant_enabled and (not self.qdrant_url or self.qdrant_url.scheme != "https"
+            or not self.qdrant_api_key or not self.qdrant_api_key.get_secret_value().strip()):
+            raise ValueError("启用 Qdrant Cloud 必须配置 HTTPS 地址和数据库 API Key")
+        return self
+
+    @model_validator(mode="after")
+    def validate_embedding(self):
+        if self.embedding_enabled:
+            if self.embedding_provider not in {"openai", "openai_compatible"} or not all((
+                self.embedding_api_base, self.embedding_api_key and self.embedding_api_key.get_secret_value().strip(),
+                self.embedding_model and self.embedding_model.strip(),
+                self.embedding_model_version and self.embedding_model_version.strip())):
+                raise ValueError("启用 Embedding 必须单独配置兼容供应商、地址、密钥、模型及版本")
+        return self
 
     calendar_mcp_url: AnyHttpUrl | None = None
     calendar_mcp_api_key: SecretStr | None = None

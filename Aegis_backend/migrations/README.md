@@ -143,6 +143,15 @@ D:\anaconda\envs\Aegis\python.exe -m alembic upgrade head --sql
 
 ## 排查提示
 
+### 010～011：知识库及Embedding（Qdrant Cloud路线）
+
+010新增四张知识表及私有/同租户共享RLS；011新增独立Embedding预算与审计。
+本地库已升级到011。向量索引改用Qdrant Cloud，未发布且未执行的012 pgvector迁移已移除；
+当前head为011，不回滚010/011，也不使用stamp。后续SQL变更再追加新迁移。
+生产运行角色须非超级用户且无BYPASSRLS。Qdrant配置不会自动索引或开启知识检索。
+降级会删除预算/审计及知识数据，先停相关代码并备份；SQL迁移不删除远端collection。
+配置与部署步骤见[知识库权限与Embedding治理](../../aegis_agent_worker/文档/11-知识库权限与Embedding治理-阶段6.2.md)。
+
 ### 009：模型用量审计
 
 `009_model_usage_audit` 为 `run_execution_attempts` 增加用途、模型信息和三个可空 Token 列。

@@ -7,7 +7,7 @@ from test_client import _settings
 from test_harness_layers import Database, Repository, RUN
 from aegis_agent_worker.llm.client import OpenAICompatibleClient, LLMMessage, LLMError, LLMOutputError
 from aegis_agent_worker.llm.guarded_client import GuardedLLMClient
-from aegis_agent_worker.llm.usage import TokenUsage
+from aegis_agent_worker.common.usage import TokenUsage
 from aegis_agent_worker.harness.executor import HarnessExecutor
 from aegis_agent_worker.agent.specialists.main_agent import MainAgent
 from aegis_agent_worker.agent.contracts.decision import ConversationCapability

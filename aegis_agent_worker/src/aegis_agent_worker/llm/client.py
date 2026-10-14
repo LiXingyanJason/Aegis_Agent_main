@@ -7,7 +7,7 @@ from typing import Any
 import httpx
 
 from aegis_agent_worker.config.settings import Settings
-from aegis_agent_worker.llm.usage import TokenUsage
+from aegis_agent_worker.common.usage import TokenUsage
 
 
 class LLMError(RuntimeError):

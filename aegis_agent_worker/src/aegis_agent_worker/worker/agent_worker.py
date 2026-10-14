@@ -43,6 +43,7 @@ from aegis_agent_worker.harness.policy_provider import LEGACY_POLICY, KNOWLEDGE_
 from aegis_agent_worker.agent.specialists.knowledge_agent import KnowledgeAgent
 from aegis_agent_worker.agent.workflows.knowledge.factory import KnowledgeWorkflowFactory
 from aegis_agent_worker.service.knowledge.evidence_service import EvidenceService
+from aegis_agent_worker.repository.knowledge_evidence_repository import KnowledgeEvidenceRepository
 from aegis_agent_worker.service.mail.mail_planning_service import MailPlanningService
 from aegis_agent_worker.service.memory.memory_context_service import MemoryContextService
 from aegis_agent_worker.service.runtime.conversation_artifact_service import ConversationArtifactService
@@ -104,7 +105,7 @@ async def run_worker() -> None:
             knowledge_workflows = KnowledgeWorkflowFactory(
                 agent=KnowledgeAgent(llm_client, policy_provider=policies),
                 query_service=KnowledgeQueryService(database, runs, tools, tool_calls, events),
-                evidence_service=EvidenceService(), artifact_service=artifact_service,
+                evidence_service=EvidenceService(KnowledgeEvidenceRepository(database)), artifact_service=artifact_service,
                 enabled=settings.knowledge_query_enabled,
             )
             orchestrator = AgentOrchestrator(

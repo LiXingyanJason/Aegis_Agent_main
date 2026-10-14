@@ -4,7 +4,8 @@ import re
 from aegis_agent_worker.harness.exceptions import HarnessError
 from aegis_agent_worker.harness.executor import HarnessExecutor
 from aegis_agent_worker.llm.client import LLMMessage, OpenAICompatibleClient
-from aegis_agent_worker.llm.usage import TokenUsage, current_model_purpose
+from aegis_agent_worker.common.usage import TokenUsage
+from aegis_agent_worker.llm.usage import current_model_purpose
 
 
 class GuardedLLMClient:
