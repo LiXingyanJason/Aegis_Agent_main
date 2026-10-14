@@ -83,20 +83,21 @@ class TaskGraph:
         if "mail_draft_revision" in registered_workflows:
             graph.add_edge("mail_draft_revision",END)
 
-        # 先执行节点 select_run_workflow。
-        # 执行完后，调用 self._route_run_type(state)，根据当前图状态返回一个字符串
-        # 然后根据run_routes = {
-        #     "conversation": "load_context",
-        #     "mail_extraction": "mail_extraction",
-        #     "mail_reply_draft": "mail_reply_draft",
-        #     "mail_send_confirmation": "mail_send_confirmation",
-        # }选择下一节点
+
         graph.add_edge(START, "select_run_workflow")
         graph.add_conditional_edges(
             "select_run_workflow",
             self._route_run_type,
             run_routes,
         )
+        # run_routes{
+        #     "conversation": "load_context",
+        #     "mail_extraction": "mail_extraction",
+        #     "mail_reply_draft": "mail_reply_draft",
+        #     "mail_send_confirmation": "mail_send_confirmation",
+        #     "mail_draft_revision": "mail_draft_revision",
+        # }
+
         graph.add_edge("load_context", "main_decision")
         conversation_routes = {"general_reply": "generate_reply", "clarify": "clarify"}
         for capability in self._capabilities:
@@ -106,6 +107,15 @@ class TaskGraph:
             self._select_workflow,
             conversation_routes,
         )
+        # conversation_routes{
+        #     "general_reply": "generate_reply",
+        #     "clarify": "clarify", # 当前信息不足、存在歧义或决策未通过校验，需要向用户澄清，暂不执行任务。提问并结束
+        #     "calendar_read": "calendar_read",
+        #     "calendar_confirmation": "calendar_confirmation",
+        #     "mail_query": "mail_query",返回对话卡,点击对话卡直接执行对应流程,不走自然语言,因此该路由没有mail_send_confirmation等
+        #     "knowledge_query": "knowledge_query"
+        # }
+
         if "calendar_read" in registered_workflows:
             graph.add_edge("calendar_read", "generate_reply")
         if "calendar_confirmation" in registered_workflows:
@@ -114,6 +124,8 @@ class TaskGraph:
             graph.add_edge("mail_extraction", END)
         if "mail_query" in registered_workflows:
             graph.add_edge("mail_query", END)
+        if "knowledge_query" in registered_workflows:
+            graph.add_edge("knowledge_query", END)
         if "mail_reply_draft" in registered_workflows:
             graph.add_edge("mail_reply_draft", END)
         if "mail_send_confirmation" in registered_workflows:

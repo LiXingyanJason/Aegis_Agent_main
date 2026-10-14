@@ -12,7 +12,7 @@ from aegis_agent_worker.agent.workflows.calendar.factory import CalendarWorkflow
 from aegis_agent_worker.llm.client import LLMError, LLMMessage
 from aegis_agent_worker.repository.run_repository import ClaimedRun
 from aegis_agent_worker.tool.contracts import ToolContext, ToolResult
-from aegis_agent_worker.service.tool.tool_execution_service import ToolExecutionService
+from aegis_agent_worker.service.calendar.calendar_tool_execution_service import CalendarToolExecutionService
 
 
 class _FakeSession:
@@ -161,7 +161,7 @@ class _FakeToolCallRepository:
 def _calendar_factory(database, repository, gateway=None, tool_calls=None):
     """为编排测试显式组装日历领域 Factory，根图不再自行创建领域依赖。"""
     tool_execution = (
-        ToolExecutionService(database, repository, gateway, tool_calls)
+        CalendarToolExecutionService(database, repository, gateway, tool_calls)
         if gateway is not None and tool_calls is not None
         # 普通回复测试也注册可用目录；该替身不会执行工具。
         # 空目录现在另有测试确认安全澄清，不再用作正文生成测试的前置条件。

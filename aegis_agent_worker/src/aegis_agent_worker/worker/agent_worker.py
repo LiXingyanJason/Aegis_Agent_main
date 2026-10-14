@@ -39,10 +39,15 @@ from aegis_agent_worker.service.mail.mail_revision_service import MailRevisionSe
 from aegis_agent_worker.service.runtime.card_context_service import CardContextService
 from aegis_agent_worker.service.runtime.main_context_tool_service import MainContextToolService
 from aegis_agent_worker.harness.policy_provider import PolicyProvider
+from aegis_agent_worker.harness.policy_provider import LEGACY_POLICY, KNOWLEDGE_CONTRACT_POLICY
+from aegis_agent_worker.agent.specialists.knowledge_agent import KnowledgeAgent
+from aegis_agent_worker.agent.workflows.knowledge.factory import KnowledgeWorkflowFactory
+from aegis_agent_worker.service.knowledge.evidence_service import EvidenceService
 from aegis_agent_worker.service.mail.mail_planning_service import MailPlanningService
 from aegis_agent_worker.service.memory.memory_context_service import MemoryContextService
 from aegis_agent_worker.service.runtime.conversation_artifact_service import ConversationArtifactService
-from aegis_agent_worker.service.tool.tool_execution_service import ToolExecutionService
+from aegis_agent_worker.service.calendar.calendar_tool_execution_service import CalendarToolExecutionService
+from aegis_agent_worker.service.knowledge.knowledge_query_service import KnowledgeQueryService
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +64,8 @@ async def run_worker() -> None:
         # SQLAlchemy 使用 asyncpg URL；LangGraph 的 AsyncPostgresSaver 使用 psycopg URL。
         async with AsyncPostgresSaver.from_conn_string(settings.database_psycopg_url) as checkpointer:
             await checkpointer.setup() # 建立checkpointer数据库表，我们通过run_id关联每一个checkpointer
-            policies = PolicyProvider()
+            policies = PolicyProvider((LEGACY_POLICY, KNOWLEDGE_CONTRACT_POLICY),
+                default_version=KNOWLEDGE_CONTRACT_POLICY.version if settings.knowledge_query_enabled else LEGACY_POLICY.version)
             harness = HarnessExecutor(database, policy_provider=policies)
             llm_client = GuardedLLMClient(OpenAICompatibleClient(settings), harness)
             events = RunEventPublisher(redis)
@@ -69,7 +75,7 @@ async def run_worker() -> None:
             cards = CardContextService(database, policy_provider=policies)
             tools = create_default_tool_gateway(settings,harness=harness,card_context=cards)
             tool_calls = ToolCallRepository()
-            tool_execution = ToolExecutionService(database, runs, tools, tool_calls, events)
+            tool_execution = CalendarToolExecutionService(database, runs, tools, tool_calls, events)
             artifact_service = ConversationArtifactService(database, runs, events)
             calendar_confirmation = CalendarConfirmationService(
                 database, runs, tool_execution, events, tools, tool_calls
@@ -95,12 +101,18 @@ async def run_worker() -> None:
                 input_requests=input_requests,
                 revision_service=MailRevisionService(database,runs,events),
             )
+            knowledge_workflows = KnowledgeWorkflowFactory(
+                agent=KnowledgeAgent(llm_client, policy_provider=policies),
+                query_service=KnowledgeQueryService(database, runs, tools, tool_calls, events),
+                evidence_service=EvidenceService(), artifact_service=artifact_service,
+                enabled=settings.knowledge_query_enabled,
+            )
             orchestrator = AgentOrchestrator(
                 database,
                 llm_client,
                 runs=runs,
                 events=events,
-                workflow_factories=(calendar_workflows, mail_workflows),
+                workflow_factories=(calendar_workflows, mail_workflows, knowledge_workflows),
                 checkpointer=checkpointer,
                 mail_tasks=mail_tasks,
                 memory_context=memory_context,

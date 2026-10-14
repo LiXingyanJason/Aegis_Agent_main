@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     agent_queue_name: str = "aegis:agent-runs"
     agent_worker_poll_timeout_seconds: int = 5
     app_timezone: str = "Asia/Shanghai"
+    knowledge_query_enabled: bool = False  # 6.1默认关闭：无真实索引时不将Mock能力提供给主Agent
 
     calendar_mcp_url: AnyHttpUrl | None = None
     calendar_mcp_api_key: SecretStr | None = None

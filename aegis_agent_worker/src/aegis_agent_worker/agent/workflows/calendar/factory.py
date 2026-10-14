@@ -9,7 +9,7 @@ from aegis_agent_worker.agent.workflows.calendar.confirmation_graph import Calen
 from aegis_agent_worker.agent.workflows.calendar.read_graph import CalendarReadWorkflow
 from aegis_agent_worker.service.calendar.calendar_confirmation_service import CalendarConfirmationService
 from aegis_agent_worker.service.runtime.conversation_artifact_service import ConversationArtifactService
-from aegis_agent_worker.service.tool.tool_execution_service import ToolExecutionService
+from aegis_agent_worker.service.calendar.calendar_tool_execution_service import CalendarToolExecutionService
 
 
 @dataclass(frozen=True, slots=True)
@@ -17,7 +17,7 @@ class CalendarWorkflowFactory:
     """仅由日历领域决定其子图依赖和注册名称。"""
 
     calendar_agent: CalendarAgent
-    tool_execution: ToolExecutionService | None
+    tool_execution: CalendarToolExecutionService | None
     confirmation_service: CalendarConfirmationService | None
     artifact_service: ConversationArtifactService | None = None
     planning_audit: object | None = None

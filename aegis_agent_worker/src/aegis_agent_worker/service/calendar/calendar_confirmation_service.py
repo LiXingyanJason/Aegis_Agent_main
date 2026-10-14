@@ -20,7 +20,7 @@ from aegis_agent_worker.config.database import Database, TenantContext, tenant_t
 from aegis_agent_worker.event.run_event import RunEventPublisher
 from aegis_agent_worker.repository.run_repository import AgentRunRepository, ClaimedRun
 from aegis_agent_worker.repository.tool_repository import ToolCallRepository
-from aegis_agent_worker.service.tool.tool_execution_service import ToolExecutionService
+from aegis_agent_worker.service.calendar.calendar_tool_execution_service import CalendarToolExecutionService
 from aegis_agent_worker.tool.contracts import ToolError, ToolInvocation
 from aegis_agent_worker.tool.gateway import ToolGateway
 
@@ -40,7 +40,7 @@ class CalendarConfirmationService:
         self,
         database: Database,
         runs: AgentRunRepository,
-        tool_execution: ToolExecutionService | None,
+        tool_execution: CalendarToolExecutionService | None,
         events: RunEventPublisher | None = None,
         tools: ToolGateway | None = None,
         tool_calls: ToolCallRepository | None = None,

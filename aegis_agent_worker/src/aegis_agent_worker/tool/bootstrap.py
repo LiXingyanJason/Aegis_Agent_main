@@ -10,11 +10,17 @@ from aegis_agent_worker.tool.gateway import ToolGateway
 from aegis_agent_worker.tool.registry import ToolRegistry
 from aegis_agent_worker.tool.context.handler import CardContextToolHandler
 from aegis_agent_worker.agent.contracts.context import CONTEXT_SCHEMAS
+from aegis_agent_worker.agent.contracts.knowledge import KnowledgeQueryPlan
+from aegis_agent_worker.tool.knowledge.handler import KnowledgeSearchHandler
+from aegis_agent_worker.service.knowledge.retrieval_service import RetrievalService
 
 
-def create_default_tool_gateway(settings: Settings, harness=None, card_context=None) -> ToolGateway:
+def create_default_tool_gateway(settings: Settings, harness=None, card_context=None, knowledge_retrieval=None) -> ToolGateway:
     """注册日历、邮件 MCP 工具及各自的连接权限要求。"""
     registry = ToolRegistry()
+    registry.register(ToolDefinition(name="knowledge.search", version="1.0", risk_level="read",
+        mcp_server="aegis-internal", description="查询当前用户已授权知识资料；未配置不返回虚构数据。",
+        argument_schema=KnowledgeQueryPlan), KnowledgeSearchHandler(knowledge_retrieval or RetrievalService()))
     if card_context is not None:
         context_handler = CardContextToolHandler(card_context)
         for name, schema in CONTEXT_SCHEMAS.items():

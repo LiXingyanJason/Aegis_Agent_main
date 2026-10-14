@@ -15,7 +15,7 @@ from aegis_agent_worker.agent.workflows.calendar.state import CalendarReadState
 from aegis_agent_worker.config.database import TenantContext
 from aegis_agent_worker.repository.run_repository import ClaimedRun
 from aegis_agent_worker.service.runtime.conversation_artifact_service import ConversationArtifactService
-from aegis_agent_worker.service.tool.tool_execution_service import ToolExecutionService
+from aegis_agent_worker.service.calendar.calendar_tool_execution_service import CalendarToolExecutionService
 from aegis_agent_worker.service.calendar.calendar_confirmation_service import explicit_interval_availability
 
 
@@ -25,7 +25,7 @@ class CalendarReadWorkflow:
     def __init__(
         self,
         calendar_agent: CalendarAgent,
-        tool_execution: ToolExecutionService | None,
+        tool_execution: CalendarToolExecutionService | None,
         artifact_service: ConversationArtifactService | None = None,
         planning_audit=None,
     ) -> None:

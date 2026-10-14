@@ -20,6 +20,12 @@ class TaskGraphState(TypedDict, total=False):
     main_decision: dict[str, Any]
     reply_context: list[dict[str, Any]]  # 仅只读卡片安全结果，不能证明外部业务已执行
     handoff: dict[str, Any]
+    knowledge_plan: dict[str, Any]
+    knowledge_evidence: list[dict[str, Any]]
+    knowledge_answer: dict[str, Any]
+    knowledge_error: str
+    knowledge_error_code: str
+    knowledge_status: str
     # 领域 Agent 产生、且已经过 Pydantic 校验的受限执行计划。
     plan: dict[str, Any]
     # 工具调用的脱敏结果摘要；完整事实仍在 tool_calls 等业务表。

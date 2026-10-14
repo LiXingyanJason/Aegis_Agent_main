@@ -1,4 +1,4 @@
-"""受控工具调用的事务、审计与 SSE 预览编排。"""
+"""日历只读工具调用的事务、审计与 SSE 预览编排。"""
 
 import json
 import logging
@@ -29,8 +29,8 @@ class ReadToolExecutionResult:
     output_summary: dict[str, Any] | None = None
 
 
-class ToolExecutionService:
-    """将工具网络调用与其步骤、审计、事件记录组织为可复用应用服务。"""
+class CalendarToolExecutionService:
+    """编排日历读取；知识检索和邮件业务使用各自的领域服务。"""
 
     def __init__(
         self,
@@ -53,6 +53,8 @@ class ToolExecutionService:
         持久化只读工具调用、发出 SSE 预览事件，并返回可供 LLM 使用的可信上下文。
         invocation:需要调用工具的名称
         """
+        if invocation.tool_name not in {"calendar.list_events", "calendar.find_free_time"}:
+            raise ToolError("TOOL_NOT_ALLOWED", "日历读取服务只接受日历只读工具")
         definition = self._tools.get_definition(invocation.tool_name) # 读取该工具权威定义(写入数据库),工具白名单检查
         label = "正在查询可用时间" if invocation.tool_name.endswith("find_free_time") else "正在查询日程"
         step_key = invocation.tool_name.replace(".", "_")

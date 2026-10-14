@@ -8,6 +8,8 @@
       <sourceFolder url="file://$MODULE_DIR$/aegis_agent_worker/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Email_mcp_server" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Email_mcp_server/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/aegis_agent_worker/evaluation-results/snapshots/ed91bfb/aegis_agent_worker/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/aegis_agent_worker/evaluation-results/wheel-build-verified/lib" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/参考文档" />
     </content>
     <orderEntry type="jdk" jdkName="D:\anaconda\envs\Aegis" jdkType="Python SDK" />

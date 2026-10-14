@@ -1,5 +1,5 @@
 """当前生产使用的执行限制集中在 LEGACY_POLICY，版本为 harness-v1，由 PolicyProvider 提供"""
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from types import MappingProxyType
 
 from aegis_agent_worker.harness.exceptions import HarnessError
@@ -40,6 +40,14 @@ LEGACY_POLICY = PolicyBundle(
         tool_result_bytes=2_000_000, mail_source_chars=12000, repair_response_chars=12000,
         history_items=8, history_chars=12000, user_message_chars=4000),
 )
+
+
+# 新能力必须新增版本，不改写已发布harness-v1；只在知识入口显式启用时使用。
+KNOWLEDGE_CONTRACT_POLICY = replace(LEGACY_POLICY, execution=replace(
+    LEGACY_POLICY.execution, version="harness-v2-knowledge-contract",
+    tool_scopes=tuple((kind, tools | frozenset({"knowledge.search"}) if kind == "conversation" else tools)
+                      for kind, tools in LEGACY_POLICY.execution.tool_scopes),
+))
 
 
 class PolicyProvider:
