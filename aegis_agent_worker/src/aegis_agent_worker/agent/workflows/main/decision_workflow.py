@@ -12,6 +12,7 @@ from aegis_agent_worker.agent.contracts.decision import (
 )
 from aegis_agent_worker.agent.graph.state import TaskGraphState
 from aegis_agent_worker.agent.routing.capability_selector import CapabilitySelector, capability_id
+from aegis_agent_worker.agent.routing.workflow_router import WorkflowRouter, WorkflowRoutingError
 from aegis_agent_worker.agent.specialists.main_agent import MainDecisionOutputError
 from aegis_agent_worker.agent.contracts.context import MainContextReadRequest, CONTEXT_SCHEMAS
 from aegis_agent_worker.tool.contracts import ToolError
@@ -40,10 +41,13 @@ class MainDecisionState(TaskGraphState, total=False):
 class MainDecisionWorkflow:
     """LLM 与下一步决策在图层；数据库访问与业务核验委托 Service。"""
 
-    def __init__(self, main_agent, context_service, capabilities, capability_selector=None, context_tools=None, policy_provider=None):
+    def __init__(self, main_agent, context_service, capabilities, capability_selector=None, context_tools=None, policy_provider=None, workflow_router=None):
         self._main_agent = main_agent
         self._context_service = context_service
         self._capabilities = tuple(capabilities)
+        # 生产由根图传入实际注册节点；独立子图测试可使用能力声明目录。
+        self._router = workflow_router or WorkflowRouter(
+            self._capabilities, {item.workflow for item in self._capabilities})
         self._selector = capability_selector or CapabilitySelector()
         self._context_tools = context_tools
         self._policies = policy_provider or DEFAULT_POLICIES
@@ -196,10 +200,6 @@ class MainDecisionWorkflow:
         return {"context_results": results, "context_request": {},
                 "context_read_count": state["context_read_count"]+1}
 
-    def _capability(self, decision):
-        return next((item for item in self._capabilities
-                     if item.domain == decision.domain and item.intent == decision.intent), None)
-
     def _validate_capability(self, state):
         """模型只允许选择当前领域工厂显式声明的能力。"""
         decision = MainDecision.model_validate(state["main_decision"])
@@ -208,13 +208,13 @@ class MainDecisionWorkflow:
                     and any("card_id" in item for item in state.get("context_results", []))):
                 return self._clarification("已读取卡片但未明确有效目标，请选择对应邮件或重新查询。",
                                            "invalid_card_reference")
-            capability = self._capability(decision)
-            if capability is None:
-                return self._clarification("当前尚不支持这项操作，请选择已有日历或邮件功能。",
-                                           "unregistered_capability")
-            if capability_id(capability) not in state["candidate_capabilities"]:
-                return self._clarification("执行方向与当前任务不一致，请明确要处理日历还是邮件。",
-                                           "outside_candidate_set")
+            try:
+                capability = self._router.resolve_capability(decision, state["candidate_capabilities"])
+            except WorkflowRoutingError as error:
+                question = ("执行方向与当前任务不一致，请明确要处理日历还是邮件。"
+                            if error.code == "outside_candidate_set" else
+                            "当前尚不支持这项操作，请选择已有日历或邮件功能。")
+                return self._clarification(question, error.code)
             if capability.requires_target and decision.target is None and decision.card_reference is None:
                 return self._clarification("请明确选择要处理的邮件。", "missing_target")
         return {}
@@ -251,14 +251,10 @@ class MainDecisionWorkflow:
         """构造专家输入和根图条件边输出，未通过校验的决策不能形成交接。"""
         decision = MainDecision.model_validate(state["main_decision"])
         handoff = None
-        workflow = "clarify" if decision.decision == "clarify" else "general_reply"
+        workflow = self._router.resolve_decision(decision, state["candidate_capabilities"])
         if decision.decision == "delegate":
-            capability = self._capability(decision)
-            if capability is None or capability_id(capability) not in state["candidate_capabilities"]:
-                raise RuntimeError("未校验的能力不能交接")
             handoff = AgentHandoff(domain=decision.domain, intent=decision.intent,
                                    instruction=decision.instruction, target=decision.target)
-            workflow = capability.workflow
         return {
             "handoff": handoff.model_dump(mode="json") if handoff else {},
             "intent": decision.intent or decision.decision, "workflow": workflow,

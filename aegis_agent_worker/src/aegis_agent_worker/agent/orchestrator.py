@@ -9,6 +9,7 @@ from uuid import UUID
 
 from aegis_agent_worker.agent.graph.graph_runner import GraphRunner
 from aegis_agent_worker.agent.graph.graph_registry import WorkflowRegistrar
+from aegis_agent_worker.agent.routing.workflow_router import WorkflowRoutingError
 from aegis_agent_worker.agent.graph.task_graph import LLMGraphError, TaskGraph, TaskGraphDependencies
 from aegis_agent_worker.config.database import Database, TenantContext
 from aegis_agent_worker.event.run_event import RunEventPublisher
@@ -162,6 +163,15 @@ class AgentOrchestrator:
             return AgentExecutionResult(status="completed")
         except asyncio.CancelledError:
             raise
+        except WorkflowRoutingError as error:
+            if self._mail_tasks is not None:
+                await self._mail_tasks.mark_failed(run, error.code)
+            await self._lifecycle.fail_run(
+                run, step_id=step_id, error_code="WORKFLOW_ROUTING_FAILED", error_message=error.code,
+            )
+            return AgentExecutionResult(
+                status="failed", error_code="WORKFLOW_ROUTING_FAILED", error_message=error.code,
+            )
         except HarnessError as error:
             if self._mail_tasks is not None:
                 await self._mail_tasks.mark_failed(run,str(error))
