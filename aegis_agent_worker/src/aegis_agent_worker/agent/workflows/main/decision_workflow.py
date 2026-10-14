@@ -280,6 +280,7 @@ class MainDecisionWorkflow:
             validation_issue_codes=state.get("validation_issue_codes", []),
             context_read_count=state.get("context_read_count", 0),
             execution_policy_version=self._policies.current(state).version,
+            fallback_reason=outcome if outcome != "validated" else None,
             referenced_cards=[{key: item[key] for key in ("card_id", "query_id", "status") if key in item}
                               for item in state.get("context_results", []) if "card_id" in item],
         )

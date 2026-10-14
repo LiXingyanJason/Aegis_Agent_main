@@ -59,8 +59,15 @@ class ExecutionRepository:
 
     async def finish_attempt(
         self, session: AsyncSession, attempt_id: UUID, *, status: str, error_code: str | None,
+        purpose: str | None = None, model_provider: str | None = None, model_name: str | None = None,
+        prompt_tokens: int | None = None, completion_tokens: int | None = None,
+        total_tokens: int | None = None,
     ) -> None:
         await session.execute(text("""
             UPDATE run_execution_attempts
-            SET status=:status,error_code=:code,finished_at=now() WHERE id=:id
-        """), dict(status=status, code=error_code, id=attempt_id))
+            SET status=:status,error_code=:code,finished_at=now(),purpose=:purpose,
+                model_provider=:provider,model_name=:model,prompt_tokens=:prompt,
+                completion_tokens=:completion,total_tokens=:total WHERE id=:id
+        """), dict(status=status, code=error_code, id=attempt_id, purpose=purpose,
+                   provider=model_provider, model=model_name, prompt=prompt_tokens,
+                   completion=completion_tokens, total=total_tokens))

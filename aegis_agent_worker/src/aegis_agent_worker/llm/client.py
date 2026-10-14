@@ -1,15 +1,19 @@
 """OpenAI 兼容聊天补全客户端。"""
 
 from dataclasses import dataclass
+from contextvars import ContextVar
 from typing import Any
 
 import httpx
 
 from aegis_agent_worker.config.settings import Settings
+from aegis_agent_worker.llm.usage import TokenUsage
 
 
 class LLMError(RuntimeError):
     """模型服务不可用、超时或返回格式异常时抛出。"""
+
+    code = "LLM_UNAVAILABLE"
 
 
 class LLMOutputError(LLMError):
@@ -32,6 +36,15 @@ class OpenAICompatibleClient:
     def __init__(self, settings: Settings, client: httpx.AsyncClient | None = None) -> None:
         self._settings = settings
         self._client = client
+        self._usage = ContextVar("llm_token_usage", default=None)
+
+    @property
+    def usage(self) -> TokenUsage:
+        """当前协程最近一次调用的用量，避免并发任务相互覆盖。"""
+        return self._usage.get() or TokenUsage()
+
+    def reset_usage(self) -> None:
+        self._usage.set(None)
 
     @property
     def provider_name(self) -> str:
@@ -52,6 +65,7 @@ class OpenAICompatibleClient:
         return await self._complete(messages, json_mode=True)
 
     async def _complete(self, messages: list[LLMMessage], *, json_mode: bool) -> str:
+        self.reset_usage()
         # DeepSeek 的 Chat API 兼容 OpenAI Chat Completions 请求与响应格式，复用同一客户端。
         if self._settings.model_provider.lower() not in {
             "openai",
@@ -83,6 +97,8 @@ class OpenAICompatibleClient:
             if owns_client:
                 await client.aclose()
 
+        # 即使内容无效，供应商已报告的本次用量仍需要审计。
+        self._usage.set(TokenUsage.from_payload(payload))
         try:
             content = payload["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as error:

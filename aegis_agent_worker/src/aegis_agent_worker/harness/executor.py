@@ -60,7 +60,7 @@ class HarnessExecutor:
     @asynccontextmanager
     async def attempt(
         self, kind: str, label: str, risk_flags: list[str] | None = None,
-    ) -> AsyncIterator[None]:
+    ) -> AsyncIterator[dict]:
         """白名单 + 次数 + 时长 + 超时四重约束，并逐次审计入库。"""
         runtime = get_execution()  # 校验上下文
         run = runtime.run
@@ -81,9 +81,10 @@ class HarnessExecutor:
                 session, run, kind=kind, label=label, risk_flags=risk_flags,
             )
         code, status = None, "succeeded"
+        audit = {}
         try:  # 执行 + 超时控制；等待模型/工具时不持有数据库事务。
             async with asyncio.timeout(min(self.policy.call_timeout(kind), max(0.01, remaining))):
-                yield
+                yield audit
         except BaseException as error:
             status, code = "failed", getattr(error, "code", "EXECUTION_FAILED")
             if isinstance(error, TimeoutError):
@@ -94,4 +95,5 @@ class HarnessExecutor:
             async with self._session(run) as session:
                 await self._repository.finish_attempt(
                     session, attempt_id, status=status, error_code=code,
+                    **audit,
                 )

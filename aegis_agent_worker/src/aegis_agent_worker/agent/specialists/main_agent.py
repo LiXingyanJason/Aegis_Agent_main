@@ -9,6 +9,7 @@ from aegis_agent_worker.agent.contracts.decision import MainDecision
 from aegis_agent_worker.agent.contracts.context import MainContextReadRequest
 from pydantic import ValidationError
 from aegis_agent_worker.llm.client import LLMMessage, LLMOutputError
+from aegis_agent_worker.llm.usage import model_call_purpose
 from aegis_agent_worker.harness.policy_provider import DEFAULT_POLICIES
 
 
@@ -113,7 +114,8 @@ class MainAgent:
         issues = []
         for attempt in range(limits.max_repairs + 1): # 首次生成＋策略允许的有界修复，均经过Harness。
             try:
-                result = await complete(messages)
+                with model_call_purpose("main_routing_repair" if attempt else "main_routing"):
+                    result = await complete(messages)
                 decision = _parse_decision(result)
                 self._output_metadata.set({"repair_count": attempt, "validation_issue_codes": issues})
                 return decision

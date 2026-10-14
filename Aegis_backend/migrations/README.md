@@ -143,6 +143,14 @@ D:\anaconda\envs\Aegis\python.exe -m alembic upgrade head --sql
 
 ## 排查提示
 
+### 009：模型用量审计
+
+`009_model_usage_audit` 为 `run_execution_attempts` 增加用途、模型信息和三个可空 Token 列。
+先执行 `python -m alembic upgrade head`，再启动新版 Worker；旧 API／Worker 兼容新增可空列。
+缺失用量和历史数据保持 NULL，不回填 0。迁移不改变 RLS、字符预算或任务状态。
+降级前停止新版 Worker 并备份审计数据，降级会删除新增列。
+详见 [路由审计与模型用量可观测性](../../aegis_agent_worker/文档/08-路由审计与模型用量可观测性.md)。
+
 | 现象 | 优先检查 |
 | --- | --- |
 | `Can't locate revision identified by ...` | 使用 `alembic heads` 核对真实 revision ID；旧库可在确认结构后用 `stamp --purge 002_msg_client_id_uq` 修正版本记录。 |

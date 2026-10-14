@@ -4,6 +4,7 @@ import re
 from aegis_agent_worker.harness.exceptions import HarnessError
 from aegis_agent_worker.harness.executor import HarnessExecutor
 from aegis_agent_worker.llm.client import LLMMessage, OpenAICompatibleClient
+from aegis_agent_worker.llm.usage import TokenUsage, current_model_purpose
 
 
 class GuardedLLMClient:
@@ -40,8 +41,13 @@ class GuardedLLMClient:
             r"忽略.{0,12}(系统|之前|以上|指令)|ignore.{0,20}(previous|system)", user_text, re.I,
         ):
             flags.append("instruction_override_pattern")
-        # 占用模型预算并进入审计上下文
-        async with self._harness.attempt("model", self.model_name, risk_flags=flags):
+        # 占用模型预算、token量并进入审计上下文
+        async with self._harness.attempt("model", self.model_name, risk_flags=flags) as audit:
+            audit.update(purpose=current_model_purpose(json_mode), model_provider=self.provider_name,
+                         model_name=self.model_name)
+            reset_usage = getattr(self._client, "reset_usage", None)
+            if reset_usage is not None:
+                reset_usage()
             # json_mode=True，需要 JSON 输出。等价于
             # if json_mode:
             #     complete = self._client.complete_json   # 没有就退回 complete
@@ -49,7 +55,14 @@ class GuardedLLMClient:
             #     complete = self._client.complete
             complete = (getattr(self._client, "complete_json", self._client.complete)
                         if json_mode else self._client.complete)
-            result = await complete(messages)  # 真正调用模型
+            try:
+                result = await complete(messages)  # 真正调用模型
+            finally:
+                usage = getattr(self._client, "usage", None)
+                if not isinstance(usage, TokenUsage):
+                    usage = TokenUsage()
+                audit.update(prompt_tokens=usage.prompt_tokens, completion_tokens=usage.completion_tokens,
+                             total_tokens=usage.total_tokens)
             if len(result) > self._harness.policy.max_output_chars:  # 输出大小校验
                 raise HarnessError("MODEL_OUTPUT_TOO_LARGE", "模型输出超过允许大小")
             return result

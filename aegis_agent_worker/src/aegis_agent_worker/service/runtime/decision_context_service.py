@@ -34,6 +34,7 @@ class DecisionContextService:
         repair_count=0, validation_issue_codes=None,
         context_read_count=0, referenced_cards=None,
         execution_policy_version=None,
+        fallback_reason=None, # 保留安全候选与修复信息
     ):
         """持久化脱敏审计事件，事务提交后发布 SSE 通知。"""
         payload = {
@@ -49,6 +50,7 @@ class DecisionContextService:
             "context_read_count": context_read_count,
             "referenced_cards": list(referenced_cards or []),
             "execution_policy_version": execution_policy_version,
+            "fallback_reason": fallback_reason,
             "decision": decision.decision if decision else None,
             "domain": decision.domain if decision else None,
             "intent": decision.intent if decision else None,
