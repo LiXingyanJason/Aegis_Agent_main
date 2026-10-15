@@ -25,6 +25,11 @@ export async function listMailMessages() {
   return response.data.data
 }
 
+export async function setMailImportance(emailId, isImportant) {
+  const response = await http.patch('/mail/messages/' + emailId + '/importance', { is_important: isImportant })
+  return response.data.data
+}
+
 export async function getMailMessageDetail(emailId) {
   const response = await http.get('/mail/messages/' + emailId)
   return response.data.data
@@ -47,6 +52,11 @@ export async function updateMailDraft(draftId, payload) {
 
 export async function listSentMailMessages() {
   const response = await http.get('/mail/sent-messages')
+  return response.data.data
+}
+
+export async function setSentMailFollowUp(sentMessageId, awaitingReply) {
+  const response = await http.patch('/mail/sent-messages/' + sentMessageId + '/follow-up', { awaiting_reply: awaitingReply })
   return response.data.data
 }
 

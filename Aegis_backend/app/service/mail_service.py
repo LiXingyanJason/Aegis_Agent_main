@@ -171,6 +171,18 @@ class MailService:
             session, tenant_id=local_user.tenant_id, user_id=local_user.id
         )
 
+    async def set_message_importance(self, session: AsyncSession, local_user: LocalUser, email_id: UUID, is_important: bool):
+        return await self._repository.set_message_importance(
+            session, tenant_id=local_user.tenant_id, user_id=local_user.id,
+            email_id=email_id, is_important=is_important,
+        )
+
+    async def set_sent_follow_up(self, session: AsyncSession, local_user: LocalUser, sent_message_id: UUID, awaiting_reply: bool):
+        return await self._repository.set_sent_follow_up(
+            session, tenant_id=local_user.tenant_id, user_id=local_user.id,
+            sent_message_id=sent_message_id, awaiting_reply=awaiting_reply,
+        )
+
     async def create_todo_drafts(self, session: AsyncSession, local_user: LocalUser, email_id, param):
         """复制已有提取结果的待办候选，不调用 Email MCP 或 LLM。"""
         return await self._repository.create_todo_drafts(

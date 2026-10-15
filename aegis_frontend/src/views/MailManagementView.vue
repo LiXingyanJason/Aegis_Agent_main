@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import {
   getMailDraft,
   getMailMessageDetail,
@@ -13,6 +14,8 @@ import {
   requestMailSendConfirmation,
   updateMailDraft,
   requestDraftRevision,
+  setMailImportance,
+  setSentMailFollowUp,
 } from '../api/mail'
 import { useAuthStore } from '../store/auth'
 import { subscribeRunEvents, getRunDetail } from '../api/run'
@@ -33,6 +36,8 @@ const draftsLoaded = ref(false)
 const sentLoaded = ref(false)
 const draftsError = ref('')
 const sentError = ref('')
+const flagBusyId = ref(null)
+const flagError = ref('')
 const draftDialogVisible = ref(false)
 const draftDetailLoading = ref(false)
 const draftSaving = ref(false)
@@ -316,6 +321,21 @@ async function loadMessages() {
   }
 }
 
+async function toggleImportance(message) {
+  flagBusyId.value = message.email_id
+  flagError.value = ''
+  try {
+    const result = await setMailImportance(message.email_id, !message.is_important)
+    messages.value = messages.value.map((item) => item.email_id === message.email_id
+      ? { ...item, is_important: result.is_important } : item)
+    ElMessage.success(result.is_important ? '已标为重要邮件。' : '已取消重要标记。')
+  } catch (cause) {
+    flagError.value = errorDetail(cause)?.message || cause.message || '保存重要标记失败。'
+  } finally {
+    flagBusyId.value = null
+  }
+}
+
 async function requestExtraction(message) {
   const emailId = message.email_id
   setOperation(emailId, { type: 'extraction', status: 'submitting', error: '' })
@@ -450,6 +470,21 @@ async function loadSentMessages() {
   }
 }
 
+async function toggleFollowUp(message) {
+  flagBusyId.value = message.sent_message_id
+  flagError.value = ''
+  try {
+    const result = await setSentMailFollowUp(message.sent_message_id, !message.awaiting_reply)
+    sentMessages.value = sentMessages.value.map((item) => item.sent_message_id === message.sent_message_id
+      ? { ...item, awaiting_reply: result.awaiting_reply } : item)
+    ElMessage.success(result.awaiting_reply ? '已加入等待回复事项。' : '已结束等待回复。')
+  } catch (cause) {
+    flagError.value = errorDetail(cause)?.message || cause.message || '保存等待回复状态失败。'
+  } finally {
+    flagBusyId.value = null
+  }
+}
+
 async function selectTab(tab) {
   activeTab.value = tab
   if (tab === 'drafts' && !draftsLoaded.value) await loadDrafts()
@@ -554,6 +589,8 @@ onMounted(async () => {
     const message = messages.value.find((item) => item.email_id === route.query.email_id)
       ?? { email_id: route.query.email_id, subject: '邮件详情', from_email: '', extraction_status: 'not_generated' }
     await openMailDetail(message)
+  } else if (route.query.tab === 'sent') {
+    activeTab.value = 'sent'
   }
 })
 onBeforeUnmount(() => {
@@ -569,11 +606,13 @@ onBeforeUnmount(() => {
     <aside class="sidebar">
       <div class="brand"><span class="mark">⌾</span>Aegis PA</div>
       <p class="nav-label app-nav-label">工作空间</p>
+      <router-link class="nav" :to="{ name: 'today' }">▦ 今日工作台</router-link>
       <router-link class="nav" :to="{ name: 'tasks' }">◌ 任务对话</router-link>
       <router-link class="nav" :to="{ name: 'calendar' }">▦ 日历</router-link>
       <router-link class="nav active" :to="{ name: 'mail-management' }">✉ 邮件管理</router-link>
       <router-link class="nav" :to="{ name: 'todo-plans' }">☷ 待办计划</router-link>
       <router-link class="nav" :to="{ name: 'confirmations' }">✓ 操作确认</router-link>
+      <router-link class="nav" :to="{ name: 'knowledge' }">▤ 知识资料</router-link>
       <router-link class="nav" :to="{ name: 'memories' }">◇ 长期记忆</router-link>
       <span class="nav disabled">◫ 连接与审计（待接入）</span>
 
@@ -606,6 +645,7 @@ onBeforeUnmount(() => {
 
         <div class="mail-card-body">
           <RunInputPanel @answered="resumeBackground" @cancelled="cancelBackground" />
+          <el-alert v-if="flagError" :title="flagError" type="error" :closable="false" show-icon />
           <div class="mail-tabs" role="tablist" aria-label="邮件分区">
             <button class="mail-tab" :class="{ active: activeTab === 'received' }" type="button" @click="selectTab('received')">
               收到 <span>{{ receivedCount }}</span>
@@ -652,7 +692,7 @@ onBeforeUnmount(() => {
                   <tbody>
                     <tr v-for="message in messages" :key="message.email_id">
                       <td>
-                        <div class="title">{{ message.customer || message.from_email }} · {{ message.subject }}</div>
+                        <div class="title">{{ message.customer || message.from_email }} · {{ message.subject }} <span v-if="message.is_important" class="badge write">重要</span></div>
                         <div class="detail">{{ message.from_email }} · {{ formatTime(message.received_at) }}</div>
                       </td>
                       <td class="mail-insights">
@@ -705,6 +745,7 @@ onBeforeUnmount(() => {
                           @click="requestExtraction(message)"
                         >{{ extractionFor(message.email_id) ? '重新生成摘要' : '生成摘要' }}</el-button>
                         <el-button class="mail-detail-button" size="small" @click="openMailDetail(message)">邮件详情</el-button>
+                        <el-button size="small" :loading="flagBusyId === message.email_id" @click="toggleImportance(message)">{{ message.is_important ? '取消重要' : '标为重要' }}</el-button>
                         <p v-if="operationFor(message.email_id)?.status === 'running'" class="mail-progress">任务已提交，正在处理…</p>
                         <p v-if="operationFor(message.email_id)?.status === 'waiting_input'" class="mail-progress">任务等待补充信息，请填写上方问题。</p>
                         <p v-if="operationFor(message.email_id)?.status === 'failed'" class="mail-error">{{ operationFor(message.email_id)?.error }}</p>
@@ -790,12 +831,12 @@ onBeforeUnmount(() => {
               <div class="section-head">
                 <div>
                   <h2>已发送</h2>
-                  <p class="muted">查看服务端已记录的发送结果；尚未实现发送能力时，此列表通常为空。</p>
+                  <p class="muted">查看已发送结果，并手动标记需要等待对方回复的邮件；收到回复后请手动结束等待。</p>
                 </div>
               </div>
               <div class="mail-table-wrap">
                 <table class="mail-table">
-                  <thead><tr><th>邮件</th><th>收件人</th><th>发送时间</th><th>状态</th></tr></thead>
+                  <thead><tr><th>邮件</th><th>收件人</th><th>发送时间</th><th>状态</th><th>跟进</th></tr></thead>
                   <tbody>
                     <tr v-for="message in sentMessages" :key="message.sent_message_id">
                       <td>
@@ -805,9 +846,13 @@ onBeforeUnmount(() => {
                       <td>{{ recipientsText(message.recipients) }}</td>
                       <td>{{ formatTime(message.sent_at) }}</td>
                       <td><span class="badge" :class="message.status === 'sent' ? 'success' : 'neutral'">{{ sentStatus(message.status) }}</span></td>
+                      <td class="mail-actions">
+                        <span v-if="message.awaiting_reply" class="badge write">等待回复</span>
+                        <el-button size="small" :disabled="message.status !== 'sent'" :loading="flagBusyId === message.sent_message_id" @click="toggleFollowUp(message)">{{ message.awaiting_reply ? '结束等待' : '标记等待回复' }}</el-button>
+                      </td>
                     </tr>
                     <tr v-if="!loading && sentLoaded && sentMessages.length === 0">
-                      <td colspan="4" class="mail-empty">尚无已发送邮件记录。</td>
+                      <td colspan="5" class="mail-empty">尚无已发送邮件记录。</td>
                     </tr>
                   </tbody>
                 </table>

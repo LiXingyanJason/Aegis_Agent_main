@@ -1,6 +1,7 @@
 """带类型校验的环境配置；其他模块不得直接读取环境变量。"""
 
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import AnyHttpUrl, SecretStr, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -35,6 +36,15 @@ class Settings(BaseSettings):
     default_tenant_name: str | None = None
 
     agent_queue_name: str = "aegis:agent-runs"
+    knowledge_index_queue_name: str = "aegis:knowledge-index-jobs"
+    knowledge_storage_root: str = str(Path(__file__).resolve().parents[3]/"data"/"knowledge-sources")
+    knowledge_max_source_bytes: int = Field(default=262144, ge=1024, le=1048576)
+    knowledge_index_max_claims: int = Field(default=3,ge=1,le=10)
+    # API仅保存模型空间元数据，不接收或调用Embedding密钥。
+    embedding_provider: str | None = None
+    embedding_model: str | None = None
+    embedding_model_version: str | None = None
+    embedding_dimensions: int = Field(default=1024, ge=1, le=2000)
 
     # 邮件列表同步由主后端直接调用；摘要和起草任务随后由独立 Agent Worker 调用。
     email_mcp_url: AnyHttpUrl | None = None

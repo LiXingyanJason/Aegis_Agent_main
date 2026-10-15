@@ -17,6 +17,7 @@ class MailMessageVO(BaseModel):
     received_at: datetime
     source_version: str
     extraction_status: str
+    is_important: bool = False
 
 
 class MailMessagesVO(BaseModel):
@@ -87,6 +88,7 @@ class SentMailMessageVO(BaseModel):
     sent_at: datetime
     status: str
     run_id: UUID | None
+    awaiting_reply: bool = False
 
 
 class TodoDraftVO(BaseModel):

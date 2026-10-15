@@ -10,6 +10,7 @@ from app.param.mail_draft_update_param import MailDraftUpdateParam
 from app.param.mail_extraction_request_param import MailExtractionRequestParam
 from app.param.mail_reply_draft_request_param import MailReplyDraftRequestParam
 from app.param.todo_draft_create_param import TodoDraftCreateParam
+from app.param.mail_workbench_param import MailImportanceParam, MailFollowUpParam
 from app.security.dependencies import CurrentUser, get_current_user, get_tenant_session
 from app.service.mail_service import (
     MailConnectionRequiredError,
@@ -81,10 +82,24 @@ def _to_messages_vo(snapshot: MailListSnapshot) -> MailMessagesVO:
                 received_at=item["received_at"],
                 source_version=item["source_version"],
                 extraction_status=item["extraction_status"],
+                is_important=item["is_important"],
             )
             for item in snapshot.items
         ],
     )
+
+@router.patch("/messages/{email_id}/importance")
+async def set_message_importance(
+    email_id: UUID, param: MailImportanceParam,
+    current_user: CurrentUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_tenant_session),
+    mail_service: MailService = Depends(get_mail_service_from_request),
+):
+    """当前用户显式标记重要邮件；不会调用LLM或读取正文。"""
+    item = await mail_service.set_message_importance(session, current_user.user, email_id, param.is_important)
+    if item is None:
+        raise HTTPException(status_code=404, detail="邮件不存在或无权操作")
+    return success({"email_id": item["id"], "is_important": item["is_important"]})
 
 
 @router.get("/messages/{email_id}")
@@ -212,10 +227,26 @@ async def list_sent_messages(
                 sent_at=item["sent_at"],
                 status=item["status"],
                 run_id=item["run_id"],
+                awaiting_reply=item["awaiting_reply"],
             )
             for item in sent_messages
         ]
     )
+
+@router.patch("/sent-messages/{sent_message_id}/follow-up")
+async def set_sent_follow_up(
+    sent_message_id: UUID, param: MailFollowUpParam,
+    current_user: CurrentUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_tenant_session),
+    mail_service: MailService = Depends(get_mail_service_from_request),
+):
+    """用户显式维护等待回复状态；不会自动推断外部收件人的动作。"""
+    item = await mail_service.set_sent_follow_up(
+        session, current_user.user, sent_message_id, param.awaiting_reply,
+    )
+    if item is None:
+        raise HTTPException(status_code=404, detail="已发送邮件不存在、发送未成功或无权操作")
+    return success({"sent_message_id": item["id"], "awaiting_reply": item["awaiting_reply"]})
 
 
 @router.post("/{email_id}/todo-drafts", status_code=status.HTTP_201_CREATED)

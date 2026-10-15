@@ -93,6 +93,21 @@ Harness已按职责分层：`harness/`管理策略、上下文和执行编排，
 
 API 服务仍在 `Aegis_backend` 中使用 Uvicorn 单独启动。
 
+### 文档索引进程（6.3）
+
+索引由单独进程消费，不阻塞上述Agent循环。先由主后端升级至013迁移，确保API和Worker的
+源文件根目录、Embedding模型元数据一致，且Worker已配置Embedding和Qdrant写密钥。
+
+```powershell
+D:\anaconda\envs\Aegis\python.exe -m aegis_agent_worker.worker.index_worker
+```
+
+该进程从专用Redis队列接收job_id/身份封包，并扫描SQL中未投递或租约过期任务。
+上传只保存文件，不排队；需所有者显式启动索引。索引成功后默认禁用，需再显式启用；真实Hybrid查询仍待6.4。
+启动后处理真实任务会调用计费Embedding并写入远端Qdrant；不需要启动Calendar/Email MCP。
+它不是Agent聊天任务的可靠恢复改造；上方Agent List崩溃恢复限制仍然存在。
+详见[6.3导入与索引](文档/12-知识资料导入与索引-阶段6.3.md)。
+
 架构说明见：[文档/01-Agent与基础设施职责边界.md](文档/01-Agent与基础设施职责边界.md) 与 [文档/02-Agent图与工作流架构.md](文档/02-Agent图与工作流架构.md)。
 
 

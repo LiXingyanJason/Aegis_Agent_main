@@ -47,12 +47,14 @@ def database():
             connection.execute(f"CREATE FUNCTION {name}() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT NULLIF(current_setting('{setting}',true),'')::uuid $$")
         apply(connection, "010")
         apply(connection, "011")
+        apply(connection, "012")
+        apply(connection, "013")
         connection.execute("INSERT INTO tenants VALUES (%s),(%s)", (UUID(int=1), UUID(int=2)))
         connection.execute("INSERT INTO users VALUES (%s,%s),(%s,%s),(%s,%s)",
             (UUID(int=10), UUID(int=1), UUID(int=11), UUID(int=1), UUID(int=20), UUID(int=2)))
         connection.execute("INSERT INTO agent_runs VALUES (%s,%s,%s,'running')", (UUID(int=600), UUID(int=1), UUID(int=10)))
         for table in ("tenants", "users", "agent_runs", "knowledge_documents", "knowledge_document_versions",
-                      "knowledge_chunks", "knowledge_index_jobs", "embedding_execution_budgets", "embedding_execution_attempts"):
+                      "knowledge_chunks", "knowledge_index_jobs", "embedding_execution_budgets", "embedding_execution_attempts", "knowledge_vector_spaces"):
             connection.execute(sql.SQL("GRANT SELECT,INSERT,UPDATE,DELETE ON {} TO {}").format(sql.Identifier(table), sql.Identifier(role)))
         connection.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO {}").format(sql.Identifier(schema), sql.Identifier(role)))
         connection.execute(sql.SQL("GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA {} TO {}").format(sql.Identifier(schema), sql.Identifier(role)))
@@ -168,11 +170,134 @@ async def test_repository_filters_also_protect_when_runtime_role_bypasses_rls(da
 
 def test_upgrade_downgrade_roundtrip_without_pgvector_dependency(database):
     database.execute("RESET ROLE")
+    apply(database, "013", "downgrade")
+    apply(database, "012", "downgrade")
     apply(database, "011", "downgrade")
     apply(database, "010", "downgrade")
     apply(database, "010")
     apply(database, "011")
+    apply(database, "012")
+    apply(database, "013")
     assert database.execute("SELECT count(*) AS n FROM knowledge_documents").fetchone()["n"] == 0
+
+
+@pytest.mark.asyncio
+async def test_real_sql_import_index_lease_and_idempotent_resume(database,tmp_path):
+    from contextlib import asynccontextmanager
+    from hashlib import sha256
+    from sqlalchemy.dialects.postgresql import dialect
+    from app.service.knowledge_import_service import KnowledgeImportService
+    from app.param.knowledge_param import KnowledgeImportMetadata,KnowledgeIndexStartParam
+    from app.storage.local_document_storage import LocalDocumentStorage
+    from aegis_agent_worker.repository.knowledge_index_repository import KnowledgeIndexRepository
+    from aegis_agent_worker.service.knowledge.knowledge_index_service import KnowledgeIndexService
+    from aegis_agent_worker.harness.embedding_executor import EmbeddingExecutor
+    from aegis_agent_worker.embedding.contracts import EmbeddingProfile
+    from aegis_agent_worker.common.usage import TokenUsage
+    class Result:
+        def __init__(self,rows): self.rows=rows
+        def first(self): return tuple(self.rows[0].values()) if self.rows else None
+        def mappings(self): return SimpleNamespace(first=lambda:self.rows[0] if self.rows else None,
+            all=lambda:self.rows,one=lambda:self.rows[0])
+        def scalar_one(self): return next(iter(self.rows[0].values()))
+    class Session:
+        @asynccontextmanager
+        async def begin(self):
+            with database.transaction(): yield
+        async def execute(self,statement,params=None):
+            compiled=statement.compile(dialect=dialect(paramstyle='pyformat'))
+            cursor=database.execute(str(compiled),params or {})
+            return Result(cursor.fetchall() if cursor.description else [])
+    class Database:
+        @asynccontextmanager
+        async def session(self): yield Session()
+    user=SimpleNamespace(id=UUID(int=10),tenant_id=UUID(int=1))
+    identity(database)
+    settings=SimpleNamespace(knowledge_max_source_bytes=262144,embedding_provider='openai_compatible',embedding_model='test-model',
+        embedding_model_version='test-v1',embedding_dimensions=3,embedding_max_batch_items=10,qdrant_collection='test',
+        knowledge_index_lease_seconds=180,knowledge_index_max_claims=3)
+    imports=KnowledgeImportService(settings,LocalDocumentStorage(tmp_path))
+    param=KnowledgeImportMetadata(title='虚构政策',category='policy',client_request_id='db-e2e',external_embedding_allowed=True)
+    item=await imports.import_source(Session(),user,param,'项目政策。'.encode(),'policy.txt')
+    replay=await imports.import_source(Session(),user,param,'项目政策。'.encode(),'policy.txt')
+    assert item['document_id']==replay['document_id'] and replay['idempotent_replay']
+    assert item['job_id'] is None and item['index_status']=='not_indexed' and not item['enabled']
+    assert database.execute('SELECT count(*) AS n FROM knowledge_index_jobs').fetchone()['n']==0
+    with pytest.raises(Exception,match='索引完成'):
+        await imports.activate(Session(),user,item['document_id'],True)
+    item=await imports.start_index(Session(),user,item['document_id'],KnowledgeIndexStartParam(external_embedding_allowed=True))
+    restarted=await imports.start_index(Session(),user,item['document_id'],KnowledgeIndexStartParam(external_embedding_allowed=True))
+    assert restarted['job_id']==item['job_id'] and restarted['idempotent_replay']
+    message=dict(job_id=item['job_id'],tenant_id=user.tenant_id,user_id=user.id)
+    repo=KnowledgeIndexRepository(Database())
+    assert await repo.recoverable(30)==[message]
+    token=uuid4()
+    assert await repo.claim(message,token,180,3)
+    assert await repo.claim(message,uuid4(),180,3) is None
+    # 模拟消息已取走后崩溃；SQL过期租约允许恢复，预算仍使用同一job。
+    database.execute('UPDATE knowledge_index_jobs SET lease_expires_at=now()-interval \'1 second\' WHERE id=%s',(item['job_id'],))
+    class Client:
+        profile=EmbeddingProfile('openai_compatible','test-model','test-v1',3)
+        max_batch_items=10
+        usage=TokenUsage(5,None,5)
+        def ensure_configured(self): pass
+        def reset_usage(self): pass
+        async def embed(self,texts): return [[1.,2.,3.] for _ in texts]
+    class Index:
+        namespace='a'*64
+        async def ensure_collection(self,profile): return {'points_count':0}
+        async def upsert(self,points):
+            assert 'content' not in points[0]['payload']
+    service=KnowledgeIndexService(settings,repo,LocalDocumentStorage(tmp_path),EmbeddingExecutor(Database(),Client()),Index())
+    result=await service.execute(message)
+    assert result['status']=='succeeded'
+    assert (await service.execute(message))['status']=='ignored'
+    stored=database.execute('SELECT status,processed_chunks,total_chunks,attempt_count FROM knowledge_index_jobs WHERE id=%s',(item['job_id'],)).fetchone()
+    assert stored['status']=='succeeded' and stored['processed_chunks']==stored['total_chunks']==1 and stored['attempt_count']==2
+    assert database.execute('SELECT current_version_id FROM knowledge_documents WHERE id=%s',(item['document_id'],)).fetchone()['current_version_id']==item['version_id']
+    assert not database.execute('SELECT enabled FROM knowledge_documents WHERE id=%s',(item['document_id'],)).fetchone()['enabled']
+    # 索引完成不等于可检索：禁用时丢弃证据，启用后才能复核，禁用立即停止新检索。
+    from aegis_agent_worker.agent.contracts.knowledge import RetrievedEvidence
+    from aegis_agent_worker.tool.contracts import ToolContext
+    from aegis_agent_worker.repository.knowledge_evidence_repository import KnowledgeEvidenceRepository
+    row=database.execute('SELECT * FROM knowledge_chunks WHERE version_id=%s',(item['version_id'],)).fetchone()
+    evidence=RetrievedEvidence(source_no=1,document_id=item['document_id'],version_id=item['version_id'],chunk_id=row['id'],
+        title='虚构政策',version_label='v1',section=row['section'] or '正文',start_offset=row['start_offset'],end_offset=row['end_offset'],
+        excerpt=row['content'],content_hash=row['content_hash'])
+    evidence_repo=KnowledgeEvidenceRepository(Database())
+    context=ToolContext(user.tenant_id,user.id,UUID(int=700))
+    assert await evidence_repo.revalidate(context,[evidence])==[]
+    assert (await imports.activate(Session(),user,item['document_id'],True))['enabled']
+    assert await evidence_repo.revalidate(context,[evidence])==[evidence]
+    assert not (await imports.activate(Session(),user,item['document_id'],False))['enabled']
+    assert await evidence_repo.revalidate(context,[evidence])==[]
+    assert database.execute('SELECT call_count FROM embedding_execution_budgets WHERE index_job_id=%s',(item['job_id'],)).fetchone()['call_count']==1
+    # 外置源文件降级必须拒绝，不能静默删除资料。
+    database.execute('RESET ROLE')
+    with pytest.raises(Exception,match='KNOWLEDGE_EXTERNAL_SOURCE_EXISTS'),database.transaction():
+        apply(database,'012','downgrade')
+
+
+def test_lifecycle_migration_backfills_requests_and_defaults_old_documents_disabled(database):
+    database.execute('RESET ROLE')
+    apply(database,'013','downgrade')
+    seed(database)
+    database.execute("INSERT INTO knowledge_index_jobs(id,tenant_id,user_id,document_id,version_id,client_request_id,request_hash) VALUES(%s,%s,%s,%s,%s,'legacy-upload',%s)",
+        (UUID(int=500),UUID(int=1),UUID(int=10),UUID(int=100),UUID(int=101),'c'*64))
+    # 测试全部在一个外层事务中；真实升级前旧数据已提交，这里先结算延迟外键事件模拟该边界。
+    database.execute('SET CONSTRAINTS ALL IMMEDIATE')
+    apply(database,'013')
+    row=database.execute('SELECT enabled,client_request_id,request_hash FROM knowledge_documents WHERE id=%s',(UUID(int=100),)).fetchone()
+    assert not row['enabled'] and row['client_request_id']=='legacy-upload' and row['request_hash']=='c'*64
+
+
+def test_lifecycle_downgrade_rejects_unbound_uploaded_sources(database):
+    database.execute('RESET ROLE')
+    seed(database)
+    database.execute('DELETE FROM knowledge_chunks')
+    database.execute('UPDATE knowledge_document_versions SET embedding_provider=NULL,embedding_model=NULL,embedding_model_version=NULL,embedding_dimensions=NULL')
+    with pytest.raises(Exception,match='KNOWLEDGE_UNINDEXED_SOURCE_EXISTS'),database.transaction():
+        apply(database,'013','downgrade')
 
 
 @pytest.mark.asyncio

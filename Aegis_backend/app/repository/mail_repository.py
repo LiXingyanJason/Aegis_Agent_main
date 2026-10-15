@@ -206,7 +206,7 @@ class MailRepository:
         result = await session.execute(
             text(
                 "SELECT id, provider_thread_id, sender_name, sender_email, subject, received_at, "
-                "source_version, extraction_status, snapshot_at "
+                "source_version, extraction_status, is_important, snapshot_at "
                 "FROM email_messages "
                 "WHERE tenant_id = :tenant_id AND user_id = :user_id "
                 "  AND connection_id = :connection_id "
@@ -215,6 +215,19 @@ class MailRepository:
             {"tenant_id": tenant_id, "user_id": user_id, "connection_id": connection_id},
         )
         return [dict(row) for row in result.mappings().all()]
+
+    async def set_message_importance(
+        self, session: AsyncSession, *, tenant_id: UUID, user_id: UUID, email_id: UUID, is_important: bool
+    ) -> dict[str, Any] | None:
+        """仅所有者可标记；邮箱同步的upsert不会覆盖此人工选择。"""
+        result = await session.execute(
+            text("UPDATE email_messages SET is_important=:is_important, updated_at=now() "
+                 "WHERE id=:email_id AND tenant_id=:tenant_id AND user_id=:user_id "
+                 "RETURNING id, is_important"),
+            dict(email_id=email_id, tenant_id=tenant_id, user_id=user_id, is_important=is_important),
+        )
+        row = result.mappings().first()
+        return dict(row) if row else None
 
     async def find_owned_message_detail_reference(
         self,
@@ -382,7 +395,7 @@ class MailRepository:
         result = await session.execute(
             text(
                 "SELECT sm.id, sm.draft_id, sm.provider_message_id, sm.subject, "
-                "sm.recipient_summary, sm.sent_at, sm.status, md.source_run_id AS run_id "
+                "sm.recipient_summary, sm.sent_at, sm.status, sm.awaiting_reply, md.source_run_id AS run_id "
                 "FROM sent_mail_messages sm JOIN mail_drafts md ON md.id = sm.draft_id "
                 "WHERE sm.tenant_id = :tenant_id AND sm.user_id = :user_id "
                 "ORDER BY sm.sent_at DESC"
@@ -390,6 +403,21 @@ class MailRepository:
             {"tenant_id": tenant_id, "user_id": user_id},
         )
         return [dict(row) for row in result.mappings().all()]
+
+    async def set_sent_follow_up(
+        self, session: AsyncSession, *, tenant_id: UUID, user_id: UUID,
+        sent_message_id: UUID, awaiting_reply: bool,
+    ) -> dict[str, Any] | None:
+        """只允许标记本人已成功发送的邮件；不推断对方是否已经回复。"""
+        result = await session.execute(
+            text("UPDATE sent_mail_messages SET awaiting_reply=:awaiting_reply "
+                 "WHERE id=:sent_message_id AND tenant_id=:tenant_id AND user_id=:user_id AND status='sent' "
+                 "RETURNING id, awaiting_reply"),
+            dict(sent_message_id=sent_message_id, tenant_id=tenant_id,
+                 user_id=user_id, awaiting_reply=awaiting_reply),
+        )
+        row = result.mappings().first()
+        return dict(row) if row else None
 
     async def create_todo_drafts(
         self,

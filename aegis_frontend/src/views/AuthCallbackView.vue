@@ -11,7 +11,7 @@ onMounted(async () => {
   try {
     const authenticated = await auth.initialize()
     if (!authenticated) throw new Error('Keycloak 未返回有效登录会话。')
-    await router.replace({ name: 'tasks' })
+    await router.replace({ name: 'today' })
   } catch (cause) {
     error.value = cause instanceof Error ? cause.message : '登录回调处理失败。'
   }

@@ -1,6 +1,7 @@
 """Agent Worker 的独立运行时配置。"""
 
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import AnyHttpUrl, SecretStr, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -37,6 +38,12 @@ class Settings(BaseSettings):
     agent_worker_poll_timeout_seconds: int = 5
     app_timezone: str = "Asia/Shanghai"
     knowledge_query_enabled: bool = False  # 6.1默认关闭：无真实索引时不将Mock能力提供给主Agent
+    knowledge_index_queue_name: str = "aegis:knowledge-index-jobs"
+    knowledge_storage_root: str = str(Path(__file__).resolve().parents[4]/"data"/"knowledge-sources")
+    knowledge_max_source_bytes: int = Field(default=262144,ge=1024,le=1048576)
+    knowledge_index_lease_seconds: int = Field(default=180,ge=120,le=600)
+    knowledge_index_recovery_seconds: int = Field(default=30,ge=10,le=300)
+    knowledge_index_max_claims: int = Field(default=3,ge=1,le=10)
     embedding_enabled: bool = False
     embedding_provider: str | None = Field(default=None, max_length=64)
     embedding_api_base: AnyHttpUrl | None = None
@@ -46,6 +53,7 @@ class Settings(BaseSettings):
     embedding_dimensions: int = Field(default=1536, ge=1, le=2000)
     embedding_send_dimensions: bool = False
     embedding_request_timeout_seconds: float = Field(default=30, gt=0, le=120)
+    embedding_max_batch_items: int = Field(default=10,ge=1,le=16)  # 阿里云v4最多10条，独立于旧Policy上限
     embedding_external_queries_allowed: bool = False
     qdrant_enabled: bool = False  # 连接配置预备；索引/检索适配在6.3/6.4接入
     qdrant_url: AnyHttpUrl | None = None

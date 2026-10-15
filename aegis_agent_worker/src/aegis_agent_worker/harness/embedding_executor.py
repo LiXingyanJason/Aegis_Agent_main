@@ -35,6 +35,13 @@ class EmbeddingExecutor:
         self._policies = policies or EmbeddingPolicyProvider()
         self._external_queries_allowed = external_queries_allowed
 
+    def ensure_configured(self):
+        self._client.ensure_configured()
+
+    @property
+    def max_batch_items(self):
+        return self._client.max_batch_items
+
     @asynccontextmanager
     async def _session(self, subject):
         async with self._database.session() as session:
@@ -51,6 +58,8 @@ class EmbeddingExecutor:
         if not isinstance(texts, list) or not texts or any(not isinstance(value, str) or not value.strip() for value in texts):
             raise HarnessError("EMBEDDING_INPUT_INVALID", "Embedding 输入不能为空")
         chars = sum(len(value) for value in texts)
+        if len(texts)>self._client.max_batch_items:
+            raise HarnessError('EMBEDDING_INPUT_LIMIT','超过供应商批次上限')
         profile = self._client.profile
         async with self._session(subject) as session:
             await self._repository.authorize(session, subject, profile)

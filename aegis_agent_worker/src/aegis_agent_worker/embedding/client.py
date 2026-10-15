@@ -14,6 +14,8 @@ class EmbeddingClient:
 
     @property
     def profile(self):
+        # @property 把一个方法变成像字段一样读取的属性。client.EmbeddingProfile
+        # 返回当前 Embedding 模型的供应商、名称、版本和向量维度。
         self.ensure_configured()
         return EmbeddingProfile(self._settings.embedding_provider, self._settings.embedding_model,
                                 self._settings.embedding_model_version, self._settings.embedding_dimensions)
@@ -21,6 +23,11 @@ class EmbeddingClient:
     def ensure_configured(self):
         if not self._settings.embedding_enabled:
             raise EmbeddingError("EMBEDDING_NOT_CONFIGURED", "Embedding 服务尚未配置或启用")
+
+    @property
+    def max_batch_items(self):
+        configured=getattr(self._settings,'embedding_max_batch_items',10)
+        return min(configured,10) if self._settings.embedding_model=='text-embedding-v4' else configured
 
     def reset_usage(self):
         self._usage.set(None)
@@ -30,10 +37,13 @@ class EmbeddingClient:
         return self._usage.get() or TokenUsage()
 
     async def embed(self, texts: list[str]) -> list[list[float]]:
+        """校验输入、请求模型服务、记录返回的用量、验证向量，并按输入顺序返回向量列表"""
         self.reset_usage()
         profile = self.profile
         if not texts or any(not isinstance(text, str) or not text.strip() for text in texts):
             raise EmbeddingError("EMBEDDING_INPUT_INVALID", "Embedding 输入不能为空")
+        if len(texts)>self.max_batch_items:
+            raise EmbeddingError('EMBEDDING_INPUT_LIMIT','超过供应商批次上限')
         owns_client = self._client is None
         client = self._client or httpx.AsyncClient()
         try:

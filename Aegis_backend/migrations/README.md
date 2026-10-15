@@ -143,11 +143,28 @@ D:\anaconda\envs\Aegis\python.exe -m alembic upgrade head --sql
 
 ## 排查提示
 
+### 013：上传、索引与启用分离
+
+当前head为`013_knowledge_lifecycle`。先备份、停止旧查询代码、执行`python -m alembic upgrade head`，再部署新版API／Worker。
+上传幂等凭据迁至文档；未索引版本允许模型空间为空。文档新增enabled，旧资料与新资料均默认false。
+已完成索引不会重建，已有排队任务不会取消；ready资料须所有者显式启用后才可交付证据。
+013降级遇到模型空间为空的上传资料会拒绝；降级会移除启用标记及新上传幂等字段，须备份并停止查询，不能stamp绕过。
+迁移只在可回滚临时schema验证，未在现有业务库执行。
+
+### 012：知识导入与索引
+
+`012_knowledge_indexing`不是已移除的pgvector迁移；当前head已追加为013。
+执行`python -m alembic upgrade head`后才部署知识导入/Index Worker；不会安装pgvector。
+新导入源文件保存在受控本机目录，版本表加入文件引用并兼容旧source_text。
+同时加入幂等请求、SQL租约恢复、批次进度及向量空间绑定，不实现多版本更新。
+有外置源文件时降级明确拒绝，先备份并恢复内联文本；不要stamp绕过。
+本次只在临时schema验证012，未升级现有业务库。详见[6.3说明](../../aegis_agent_worker/文档/12-知识资料导入与索引-阶段6.3.md)。
+
 ### 010～011：知识库及Embedding（Qdrant Cloud路线）
 
 010新增四张知识表及私有/同租户共享RLS；011新增独立Embedding预算与审计。
 本地库已升级到011。向量索引改用Qdrant Cloud，未发布且未执行的012 pgvector迁移已移除；
-当前head为011，不回滚010/011，也不使用stamp。后续SQL变更再追加新迁移。
+当时head为011，现已追加012／013，不回滚010/011，也不使用stamp。后续SQL变更继续追加新迁移。
 生产运行角色须非超级用户且无BYPASSRLS。Qdrant配置不会自动索引或开启知识检索。
 降级会删除预算/审计及知识数据，先停相关代码并备份；SQL迁移不删除远端collection。
 配置与部署步骤见[知识库权限与Embedding治理](../../aegis_agent_worker/文档/11-知识库权限与Embedding治理-阶段6.2.md)。

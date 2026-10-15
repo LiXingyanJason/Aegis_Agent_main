@@ -26,6 +26,11 @@ from app.security.auth_security import OIDCAuthenticator
 from app.service.identity_service import IdentityService
 from app.integration.email_mcp_client import EmailMCPClient
 from app.service.mail_service import MailService
+from app.controller.knowledge_controller import router as knowledge_router
+from app.service.knowledge_import_service import KnowledgeImportService
+from app.service.knowledge_dispatch_service import KnowledgeDispatchService
+from app.storage.local_document_storage import LocalDocumentStorage
+from app.common.knowledge_body_limit import KnowledgeBodyLimit
 
 
 
@@ -48,6 +53,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.mail_service = MailService(EmailMCPClient(settings))
     app.state.calendar_service = CalendarService(database, CalendarMCPClient(settings))
     app.state.agent_input_service=AgentInputService(publisher=RunEventPublisher(redis))
+    app.state.knowledge_import_service=KnowledgeImportService(settings,
+        LocalDocumentStorage(settings.knowledge_storage_root,settings.knowledge_max_source_bytes))
+    app.state.knowledge_dispatch_service=KnowledgeDispatchService(redis,settings.knowledge_index_queue_name)
     try:
         yield
     finally:
@@ -56,6 +64,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="Aegis PA API", version="0.1.0", lifespan=lifespan)
+app.add_middleware(KnowledgeBodyLimit)
 instrument_fastapi(app)
 app.include_router(conversation_router)
 app.include_router(approval_router)
@@ -65,6 +74,7 @@ app.include_router(todo_router)
 app.include_router(memory_router)
 app.include_router(calendar_router)
 app.include_router(agent_input_router)
+app.include_router(knowledge_router)
 
 
 @app.get("/health", tags=["system"])

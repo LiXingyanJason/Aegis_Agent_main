@@ -20,12 +20,13 @@ class KnowledgeEvidenceRepository:
         async with self._database.session() as session:
             async with tenant_transaction(session, TenantContext(context.tenant_id, context.user_id)):
                 rows = (await session.execute(text("""SELECT c.id AS chunk_id,c.document_id,c.version_id,
-                    d.title,v.version_label,c.section,c.start_offset,c.end_offset,
+                    d.title,v.version_label,coalesce(nullif(c.section,''),'正文') AS section,c.start_offset,c.end_offset,
                     left(c.content,800) AS excerpt,c.content_hash
                     FROM knowledge_chunks c JOIN knowledge_documents d ON d.id=c.document_id AND d.tenant_id=c.tenant_id
                     JOIN knowledge_document_versions v ON v.id=c.version_id AND v.document_id=d.id AND v.tenant_id=d.tenant_id
                     WHERE c.id=ANY(CAST(:ids AS uuid[])) AND c.tenant_id=:tenant AND d.tenant_id=:tenant
-                      AND (d.user_id=:user OR d.visibility='tenant') AND d.deleted_at IS NULL
+                      AND (d.user_id=:user OR d.visibility='tenant') AND d.deleted_at IS NULL AND d.enabled
+                      AND NOT d.is_sensitive AND d.external_embedding_allowed
                       AND v.status='ready' AND d.current_version_id=v.id"""),
                     dict(ids=list(prior), tenant=context.tenant_id, user=context.user_id))).mappings().all()
         current = [RetrievedEvidence(source_no=prior[row["chunk_id"]].source_no, **dict(row)) for row in rows]

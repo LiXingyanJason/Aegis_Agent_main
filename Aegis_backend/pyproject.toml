@@ -5,6 +5,7 @@ description = "Aegis PA backend service"
 requires-python = ">=3.12"
 dependencies = [
   "fastapi>=0.115,<1.0",
+  "python-multipart>=0.0.20,<1.0",
   "uvicorn[standard]>=0.30,<1.0",
   # OpenTelemetry SQLAlchemy 自动埋点当前仅支持 SQLAlchemy < 2.1。
   "sqlalchemy[asyncio]>=2.0,<2.1",

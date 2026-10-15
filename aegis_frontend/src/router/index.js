@@ -7,11 +7,13 @@ const router = createRouter({
     { path: '/', redirect: '/login' },
     { path: '/login', name: 'login', component: () => import('../views/LoginView.vue'), meta: { public: true } },
     { path: '/auth/callback', name: 'auth-callback', component: () => import('../views/AuthCallbackView.vue'), meta: { public: true } },
+    { path: '/today', name: 'today', component: () => import('../views/TodayWorkbenchView.vue') },
     { path: '/tasks', name: 'tasks', component: () => import('../views/TaskConsoleView.vue') },
     { path: '/calendar', name: 'calendar', component: () => import('../views/CalendarView.vue') },
     { path: '/mail', name: 'mail-management', component: () => import('../views/MailManagementView.vue') },
     { path: '/todos', name: 'todo-plans', component: () => import('../views/TodoPlanView.vue') },
     { path: '/confirmations', name: 'confirmations', component: () => import('../views/ConfirmationView.vue') },
+    { path: '/knowledge', name: 'knowledge', component: () => import('../views/KnowledgeView.vue') },
     { path: '/memory', name: 'memories', component: () => import('../views/MemoryView.vue') },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('../views/NotFoundView.vue'), meta: { public: true } },
   ],
@@ -26,7 +28,7 @@ router.beforeEach(async (to) => {
 
   try {
     const authenticated = await auth.initialize()
-    if (to.name === 'auth-callback') return authenticated ? { name: 'tasks' } : { name: 'login' }
+    if (to.name === 'auth-callback') return authenticated ? { name: 'today' } : { name: 'login' }
     if (!to.meta.public && !authenticated) return { name: 'login' }
   } catch {
     // 受保护页面与无效回调均安全降级到登录页。

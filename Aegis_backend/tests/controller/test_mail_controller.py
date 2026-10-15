@@ -1,8 +1,10 @@
 """邮件列表接口测试。"""
 
+import asyncio
 from datetime import UTC, datetime
 from uuid import UUID
 
+import httpx
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -87,6 +89,12 @@ class _FakeMailManagementService:
     async def list_sent_messages(self, _session, _local_user):
         """模拟空的已发送分区。"""
         return []
+
+    async def set_message_importance(self, _session, _local_user, email_id, is_important):
+        return {"id": email_id, "is_important": is_important} if email_id == EMAIL_ID else None
+
+    async def set_sent_follow_up(self, _session, _local_user, sent_message_id, awaiting_reply):
+        return {"id": sent_message_id, "awaiting_reply": awaiting_reply} if sent_message_id == DRAFT_ID else None
 
     async def create_todo_drafts(self, _session, _local_user, email_id, param):
         """模拟将第一项候选复制为站内待办草稿。"""
@@ -177,6 +185,7 @@ def test_list_messages_returns_current_users_snapshot_without_body() -> None:
                     "received_at": datetime(2026, 10, 6, 2, 10, tzinfo=UTC),
                     "source_version": "mock-v1",
                     "extraction_status": "not_generated",
+                    "is_important": False,
                     "body_text": "这不应返回给浏览器",
                 }
             ],
@@ -191,8 +200,27 @@ def test_list_messages_returns_current_users_snapshot_without_body() -> None:
     item = response.json()["data"]["items"][0]
     assert item["email_id"] == str(EMAIL_ID)
     assert item["customer"] == "李莉"
+    assert item["is_important"] is False
     assert "body_text" not in item
     assert fake_service.received_user == LOCAL_USER
+
+
+def test_mail_workbench_flags_require_boolean_and_owned_record() -> None:
+    app = _create_test_app(_FakeMailManagementService())
+    headers = {"Authorization": "Bearer verified-test-token"}
+
+    async def run_requests():
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+            important = await client.patch(f"/mail/messages/{EMAIL_ID}/importance", json={"is_important": True}, headers=headers)
+            follow_up = await client.patch(f"/mail/sent-messages/{DRAFT_ID}/follow-up", json={"awaiting_reply": True}, headers=headers)
+            invalid = await client.patch(f"/mail/messages/{EMAIL_ID}/importance", json={"is_important": "true"}, headers=headers)
+            missing = await client.patch(f"/mail/messages/{RUN_ID}/importance", json={"is_important": True}, headers=headers)
+        assert important.status_code == 200 and important.json()["data"]["is_important"] is True
+        assert follow_up.status_code == 200 and follow_up.json()["data"]["awaiting_reply"] is True
+        assert invalid.status_code == 422
+        assert missing.status_code == 404
+
+    asyncio.run(run_requests())
 
 
 def test_list_messages_explains_missing_connection() -> None:
