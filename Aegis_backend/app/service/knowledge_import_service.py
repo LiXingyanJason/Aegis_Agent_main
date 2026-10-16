@@ -56,8 +56,8 @@ class KnowledgeImportService:
                 await self._storage.delete(key)
             raise
 
-    async def list_documents(self, session,user,limit):
-        return await self._repository.list_documents(session,user,limit)
+    async def list_documents(self, session,user,limit,offset=0):
+        return await self._repository.list_documents(session,user,limit,offset)
 
     @staticmethod
     def index_status(source):

@@ -26,6 +26,7 @@ class TaskGraphState(TypedDict, total=False):
     knowledge_error: str
     knowledge_error_code: str
     knowledge_status: str
+    knowledge_retrieval: dict[str, Any]  # 受限检索诊断，无查询全文/ACL/向量
     # 领域 Agent 产生、且已经过 Pydantic 校验的受限执行计划。
     plan: dict[str, Any]
     # 工具调用的脱敏结果摘要；完整事实仍在 tool_calls 等业务表。

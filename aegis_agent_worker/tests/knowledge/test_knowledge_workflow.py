@@ -105,6 +105,20 @@ async def test_layered_success_produces_verified_source_artifact():
 
 
 @pytest.mark.asyncio
+async def test_degraded_result_keeps_state_and_warns_user_without_changing_artifact():
+    store,artifacts=KnowledgeStore(),Artifacts()
+    class Degraded:
+        async def query(self,run,plan):
+            return KnowledgeSearchResult(evidence=[evidence()],retrieval={
+                'mode':'lexical_only','degraded':True,'reason':'vector_unavailable'})
+    result=await KnowledgeQueryWorkflow(Agent(),Degraded(),EvidenceService(store),artifacts).build().ainvoke(state())
+    assert result['knowledge_retrieval']['degraded'] is True
+    assert '仅依据关键词检索结果' in result['assistant_content']
+    assert result['assistant_content'].endswith('至少提前30天通知。[1]')
+    assert artifacts.saved[0].artifact_type=='knowledge_sources'
+
+
+@pytest.mark.asyncio
 async def test_invalid_plan_has_zero_retrieval_calls():
     tools = Tools(KnowledgeStore())
     result = await KnowledgeQueryWorkflow(Agent(invalid=True), tools).build().ainvoke(state())

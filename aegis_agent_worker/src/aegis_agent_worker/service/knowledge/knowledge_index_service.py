@@ -70,7 +70,7 @@ class KnowledgeIndexService:
                     'tenant_id':str(message['tenant_id']),'owner_id':str(message['user_id']),
                     'document_id':str(job['document_id']),'version_id':str(job['version_id']),
                     'chunk_id':str(chunk.id),'content_hash':chunk.content_hash,
-                    'category':job['category'],'visibility':fresh['visibility'],
+                    'visibility':fresh['visibility'],
                     'model_provider':profile.provider,'model':profile.model,'model_version':profile.version,
                     'dimensions':profile.dimensions}} for chunk,vector in zip(batch,vectors)]
                 # 先等待 Qdrant 确认写入，再在数据库中把这一批标为已索引。

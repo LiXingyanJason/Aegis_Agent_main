@@ -49,6 +49,11 @@ from aegis_agent_worker.service.memory.memory_context_service import MemoryConte
 from aegis_agent_worker.service.runtime.conversation_artifact_service import ConversationArtifactService
 from aegis_agent_worker.service.calendar.calendar_tool_execution_service import CalendarToolExecutionService
 from aegis_agent_worker.service.knowledge.knowledge_query_service import KnowledgeQueryService
+from aegis_agent_worker.service.knowledge.workflow_progress_service import KnowledgeWorkflowProgress
+from aegis_agent_worker.service.knowledge.hybrid_retrieval_service import HybridRetrievalService
+from aegis_agent_worker.repository.knowledge_retrieval_repository import KnowledgeRetrievalRepository
+from aegis_agent_worker.embedding.bootstrap import create_embedding_executor
+from aegis_agent_worker.vector.qdrant_search import QdrantSearch
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +79,10 @@ async def run_worker() -> None:
             input_requests=InputRequestService(database,runs,events)
             memory_context = MemoryContextService(database)
             cards = CardContextService(database, policy_provider=policies)
-            tools = create_default_tool_gateway(settings,harness=harness,card_context=cards)
+            knowledge_retrieval = HybridRetrievalService(settings,KnowledgeRetrievalRepository(database),
+                create_embedding_executor(settings,database),QdrantSearch(settings)) if settings.knowledge_query_enabled else None
+            tools = create_default_tool_gateway(settings,harness=harness,card_context=cards,
+                knowledge_retrieval=knowledge_retrieval)
             tool_calls = ToolCallRepository()
             tool_execution = CalendarToolExecutionService(database, runs, tools, tool_calls, events)
             artifact_service = ConversationArtifactService(database, runs, events)
@@ -107,6 +115,7 @@ async def run_worker() -> None:
                 query_service=KnowledgeQueryService(database, runs, tools, tool_calls, events),
                 evidence_service=EvidenceService(KnowledgeEvidenceRepository(database)), artifact_service=artifact_service,
                 enabled=settings.knowledge_query_enabled,
+                progress_service=KnowledgeWorkflowProgress(database,runs,events),
             )
             orchestrator = AgentOrchestrator(
                 database,

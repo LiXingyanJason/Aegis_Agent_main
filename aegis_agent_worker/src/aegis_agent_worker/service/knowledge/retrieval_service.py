@@ -1,4 +1,4 @@
-"""检索策略的最小接口；未配置真实Repository时必须明确拒绝。"""
+"""旧单路/测试适配入口；生产6.4使用HybridRetrievalService，未配置仍明确拒绝。"""
 from aegis_agent_worker.agent.contracts.knowledge import KnowledgeQueryPlan, KnowledgeSearchResult
 from aegis_agent_worker.repository.knowledge_repository import KnowledgeRepository
 from aegis_agent_worker.tool.contracts import ToolError

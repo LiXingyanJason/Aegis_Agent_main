@@ -103,10 +103,25 @@ D:\anaconda\envs\Aegis\python.exe -m aegis_agent_worker.worker.index_worker
 ```
 
 该进程从专用Redis队列接收job_id/身份封包，并扫描SQL中未投递或租约过期任务。
-上传只保存文件，不排队；需所有者显式启动索引。索引成功后默认禁用，需再显式启用；真实Hybrid查询仍待6.4。
+上传只保存文件，不排队；需所有者显式启动索引。索引成功后默认禁用，需再显式启用。
 启动后处理真实任务会调用计费Embedding并写入远端Qdrant；不需要启动Calendar/Email MCP。
 它不是Agent聊天任务的可靠恢复改造；上方Agent List崩溃恢复限制仍然存在。
 详见[6.3导入与索引](文档/12-知识资料导入与索引-阶段6.3.md)。
+
+### 知识查询（6.4）
+
+已接入PostgreSQL全文＋受治理Embedding＋Qdrant只读召回及RRF，默认关闭。
+启用前需资料ready且enabled，查询模型空间与索引一致，配置Qdrant读取密钥，
+仅在已获外发授权时设置`EMBEDDING_EXTERNAL_QUERIES_ALLOWED=true`及`KNOWLEDGE_QUERY_ENABLED=true`，重启聊天Worker。
+`KNOWLEDGE_LEXICAL_FALLBACK_ALLOWED=false`默认不降级；不新增浏览器直调检索接口。
+本次仅离线及可回滚PG验证，未调用真实云端。详见[6.4配置与验收](文档/13-权限前置Hybrid检索与RRF-阶段6.4.md)。
+
+6.5已补齐来源引用修复／冲突提示、生成前后复核及主后端历史来源卡片的即时权限检查；
+无新迁移，启用方式不变。详见[知识子图与来源约束回答](文档/14-知识查询子图与来源约束回答-阶段6.5.md)。
+
+6.6已接通资料管理接口、来源详情、阶段SSE及前端来源卡片。知识资料类别功能暂缓，
+上传接口与查询计划不再接收类别字段，已有资料不需重新索引；部署前先升级至016_knowledge_category_default，
+再一起更新API／Agent Worker／Index Worker和前端。详见[6.6部署与手工联调](文档/15-知识资料接口-SSE与来源卡片-阶段6.6.md)。
 
 架构说明见：[文档/01-Agent与基础设施职责边界.md](文档/01-Agent与基础设施职责边界.md) 与 [文档/02-Agent图与工作流架构.md](文档/02-Agent图与工作流架构.md)。
 

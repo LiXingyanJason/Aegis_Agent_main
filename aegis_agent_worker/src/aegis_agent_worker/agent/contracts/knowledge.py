@@ -8,18 +8,12 @@ from aegis_agent_worker.agent.contracts.common import ConversationArtifact, ensu
 from aegis_agent_worker.tool.contracts import ToolInvocation
 
 
-class KnowledgeFilters(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
-    category: Literal["project", "policy", "contract", "minutes"] | None = None
-
-
 class KnowledgeQueryPlan(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     version: Literal[1] = 1
     query: str = Field(min_length=1, max_length=1000)
     query_rewrites: list[str] = Field(default_factory=list, max_length=2)
     top_k: int = Field(default=5, strict=True, ge=1, le=5)
-    filters: KnowledgeFilters = Field(default_factory=KnowledgeFilters)
 
     @field_validator("query")
     @classmethod
@@ -64,9 +58,28 @@ class RetrievedEvidence(BaseModel):
         return self
 
 
+class RetrievalRanking(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    chunk_id: UUID
+    lexical_rank: int | None = Field(default=None, ge=1, le=50)
+    vector_rank: int | None = Field(default=None, ge=1, le=50)
+    rrf_score: float = Field(ge=0, allow_inf_nan=False)
+
+
+class RetrievalMetadata(BaseModel):
+    """只含有界安全诊断，不含查询全文、ACL或向量；排名分数不是事实概率。"""
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    policy_version: str = Field(default="hybrid-v1", min_length=1, max_length=64)
+    mode: Literal["hybrid", "lexical_only"] = "hybrid"
+    degraded: bool = False
+    reason: Literal["no_accessible_documents", "no_matches", "sources_unavailable", "vector_unavailable", "result_limit"] | None = None
+    rankings: list[RetrievalRanking] = Field(default_factory=list, max_length=5)
+
+
 class KnowledgeSearchResult(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     evidence: list[RetrievedEvidence] = Field(default_factory=list, max_length=5)
+    retrieval: RetrievalMetadata | None = None  # 兼容既有替身；真实6.4返回策略/模式/诊断
 
     @model_validator(mode="after")
     def unique_sources(self):
@@ -82,6 +95,7 @@ class KnowledgeAnswer(BaseModel):
     answer: str = Field(min_length=1, max_length=4000)
     citation_numbers: list[StrictInt] = Field(default_factory=list, max_length=5)
     can_confirm: bool = Field(strict=True)
+    has_conflict: bool = Field(default=False, strict=True)
 
     @field_validator("answer")
     @classmethod
@@ -95,9 +109,14 @@ class KnowledgeAnswer(BaseModel):
         values = self.citation_numbers
         if any(type(value) is not int or not 1 <= value <= 5 for value in values) or len(set(values)) != len(values):
             raise ValueError("引用编号无效")
-        displayed = {int(value) for value in re.findall(r"\[(\d+)\]", self.answer)}
+        labels = re.findall(r"\[(\d+)\]", self.answer)
+        if any(value != str(int(value)) for value in labels):
+            raise ValueError("引用须使用规范编号")
+        displayed = {int(value) for value in labels}
         if displayed != set(values) or (self.can_confirm and not values) or (not self.can_confirm and values):
             raise ValueError("答案和引用不一致")
+        if self.has_conflict and (not self.can_confirm or len(values)<2):
+            raise ValueError("冲突回答必须引用至少两项依据")
         return self
 
     def verify_sources(self, evidence):
@@ -109,6 +128,7 @@ class KnowledgeAnswer(BaseModel):
 class KnowledgeSourcesPayload(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     sources: list[RetrievedEvidence] = Field(min_length=1, max_length=5)
+    has_conflict: bool = Field(default=False, strict=True)
 
 
 class KnowledgeSourceArtifact(BaseModel):

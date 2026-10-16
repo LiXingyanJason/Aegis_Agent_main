@@ -17,7 +17,6 @@ class KnowledgeImportVO(BaseModel):
 class KnowledgeDocumentVO(BaseModel):
     document_id: UUID
     title: str
-    category: str
     visibility: str
     version_id: UUID
     job_id: UUID | None = None
@@ -33,6 +32,24 @@ class KnowledgeActivationVO(BaseModel):
     document_id: UUID
     enabled: bool
     index_status: str
+
+
+class KnowledgeDocumentDetailVO(KnowledgeDocumentVO):
+    version_label: str
+    indexed_chunks: int
+
+
+class KnowledgeChunkVO(BaseModel):
+    document_id: UUID
+    version_id: UUID
+    chunk_id: UUID
+    title: str
+    version_label: str
+    section: str
+    start_offset: int
+    end_offset: int
+    excerpt: str
+    content_hash: str
 
 
 class KnowledgeIndexJobVO(BaseModel):

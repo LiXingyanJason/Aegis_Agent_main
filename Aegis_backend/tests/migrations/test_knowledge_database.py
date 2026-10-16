@@ -49,6 +49,8 @@ def database():
         apply(connection, "011")
         apply(connection, "012")
         apply(connection, "013")
+        apply(connection, "015")
+        apply(connection, "016")
         connection.execute("INSERT INTO tenants VALUES (%s),(%s)", (UUID(int=1), UUID(int=2)))
         connection.execute("INSERT INTO users VALUES (%s,%s),(%s,%s),(%s,%s)",
             (UUID(int=10), UUID(int=1), UUID(int=11), UUID(int=1), UUID(int=20), UUID(int=2)))
@@ -72,7 +74,7 @@ def identity(c, tenant=1, user=10):
 
 def seed(c, document=100, tenant=1, user=10, shared=False):
     identity(c, tenant, user)
-    c.execute("INSERT INTO knowledge_documents(id,tenant_id,user_id,title,category) VALUES(%s,%s,%s,'虚构政策','policy')",
+    c.execute("INSERT INTO knowledge_documents(id,tenant_id,user_id,title) VALUES(%s,%s,%s,'虚构政策')",
               (UUID(int=document), UUID(int=tenant), UUID(int=user)))
     c.execute("""INSERT INTO knowledge_document_versions(id,document_id,tenant_id,version_no,version_label,source_text,
         content_hash,status,embedding_provider,embedding_model,embedding_model_version,embedding_dimensions)
@@ -84,6 +86,231 @@ def seed(c, document=100, tenant=1, user=10, shared=False):
         content_hash,embedding_provider,embedding_model,embedding_model_version,embedding_dimensions)
         VALUES(%s,%s,%s,%s,0,'虚构资料',0,4,%s,'openai_compatible','test-model','test-v1',3)""",
         (UUID(int=document+2), UUID(int=document), UUID(int=document+1), UUID(int=tenant), "b"*64))
+
+
+@pytest.fixture
+def retrieval_database(database):
+    """SQLAlchemy语句在同一可回滚PG事务执行；复用真实租户事务。"""
+    from contextlib import asynccontextmanager
+    from sqlalchemy.dialects.postgresql import dialect
+    class Session:
+        @asynccontextmanager
+        async def begin(self):
+            with database.transaction():
+                yield
+        async def execute(self, statement, params=None):
+            cursor=database.execute(str(statement.compile(dialect=dialect(paramstyle='pyformat'))),params or {})
+            rows=cursor.fetchall() if cursor.description else []
+            return SimpleNamespace(rowcount=cursor.rowcount,mappings=lambda:SimpleNamespace(all=lambda:rows,one=lambda:rows[0],first=lambda:rows[0] if rows else None),
+                first=lambda:tuple(rows[0].values()) if rows else None,
+                scalar_one=lambda:next(iter(rows[0].values())))
+    class Database:
+        @asynccontextmanager
+        async def session(self):
+            yield Session()
+    return Database()
+
+
+def searchable(c, document=100, tenant=1, user=10, shared=False, content='续约需提前30天通知。合同CN-2026-01，联系ops@example.com，Aegis项目。'):
+    from hashlib import sha256
+    from aegis_agent_worker.indexing.chunker import search_tokens
+    seed(c,document,tenant,user,shared)
+    c.execute('UPDATE knowledge_documents SET enabled=true,external_embedding_allowed=true WHERE id=%s',(UUID(int=document),))
+    c.execute('UPDATE knowledge_chunks SET content=%s,end_offset=%s,content_hash=%s,search_tokens=%s,indexed_at=now() WHERE document_id=%s',
+        (content,len(content),sha256(content.encode()).hexdigest(),search_tokens(content),UUID(int=document)))
+    namespace=sha256(b'https://test.example/kb').hexdigest()
+    c.execute('UPDATE knowledge_document_versions SET vector_namespace=%s,vector_collection=%s WHERE id=%s',
+        (namespace,'kb',UUID(int=document+1)))
+    c.execute("""INSERT INTO knowledge_index_jobs(id,tenant_id,user_id,document_id,version_id,status,
+        vector_namespace,vector_collection,total_chunks,processed_chunks)
+        VALUES(%s,%s,%s,%s,%s,'succeeded',%s,'kb',1,1)""",
+        (UUID(int=document+3),UUID(int=tenant),UUID(int=user),UUID(int=document),UUID(int=document+1),namespace))
+    c.execute("""INSERT INTO knowledge_vector_spaces(namespace,collection_name,model_provider,model_name,model_version,dimensions)
+        VALUES(%s,'kb','openai_compatible','test-model','test-v1',3) ON CONFLICT DO NOTHING""",(namespace,))
+
+
+@pytest.mark.asyncio
+async def test_actual_retrieval_scope_private_shared_cross_tenant_and_bypass(database,retrieval_database):
+    from aegis_agent_worker.repository.knowledge_retrieval_repository import KnowledgeRetrievalRepository
+    from aegis_agent_worker.tool.contracts import ToolContext
+    searchable(database)
+    searchable(database,document=200,shared=True)
+    searchable(database,document=300,tenant=2,user=20,shared=True)
+    repo=KnowledgeRetrievalRepository(retrieval_database)
+    for tenant,user,expected in ((1,10,{101,201}),(1,11,{201}),(2,20,{301})):
+        context=ToolContext(UUID(int=tenant),UUID(int=user),UUID(int=600))
+        rows=await repo.scope(context,200)
+        assert {row['version_id'].int for row in rows}==expected
+    # 即使运行连接绕过RLS，显式SQL身份范围也不能省略。
+    database.execute('RESET ROLE')
+    rows=await repo.scope(ToolContext(UUID(int=1),UUID(int=11),UUID(int=600)),200)
+    assert {row['version_id'].int for row in rows}=={201}
+    context=ToolContext(UUID(int=1),UUID(int=11),UUID(int=600))
+    assert not await repo.load(context,[UUID(int=101),UUID(int=301)],[UUID(int=102),UUID(int=302)])
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('query',['续约','ops@example.com','CN-2026-01','Aegis项目'])
+async def test_actual_fts_chinese_email_identifier_and_mixed(database,retrieval_database,query):
+    from aegis_agent_worker.repository.knowledge_retrieval_repository import KnowledgeRetrievalRepository
+    from aegis_agent_worker.indexing.chunker import search_tokens
+    from aegis_agent_worker.tool.contracts import ToolContext
+    searchable(database)
+    context=ToolContext(UUID(int=1),UUID(int=10),UUID(int=600))
+    repo=KnowledgeRetrievalRepository(retrieval_database)
+    tsquery=' | '.join("'"+term+"'" for term in search_tokens(query).split())
+    hits=await repo.lexical(context,[UUID(int=101)],tsquery,20)
+    assert [item.chunk_id.int for item in hits]==[102]
+    assert (await repo.load(context,[UUID(int=101)],[UUID(int=102)]))[0].excerpt.startswith('续约')
+    assert not await repo.lexical(context,[UUID(int=999)],tsquery,20)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('change',["enabled=false","deleted_at=now()","is_sensitive=true","external_embedding_allowed=false",
+    "current_version_id=NULL"])
+async def test_actual_scope_and_delivery_state_guards(database,retrieval_database,change):
+    from aegis_agent_worker.repository.knowledge_retrieval_repository import KnowledgeRetrievalRepository
+    from aegis_agent_worker.tool.contracts import ToolContext
+    searchable(database)
+    context=ToolContext(UUID(int=1),UUID(int=10),UUID(int=600))
+    repo=KnowledgeRetrievalRepository(retrieval_database)
+    assert len(await repo.scope(context,200))==1
+    database.execute('UPDATE knowledge_documents SET '+change)
+    assert not await repo.scope(context,200)
+    assert not await repo.lexical(context,[UUID(int=101)],"'续约'",20)
+    assert not await repo.load(context,[UUID(int=101)],[UUID(int=102)])
+
+
+@pytest.mark.asyncio
+async def test_actual_hybrid_semantic_stub_embedding_audit_and_revocation(database,retrieval_database):
+    from aegis_agent_worker.repository.knowledge_retrieval_repository import KnowledgeRetrievalRepository
+    from aegis_agent_worker.service.knowledge.hybrid_retrieval_service import HybridRetrievalService
+    from aegis_agent_worker.harness.embedding_executor import EmbeddingExecutor
+    from aegis_agent_worker.embedding.contracts import EmbeddingProfile
+    from aegis_agent_worker.common.usage import TokenUsage
+    from aegis_agent_worker.retrieval.ranking import SearchHit
+    from aegis_agent_worker.tool.contracts import ToolContext
+    searchable(database,content='续约通知期限为30天。')
+    settings=SimpleNamespace(embedding_provider='openai_compatible',embedding_model='test-model',embedding_model_version='test-v1',
+        embedding_dimensions=3,qdrant_url='https://test.example',qdrant_collection='kb',knowledge_lexical_fallback_allowed=False)
+    class Client:
+        profile=EmbeddingProfile('openai_compatible','test-model','test-v1',3)
+        max_batch_items=3
+        usage=TokenUsage(8,None,8)
+        def ensure_configured(self): pass
+        def reset_usage(self): pass
+        async def embed(self,texts): return [[1.,0.,0.] for _ in texts]
+    class Vector:
+        revoke=False
+        async def search(self,context,versions,vector,profile,limit):
+            assert versions==[UUID(int=101)]
+            if self.revoke:
+                database.execute('UPDATE knowledge_documents SET enabled=false')
+            return [SearchHit(UUID(int=102),0.9),SearchHit(UUID(int=302),0.8)]
+    vector=Vector()
+    service=HybridRetrievalService(settings,KnowledgeRetrievalRepository(retrieval_database),
+        EmbeddingExecutor(retrieval_database,Client(),external_queries_allowed=True),vector)
+    context=ToolContext(UUID(int=1),UUID(int=10),UUID(int=600))
+    # 同义问题不依赖词面重合；向量用替身，不将此结果声称为真实模型召回率。
+    result=await service.search(context,{'query':'advance notice for renewal'})
+    assert len(result.evidence)==1 and result.evidence[0].chunk_id.int==102
+    assert result.retrieval.rankings[0].vector_rank==1 and result.retrieval.rankings[0].lexical_rank is None
+    audit=database.execute("SELECT purpose,prompt_tokens FROM embedding_execution_attempts").fetchone()
+    assert audit['purpose']=='knowledge_query' and audit['prompt_tokens']==8
+    vector.revoke=True
+    result=await service.search(context,{'query':'advance notice for renewal'})
+    assert result.evidence==[] and result.retrieval.reason=='sources_unavailable'
+
+
+@pytest.mark.asyncio
+async def test_source_card_actual_sql_current_identity_and_revocation(database,retrieval_database):
+    from app.service.knowledge_artifact_service import KnowledgeArtifactService
+    from aegis_agent_worker.repository.knowledge_retrieval_repository import KnowledgeRetrievalRepository
+    from aegis_agent_worker.tool.contracts import ToolContext
+    searchable(database,shared=True)
+    context=ToolContext(UUID(int=1),UUID(int=11),UUID(int=600))
+    evidence=(await KnowledgeRetrievalRepository(retrieval_database).load(context,[UUID(int=101)],[UUID(int=102)]))[0]
+    artifact={'artifact_type':'knowledge_sources','payload':{'sources':[evidence.model_dump(mode='json')]}}
+    service=KnowledgeArtifactService()
+    user=SimpleNamespace(id=context.user_id,tenant_id=context.tenant_id)
+    async with retrieval_database.session() as session:
+        assert (await service.refresh(session,user,artifact))['payload']['availability']=='available'
+        identity(database)
+        database.execute("UPDATE knowledge_documents SET visibility='private'")
+        identity(database,user=11)
+        result=await service.refresh(session,user,artifact)
+        assert result['payload']['sources']==[] and result['payload']['availability']=='unavailable'
+        # 即使连接绕过RLS，也不能读取其他租户或撤回共享后的旧来源。
+        database.execute('RESET ROLE')
+        result=await service.refresh(session,user,artifact)
+        assert not result['payload']['sources']
+
+
+@pytest.mark.asyncio
+async def test_document_management_source_hash_and_soft_delete_actual_sql(database,retrieval_database):
+    from app.repository.knowledge_document_repository import KnowledgeDocumentRepository
+    from app.repository.knowledge_import_repository import KnowledgeImportRepository
+    from app.repository.knowledge_repository import KnowledgeRepository
+    searchable(database,shared=True)
+    owner=SimpleNamespace(id=UUID(int=10),tenant_id=UUID(int=1))
+    reader=SimpleNamespace(id=UUID(int=11),tenant_id=UUID(int=1))
+    repo=KnowledgeDocumentRepository()
+    digest=database.execute('SELECT content_hash FROM knowledge_chunks').fetchone()['content_hash']
+    async with retrieval_database.session() as session:
+        identity(database,user=11)
+        detail=await repo.detail(session,reader,UUID(int=100))
+        assert detail['index_status']=='ready' and not detail['can_manage'] and detail['job_id'] is None
+        assert (await KnowledgeImportRepository().list_documents(session,reader,10))[0]['index_status']=='ready'
+        assert not await repo.delete(session,reader,UUID(int=100))
+        assert await repo.chunk(session,reader,UUID(int=100),UUID(int=101),UUID(int=102),digest)
+        assert not await repo.chunk(session,reader,UUID(int=100),UUID(int=101),UUID(int=102),'c'*64)
+        assert not await repo.chunk(session,reader,UUID(int=999),UUID(int=101),UUID(int=102),digest)
+        identity(database)
+        assert await KnowledgeRepository().set_visibility(session,tenant_id=owner.tenant_id,user_id=owner.id,document_id=UUID(int=100),visibility='private')
+        identity(database,user=11)
+        assert not await repo.chunk(session,reader,UUID(int=100),UUID(int=101),UUID(int=102),digest)
+        identity(database)
+        assert await repo.delete(session,owner,UUID(int=100))
+        assert not await repo.detail(session,owner,UUID(int=100))
+        assert not await repo.chunk(session,owner,UUID(int=100),UUID(int=101),UUID(int=102),digest)
+        assert database.execute('SELECT count(*) AS n FROM knowledge_chunks').fetchone()['n']==0
+        assert database.execute('SELECT count(*) AS n FROM knowledge_document_versions').fetchone()['n']==0
+        assert database.execute('SELECT count(*) AS n FROM knowledge_index_jobs').fetchone()['n']==0
+        database.execute('RESET ROLE')
+        assert database.execute('SELECT count(*) AS n FROM knowledge_chunks').fetchone()['n']==1
+        assert not await repo.chunk(session,owner,UUID(int=100),UUID(int=101),UUID(int=102),digest)
+
+
+@pytest.mark.asyncio
+async def test_shared_reader_hybrid_binding_does_not_require_private_job_access(database,retrieval_database):
+    from aegis_agent_worker.repository.knowledge_retrieval_repository import KnowledgeRetrievalRepository
+    from aegis_agent_worker.service.knowledge.hybrid_retrieval_service import HybridRetrievalService
+    from aegis_agent_worker.tool.contracts import ToolContext
+    from aegis_agent_worker.retrieval.ranking import SearchHit
+    searchable(database,shared=True)
+    identity(database,user=11)
+    assert not database.execute('SELECT id FROM knowledge_index_jobs').fetchall()
+    settings=SimpleNamespace(embedding_provider='openai_compatible',embedding_model='test-model',embedding_model_version='test-v1',
+        embedding_dimensions=3,qdrant_url='https://test.example',qdrant_collection='kb',knowledge_lexical_fallback_allowed=False)
+    class Embedding:
+        async def embed(self,subject,texts): return [[1.,0.,0.] for _ in texts]
+    class Vector:
+        async def search(self,context,versions,vector,profile,limit):
+            assert versions==[UUID(int=101)]
+            return [SearchHit(UUID(int=102),1.)]
+    result=await HybridRetrievalService(settings,KnowledgeRetrievalRepository(retrieval_database),Embedding(),Vector()).search(
+        ToolContext(UUID(int=1),UUID(int=11),UUID(int=601)),{'query':'续约'})
+    assert len(result.evidence)==1 and result.evidence[0].chunk_id.int==102
+
+
+def test_version_binding_migration_backfills_and_roundtrips(database):
+    searchable(database,shared=True)
+    database.execute('SET CONSTRAINTS ALL IMMEDIATE')
+    database.execute('RESET ROLE')
+    apply(database,'015','downgrade')
+    apply(database,'015')
+    row=database.execute('SELECT vector_namespace,vector_collection FROM knowledge_document_versions').fetchone()
+    assert row['vector_collection']=='kb' and len(row['vector_namespace'])==64
 
 
 def test_actual_rls_private_shared_cross_tenant_and_no_context(database):
@@ -170,6 +397,7 @@ async def test_repository_filters_also_protect_when_runtime_role_bypasses_rls(da
 
 def test_upgrade_downgrade_roundtrip_without_pgvector_dependency(database):
     database.execute("RESET ROLE")
+    apply(database, "015", "downgrade")
     apply(database, "013", "downgrade")
     apply(database, "012", "downgrade")
     apply(database, "011", "downgrade")
@@ -178,6 +406,7 @@ def test_upgrade_downgrade_roundtrip_without_pgvector_dependency(database):
     apply(database, "011")
     apply(database, "012")
     apply(database, "013")
+    apply(database, "015")
     assert database.execute("SELECT count(*) AS n FROM knowledge_documents").fetchone()["n"] == 0
 
 
@@ -217,7 +446,7 @@ async def test_real_sql_import_index_lease_and_idempotent_resume(database,tmp_pa
         embedding_model_version='test-v1',embedding_dimensions=3,embedding_max_batch_items=10,qdrant_collection='test',
         knowledge_index_lease_seconds=180,knowledge_index_max_claims=3)
     imports=KnowledgeImportService(settings,LocalDocumentStorage(tmp_path))
-    param=KnowledgeImportMetadata(title='虚构政策',category='policy',client_request_id='db-e2e',external_embedding_allowed=True)
+    param=KnowledgeImportMetadata(title='虚构政策',client_request_id='db-e2e',external_embedding_allowed=True)
     item=await imports.import_source(Session(),user,param,'项目政策。'.encode(),'policy.txt')
     replay=await imports.import_source(Session(),user,param,'项目政策。'.encode(),'policy.txt')
     assert item['document_id']==replay['document_id'] and replay['idempotent_replay']

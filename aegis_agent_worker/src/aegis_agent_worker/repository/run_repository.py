@@ -133,6 +133,12 @@ class AgentRunRepository:
         return step_id
 
     async def create_running_tool_step(
+        self, session: AsyncSession, *, run_id: UUID, tenant_id: UUID, step_key: str, label: str,
+    ) -> UUID:
+        """记录正在执行的只读工具步骤，并将任务阶段更新为该步骤。"""
+        return await self.create_running_step(session,run_id=run_id,tenant_id=tenant_id,step_key=step_key,label=label)
+
+    async def create_running_step(
         self,
         session: AsyncSession,
         *,
@@ -141,7 +147,7 @@ class AgentRunRepository:
         step_key: str,
         label: str,
     ) -> UUID:
-        """记录正在执行的只读工具步骤，并将任务阶段更新为该步骤。"""
+        """记录工具或模型阶段，并将任务阶段更新为该步骤；不决定如何执行。"""
         result = await session.execute(
             text(
                 "INSERT INTO run_steps (tenant_id, run_id, sequence_no, step_key, label, status, started_at) "

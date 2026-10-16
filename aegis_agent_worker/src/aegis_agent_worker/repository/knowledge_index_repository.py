@@ -58,7 +58,7 @@ class KnowledgeIndexRepository:
         async with self.session(message) as session:
             row=(await session.execute(text("""SELECT j.*,v.source_text,v.storage_backend,v.storage_key,
               v.original_filename,v.source_bytes,v.content_hash AS source_hash,v.embedding_provider,v.embedding_model,
-              v.embedding_model_version,v.embedding_dimensions,d.category,d.visibility,d.is_sensitive,d.external_embedding_allowed
+              v.embedding_model_version,v.embedding_dimensions,d.visibility,d.is_sensitive,d.external_embedding_allowed
               FROM knowledge_index_jobs j JOIN knowledge_documents d ON d.id=j.document_id AND d.tenant_id=j.tenant_id
               JOIN knowledge_document_versions v ON v.id=j.version_id AND v.document_id=d.id AND v.tenant_id=d.tenant_id
               WHERE j.id=:id AND j.tenant_id=:tenant AND j.user_id=:user AND d.user_id=:user
@@ -104,6 +104,12 @@ class KnowledgeIndexRepository:
               namespace=namespace,collection=collection,parser=parser,total=len(chunks),id=message['job_id'],
               tenant=message['tenant_id'],user=message['user_id'],token=token))).first()
             if not pinned: raise HarnessError('KNOWLEDGE_INDEX_PROFILE_CHANGED','索引目标/解析版本变化或租约失效')
+            bound=(await session.execute(text("""UPDATE knowledge_document_versions SET vector_namespace=:namespace,
+              vector_collection=:collection WHERE id=:id AND tenant_id=:tenant
+              AND (vector_namespace IS NULL OR vector_namespace=:namespace)
+              AND (vector_collection IS NULL OR vector_collection=:collection) RETURNING id"""),
+              dict(namespace=namespace,collection=collection,id=job['version_id'],tenant=message['tenant_id']))).first()
+            if not bound: raise HarnessError('KNOWLEDGE_INDEX_PROFILE_CHANGED','版本索引绑定已变化')
             for chunk in chunks:
                 await session.execute(text("""INSERT INTO knowledge_chunks
                   (id,document_id,version_id,tenant_id,position,section,content,start_offset,end_offset,content_hash,

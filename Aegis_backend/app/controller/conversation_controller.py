@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.response import success
@@ -99,23 +99,25 @@ async def list_conversations(
 @router.get("/{conversation_id}/artifacts")
 async def list_conversation_artifacts(
     conversation_id: UUID,
+    response: Response,
     run_id: UUID | None = None,
     current_user: CurrentUser = Depends(get_current_user),
     session: AsyncSession = Depends(get_tenant_session),
 ) -> dict[str, list[ConversationArtifactVO]]:
     """
     读取会话中仍有效的脱敏卡片引用，供 SSE 事件后按需刷新。
-    当前可返回两类卡片数据（工具返回的安全摘要）：
+    可返回日历、邮件及知识来源等卡片数据（工具返回的安全摘要）：
         - calendar_events：日程标题、起止时间、显示时区。
         - calendar_free_time：可用时间段、会议时长、显示时区。
     它不返回完整日历原始响应、会议描述、参会人、OAuth 信息等敏感或不适合放入对话卡片的数据。
-    以后“本周续约邮件”的候选邮件卡片也会使用同一接口
+    knowledge_sources会重新核验当前权限／版本；失效条目不返回旧摘录，availability标记可用程度。
     """
     artifacts = await _conversation_service.list_active_artifacts(
         session, current_user.user, conversation_id, run_id
     )
     if artifacts is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="会话不存在或无权访问")
+    response.headers['Cache-Control']='no-store'
     return success(
         [
             ConversationArtifactVO(

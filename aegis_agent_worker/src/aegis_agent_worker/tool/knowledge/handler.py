@@ -17,6 +17,7 @@ class KnowledgeSearchHandler:
             raise ToolError("TOOL_INVALID_ARGUMENTS", "知识查询参数未通过校验") from None
         result = await self._retrieval.search(context, plan)
         return ToolResult(response_payload=result.model_dump(mode="json"), output_summary={
+            "retrieval": result.retrieval.model_dump(mode='json') if result.retrieval else None,
             "evidence_count": len(result.evidence),
             "sources": [{"document_id": str(item.document_id), "version_id": str(item.version_id),
                          "chunk_id": str(item.chunk_id)} for item in result.evidence],

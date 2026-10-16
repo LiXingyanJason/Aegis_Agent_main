@@ -1,10 +1,10 @@
-"""知识资料权限事实 SQL；不接受正文或分类标签声明的 ACL。"""
+"""知识资料权限事实 SQL；不接受正文声明的 ACL。"""
 from sqlalchemy import text
 
 
 class KnowledgeRepository:
     async def get_document(self, session, *, tenant_id, user_id, document_id):
-        result = await session.execute(text("""SELECT id,title,category,visibility,user_id,current_version_id,
+        result = await session.execute(text("""SELECT id,title,visibility,user_id,current_version_id,
             is_sensitive,external_embedding_allowed FROM knowledge_documents
             WHERE id=:id AND tenant_id=:tenant AND deleted_at IS NULL
               AND (user_id=:user OR visibility='tenant')"""),

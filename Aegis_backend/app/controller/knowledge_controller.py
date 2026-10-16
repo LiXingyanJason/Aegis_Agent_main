@@ -1,13 +1,17 @@
-"""资料导入/索引状态入口；不开放已有文档更新、下载或远程URL导入。"""
+"""资料管理/索引/受控来源入口；不开放多版本更新、下载或远程URL导入。"""
 import json
 from uuid import UUID
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile, Response
 from pydantic import ValidationError
 from app.common.response import success
 from app.security.dependencies import CurrentUser,get_current_user,get_tenant_session
 from app.param.knowledge_param import KnowledgeImportMetadata,KnowledgeTextImportParam,KnowledgeIndexStartParam,KnowledgeActivationParam
 from app.vo.knowledge_vo import KnowledgeImportVO,KnowledgeDocumentVO,KnowledgeIndexJobVO,KnowledgeActivationVO
 from app.service.knowledge_import_service import KnowledgeImportError
+from app.param.knowledge_param import KnowledgeVisibilityParam
+from app.vo.knowledge_vo import KnowledgeDocumentDetailVO,KnowledgeChunkVO
+from app.service.knowledge_document_service import KnowledgeDocumentService
+from app.service.knowledge_service import KnowledgeService
 
 router = APIRouter(prefix='/knowledge',tags=['knowledge'])
 
@@ -83,10 +87,42 @@ async def activate_document(document_id:UUID,param:KnowledgeActivationParam,curr
 
 @router.get('/documents')
 async def list_documents(limit:int=Query(50,ge=1,le=100),current_user:CurrentUser=Depends(get_current_user),
-                          session=Depends(get_tenant_session),imports=Depends(service)):
+                          session=Depends(get_tenant_session),imports=Depends(service),offset:int=Query(0,ge=0,le=100000)):
     """查看当前用户有权访问的资料列表"""
-    items = await imports.list_documents(session,current_user.user,limit)
+    items = await imports.list_documents(session,current_user.user,limit,offset)
     return success([KnowledgeDocumentVO(**item) for item in items])
+
+
+@router.get('/documents/{document_id}')
+async def document_detail(document_id:UUID,current_user:CurrentUser=Depends(get_current_user),session=Depends(get_tenant_session)):
+    item=await KnowledgeDocumentService().detail(session,current_user.user,document_id)
+    if item is None:
+        raise HTTPException(404,detail='资料不存在或无权访问')
+    return success(KnowledgeDocumentDetailVO(**item))
+
+
+@router.delete('/documents/{document_id}',status_code=204)
+async def delete_document(document_id:UUID,current_user:CurrentUser=Depends(get_current_user),session=Depends(get_tenant_session)):
+    if not await KnowledgeDocumentService().delete(session,current_user.user,document_id):
+        raise HTTPException(404,detail='资料不存在或无权操作')
+    return Response(status_code=204)
+
+
+@router.patch('/documents/{document_id}/visibility')
+async def share_document(document_id:UUID,param:KnowledgeVisibilityParam,current_user:CurrentUser=Depends(get_current_user),session=Depends(get_tenant_session)):
+    if not await KnowledgeService().set_visibility(session,current_user.user,document_id,param.visibility):
+        raise HTTPException(404,detail='资料不存在或无权操作')
+    return success({'document_id':document_id,'visibility':param.visibility})
+
+
+@router.get('/documents/{document_id}/versions/{version_id}/chunks/{chunk_id}')
+async def source_detail(document_id:UUID,version_id:UUID,chunk_id:UUID,response:Response,
+    content_hash:str=Query(...,pattern=r'^[a-f0-9]{64}$'),current_user:CurrentUser=Depends(get_current_user),session=Depends(get_tenant_session)):
+    item=await KnowledgeDocumentService().source(session,current_user.user,document_id,version_id,chunk_id,content_hash)
+    if item is None:
+        raise HTTPException(404,detail={'code':'KNOWLEDGE_SOURCE_UNAVAILABLE','message':'来源不存在、已失效或无权访问'},headers={'Cache-Control':'no-store'})
+    response.headers['Cache-Control']='no-store'
+    return success(KnowledgeChunkVO(**item))
 
 
 @router.get('/index-jobs/{job_id}')

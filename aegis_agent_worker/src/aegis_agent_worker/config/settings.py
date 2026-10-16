@@ -37,7 +37,8 @@ class Settings(BaseSettings):
     agent_queue_name: str = "aegis:agent-runs"
     agent_worker_poll_timeout_seconds: int = 5
     app_timezone: str = "Asia/Shanghai"
-    knowledge_query_enabled: bool = False  # 6.1默认关闭：无真实索引时不将Mock能力提供给主Agent
+    knowledge_query_enabled: bool = False  # 6.4真实检索显式开启；不将Mock能力提供给主Agent
+    knowledge_lexical_fallback_allowed: bool = False  # 显式允许Qdrant服务故障时仅全文检索；不绕过Embedding治理
     knowledge_index_queue_name: str = "aegis:knowledge-index-jobs"
     knowledge_storage_root: str = str(Path(__file__).resolve().parents[4]/"data"/"knowledge-sources")
     knowledge_max_source_bytes: int = Field(default=262144,ge=1024,le=1048576)
@@ -55,7 +56,7 @@ class Settings(BaseSettings):
     embedding_request_timeout_seconds: float = Field(default=30, gt=0, le=120)
     embedding_max_batch_items: int = Field(default=10,ge=1,le=16)  # 阿里云v4最多10条，独立于旧Policy上限
     embedding_external_queries_allowed: bool = False
-    qdrant_enabled: bool = False  # 连接配置预备；索引/检索适配在6.3/6.4接入
+    qdrant_enabled: bool = False  # 6.3写入与6.4只读检索，密钥分别配置
     qdrant_url: AnyHttpUrl | None = None
     qdrant_api_key: SecretStr | None = None
     qdrant_write_api_key: SecretStr | None = None

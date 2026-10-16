@@ -1,16 +1,12 @@
-"""真实 SQL 权限／版本复核；检索算法仍留待6.4，不伪装 retrieve 已完成。"""
+"""真实 SQL 权限／版本复核；Hybrid召回SQL独立于knowledge_retrieval_repository。"""
 from sqlalchemy import text
 from aegis_agent_worker.config.database import TenantContext, tenant_transaction
 from aegis_agent_worker.agent.contracts.knowledge import KnowledgeSearchResult, RetrievedEvidence
-from aegis_agent_worker.tool.contracts import ToolError
 
 
 class KnowledgeEvidenceRepository:
     def __init__(self, database):
         self._database = database
-
-    async def retrieve(self, context, plan):
-        raise ToolError("KNOWLEDGE_NOT_CONFIGURED", "知识检索索引尚未接入")
 
     async def revalidate(self, context, evidence):
         original = KnowledgeSearchResult(evidence=evidence)
@@ -27,7 +23,7 @@ class KnowledgeEvidenceRepository:
                     WHERE c.id=ANY(CAST(:ids AS uuid[])) AND c.tenant_id=:tenant AND d.tenant_id=:tenant
                       AND (d.user_id=:user OR d.visibility='tenant') AND d.deleted_at IS NULL AND d.enabled
                       AND NOT d.is_sensitive AND d.external_embedding_allowed
-                      AND v.status='ready' AND d.current_version_id=v.id"""),
+                      AND v.status='ready' AND d.current_version_id=v.id AND c.indexed_at IS NOT NULL"""),
                     dict(ids=list(prior), tenant=context.tenant_id, user=context.user_id))).mappings().all()
         current = [RetrievedEvidence(source_no=prior[row["chunk_id"]].source_no, **dict(row)) for row in rows]
         # 文档更新、正文或标题变更都不替换旧引用；返回仍精确匹配的证据。

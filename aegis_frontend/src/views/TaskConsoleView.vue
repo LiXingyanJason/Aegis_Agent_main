@@ -3,6 +3,9 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getRunDetail, subscribeRunEvents } from '../api/run'
 import MailCandidateCard from '../components/MailCandidateCard.vue'
+import KnowledgeSourceCard from '../components/KnowledgeSourceCard.vue'
+import KnowledgeSourceDialog from '../components/KnowledgeSourceDialog.vue'
+import { citationParts, knowledgeRetrievalSummary, knowledgeSearchError } from '../utils/knowledge'
 import RunInputPanel from '../components/RunInputPanel.vue'
 import { useAuthStore } from '../store/auth'
 import { useConversationStore } from '../store/conversation'
@@ -20,6 +23,8 @@ const isRunActive = ref(false)
 const messagesElement = ref(null)
 const inputPanelKey = ref(0)
 const inputFollowup = ref('')
+const selectedSource = ref(null)
+const sourceRunId = ref(null)
 let inputPollTimer = null
 let inputPollingRunId = null
 let pollTimer = null
@@ -162,7 +167,7 @@ function artifactsForMessage(message) {
   if (!message.run_id) return []
   return (conversations.artifactsByRun[message.run_id] ?? [])
     .filter((artifact) => {
-      if (!['calendar_events', 'calendar_free_time', 'mail_candidates'].includes(artifact.artifact_type)) return false
+      if (!['calendar_events', 'calendar_free_time', 'mail_candidates', 'knowledge_sources'].includes(artifact.artifact_type)) return false
       if (artifact.assistant_message_id) return artifact.assistant_message_id === message.message_id
       return message.role === 'user'
     })
@@ -171,6 +176,35 @@ function artifactsForMessage(message) {
 function artifactTitle(artifact) {
   return artifact.artifact_type === 'calendar_free_time' ? '可用时间' : '日程结果'
 }
+
+function messageParts(message) {
+  const sources = message.role === 'assistant' ? artifactsForMessage(message)
+    .filter((artifact) => artifact.artifact_type === 'knowledge_sources')
+    .flatMap((artifact) => artifact.payload?.sources ?? []) : []
+  return citationParts(message.content, sources)
+}
+
+function openSource(source, runId) {
+  sourceRunId.value = runId
+  selectedSource.value = source
+}
+
+async function recheckSource() {
+  if (sourceRunId.value) await refreshArtifactsForRun(sourceRunId.value, activeConversation.value?.conversation_id)
+}
+
+function refreshVisibleKnowledge() {
+  selectedSource.value = null
+  const id = activeConversation.value?.conversation_id
+  if (!id) return
+  for (const [runId, artifacts] of Object.entries(conversations.artifactsByRun)) {
+    if (artifacts.some((artifact) => artifact.artifact_type === 'knowledge_sources')) void refreshArtifactsForRun(runId, id)
+  }
+}
+
+watch(() => activeConversation.value?.conversation_id, () => { selectedSource.value = null })
+onMounted(() => window.addEventListener('focus', refreshVisibleKnowledge))
+onBeforeUnmount(() => window.removeEventListener('focus', refreshVisibleKnowledge))
 
 function artifactItems(artifact) {
   return artifact.payload?.items ?? []
@@ -435,6 +469,7 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
 
 <template>
   <main class="workspace">
+    <KnowledgeSourceDialog :source="selectedSource" @close="selectedSource = null" @unavailable="recheckSource" />
     <aside class="sidebar">
       <div class="brand"><span class="mark">⌾</span>Aegis PA</div>
       <p class="nav-label app-nav-label">工作空间</p>
@@ -505,7 +540,7 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
                 <div class="message" :class="item.role">
                   <div class="avatar">{{ item.role === 'user' ? '你' : 'A' }}</div>
                   <div>
-                    <div class="message-bubble">{{ item.content }}</div>
+                    <div class="message-bubble"><template v-for="(part, partIndex) in messageParts(item)" :key="partIndex"><button v-if="part.source" type="button" class="knowledge-citation" @click="openSource(part.source, item.run_id)">{{ part.text }}</button><template v-else>{{ part.text }}</template></template></div>
                     <div class="message-meta">{{ item.role === 'user' ? '你' : 'Aegis' }} · {{ formatTime(item.created_at) }}</div>
                   </div>
                 </div>
@@ -516,6 +551,7 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
                 >
                   <div class="avatar">A</div>
                   <MailCandidateCard v-if="artifact.artifact_type === 'mail_candidates'" :artifact="artifact" @input-required="inputPanelKey += 1" />
+                  <KnowledgeSourceCard v-else-if="artifact.artifact_type === 'knowledge_sources'" :artifact="artifact" :error="conversations.artifactErrors[item.run_id] || ''" @open-source="openSource($event, item.run_id)" @refresh="refreshArtifactsForRun(item.run_id, activeConversation?.conversation_id)" />
                   <div v-else class="artifact-card">
                     <div class="artifact-heading">
                       <b>{{ artifactTitle(artifact) }}</b>
@@ -531,6 +567,7 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
                     <p v-if="!artifactItems(artifact).length" class="muted">暂无可展示的脱敏结果。</p>
                   </div>
                 </div>
+                <p v-if="item.role === 'assistant' && conversations.artifactErrors[item.run_id] && !artifactsForMessage(item).some((artifact) => artifact.artifact_type === 'knowledge_sources')" role="alert" class="muted">展示结果暂不可用，未使用旧缓存。<button type="button" class="knowledge-citation" @click="refreshArtifactsForRun(item.run_id, activeConversation?.conversation_id)">重新读取卡片</button></p>
                 <template v-if="item.role === 'user' && meetingRunForMessage(item) && meetingPreview(meetingRunForMessage(item))">
                   <div v-for="run in [meetingRunForMessage(item)]" :key="'meeting-plan-' + run.run_id" class="message meeting-plan-message">
                     <div class="avatar">A</div>
@@ -598,12 +635,22 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
                     </li>
                   </ol>
                   <div v-if="run.tool_previews?.length" class="run-section">
-                    <b>日历查询结果</b>
+                    <b>工具查询结果</b>
                     <div v-for="tool in run.tool_previews" :key="tool.tool_call_id" class="tool-preview">
                       <p><b>{{ tool.tool_name }}</b> · {{ tool.status }} · {{ tool.risk_level }}</p>
-                      <p v-if="tool.input_summary">查询条件：{{ formatCalendarData(tool.input_summary) }}</p>
-                      <p v-if="tool.output_summary">查询结果：{{ formatCalendarData(tool.output_summary) }}</p>
-                      <p v-if="tool.error_message" class="run-error">{{ tool.error_message }}</p>
+                      <template v-if="tool.tool_name === 'knowledge.search'">
+                        <template v-if="tool.output_summary">
+                          <p>检索方式：{{ knowledgeRetrievalSummary(tool.output_summary).mode }}</p>
+                          <p v-if="knowledgeRetrievalSummary(tool.output_summary).count !== null">已核验证据：{{ knowledgeRetrievalSummary(tool.output_summary).count }} 条</p>
+                          <p v-if="knowledgeRetrievalSummary(tool.output_summary).reason" :class="{ 'run-error': knowledgeRetrievalSummary(tool.output_summary).degraded }">{{ knowledgeRetrievalSummary(tool.output_summary).reason }}</p>
+                        </template>
+                        <p v-if="tool.status === 'failed'" class="run-error">{{ knowledgeSearchError(tool) }}</p>
+                      </template>
+                      <template v-else>
+                        <p v-if="tool.input_summary">查询条件：{{ formatCalendarData(tool.input_summary) }}</p>
+                        <p v-if="tool.output_summary">查询结果：{{ formatCalendarData(tool.output_summary) }}</p>
+                        <p v-if="tool.error_message" class="run-error">{{ tool.error_message }}</p>
+                      </template>
                     </div>
                   </div>
                   <el-alert
@@ -663,6 +710,7 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
 </template>
 
 <style scoped>
+.knowledge-citation { color:#1c5bd6;background:transparent;border:0;font:inherit;cursor:pointer;padding:0 2px; }
 .conversation-card > .run-input-panel { flex: none; margin: 10px 20px; max-height: 35%; overflow-y: auto; }
 .mail-input-followup { flex: none; margin: 8px 20px; color: #345d8d; font-size: 12px; }
 .mail-input-followup a { color: #266dcc; }

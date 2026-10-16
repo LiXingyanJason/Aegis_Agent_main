@@ -8,13 +8,15 @@ from app.param.conversation_create_param import ConversationCreateParam
 from app.param.message_send_param import MessageSendParam
 from app.repository.conversation_repository import Conversation, ConversationRepository, SentMessageRun
 from app.repository.user_repository import LocalUser
+from app.service.knowledge_artifact_service import KnowledgeArtifactService
 
 
 class ConversationService:
     """处理会话创建等面向用户的业务规则。"""
 
-    def __init__(self, conversations: ConversationRepository | None = None) -> None:
+    def __init__(self, conversations: ConversationRepository | None = None, knowledge_artifacts=None) -> None:
         self._conversations = conversations or ConversationRepository()
+        self._knowledge_artifacts=knowledge_artifacts or KnowledgeArtifactService()
 
     async def create_conversation(
         self,
@@ -94,13 +96,15 @@ class ConversationService:
         )
         if conversation is None:
             return None
-        return await self._conversations.list_active_artifacts_for_conversation(
+        artifacts = await self._conversations.list_active_artifacts_for_conversation(
             session,
             conversation_id=conversation_id,
             tenant_id=local_user.tenant_id,
             user_id=local_user.id,
             run_id=run_id,
         )
+        return [await self._knowledge_artifacts.refresh(session,local_user,item)
+                if item['artifact_type']=='knowledge_sources' else item for item in artifacts]
 
     async def send_message(
         self,

@@ -7,6 +7,7 @@ import {
   sendConversationMessage,
 } from '../api/conversation'
 import { getRunDetail } from '../api/run'
+import { unavailableKnowledgeArtifacts } from '../utils/knowledge'
 
 export const useConversationStore = defineStore('conversation', {
   state: () => ({
@@ -15,6 +16,8 @@ export const useConversationStore = defineStore('conversation', {
     messages: [],
     runs: [],
     artifactsByRun: {},
+    artifactErrors: {},
+    artifactRequests: {},
     runEventNos: {},
     latestSubmission: null,
     loadingHistory: false,
@@ -30,6 +33,8 @@ export const useConversationStore = defineStore('conversation', {
       this.messages = []
       this.runs = []
       this.artifactsByRun = {}
+      this.artifactErrors = {}
+      this.artifactRequests = {}
       this.latestSubmission = null
       this.loadingDetail = false
     },
@@ -144,14 +149,28 @@ export const useConversationStore = defineStore('conversation', {
       return run
     },
     async loadArtifacts(conversationId, runId) {
-      const artifacts = await getConversationArtifacts(conversationId, runId)
-      if (this.current?.conversation_id === conversationId) {
+      const key = runId ?? '__all__'
+      const version = this.currentRequestKey
+      const request = (this.artifactRequests[key] ?? 0) + 1
+      this.artifactRequests[key] = request
+      this.artifactErrors[key] = ''
+      this.artifactsByRun[key] = unavailableKnowledgeArtifacts(this.artifactsByRun[key] ?? [], 'loading')
+      try {
+        const artifacts = await getConversationArtifacts(conversationId, runId)
+        if (this.current?.conversation_id === conversationId && version === this.currentRequestKey && this.artifactRequests[key] === request) {
         this.artifactsByRun = {
           ...this.artifactsByRun,
-          [runId ?? '__all__']: artifacts,
+          [key]: artifacts,
         }
+        }
+        return artifacts
+      } catch (cause) {
+        if (this.current?.conversation_id === conversationId && version === this.currentRequestKey && this.artifactRequests[key] === request) {
+          this.artifactErrors[key] = '来源服务暂不可用。'
+          this.artifactsByRun[key] = unavailableKnowledgeArtifacts(this.artifactsByRun[key] ?? [])
+        }
+        throw cause
       }
-      return artifacts
     },
     applyRunEvent(event) {
       const runId = event.run_id

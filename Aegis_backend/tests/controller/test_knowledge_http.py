@@ -26,9 +26,9 @@ async def test_http_text_and_multipart_import_and_invalid_metadata():
             return dict(document_id=document_id,version_id=UUID(int=2),job_id=UUID(int=3),status='queued',index_status='queued')
         async def activate(self,session,user,document_id,enabled):
             return dict(document_id=document_id,enabled=enabled,index_status='ready')
-        async def list_documents(self,session,user,limit):
+        async def list_documents(self,session,user,limit,offset=0):
             return [dict(document_id=UUID(int=1),version_id=UUID(int=2),job_id=None,
-                title='test',category='project',visibility='private',index_status='not_indexed',
+                title='test',visibility='private',index_status='not_indexed',
                 enabled=False,is_sensitive=False,external_embedding_allowed=False,
                 can_manage=True,created_at=datetime(2026,1,1,tzinfo=timezone.utc))]
     app=FastAPI()
@@ -38,11 +38,13 @@ async def test_http_text_and_multipart_import_and_invalid_metadata():
     app.dependency_overrides[service]=lambda:Imports()
     dispatch=SimpleNamespace(enqueue_after_commit=Mock())
     app.dependency_overrides[dispatcher]=lambda:dispatch
-    param=dict(title='test',category='project',client_request_id='x',external_embedding_allowed=True)
+    param=dict(title='test',client_request_id='x',external_embedding_allowed=True)
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://test') as client:
         response=await client.post('/knowledge/documents',json={**param,'content':'test'})
         assert response.status_code==201 and response.json()['data']['status']=='uploaded'
         assert response.json()['data']['job_id'] is None and not response.json()['data']['enabled']
+        response=await client.post('/knowledge/documents',json={**param,'category':'policy','content':'test'})
+        assert response.status_code==422
         response=await client.post('/knowledge/documents/upload',data={'metadata':json.dumps(param)},files={'file':('test.txt',b'test','text/plain')})
         assert response.status_code==201
         dispatch.enqueue_after_commit.assert_not_called()
@@ -55,6 +57,7 @@ async def test_http_text_and_multipart_import_and_invalid_metadata():
         assert response.status_code==200 and not response.json()['data']['enabled']
         response=await client.get('/knowledge/documents')
         assert response.status_code==200 and response.json()['data'][0]['can_manage'] is True
+        assert 'category' not in response.json()['data'][0]
         assert dispatch.enqueue_after_commit.call_count==1
         response=await client.post('/knowledge/documents/upload',data={'metadata':json.dumps({**param,'storage_key':'unsafe'})},files={'file':('test.txt',b'test')})
         assert response.status_code==422

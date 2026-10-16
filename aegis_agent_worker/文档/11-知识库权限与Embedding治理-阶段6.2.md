@@ -4,7 +4,7 @@
 
 本页说明6.2边界；后续6.3已实现本机源文件导入/索引，新增012_knowledge_indexing与013_knowledge_lifecycle。
 当前代码head为013；上传、索引、启用分别操作，新旧资料均默认禁用。本次未升级业务库；见[6.3部署与接口](12-知识资料导入与索引-阶段6.3.md)。
-真实Hybrid检索/OSS仍待后续步骤，不将配置完成当作查询成功。
+后续6.4已接入Hybrid检索代码，OSS及云端实际效果仍待验证；见[6.4使用说明](13-权限前置Hybrid检索与RRF-阶段6.4.md)，不将配置完成当作查询成功。
 
 向量路线已改为 **本地 PostgreSQL + Qdrant Cloud 免费集群**；无需迁移原数据库或安装 pgvector。
 
@@ -16,7 +16,7 @@
 本地库已核验为 `011_embedding_governance`。010/011保持原样；
 未提交且未执行的 `012_knowledge_pgvector.py` 已移除；6.2时head为011，后续追加012／013，不改写历史迁移。
 **没有执行数据库回滚、stamp、云集群创建、远端写入或资料上传。**
-6.3导入与Qdrant写入适配已实现，真实Hybrid检索仍待6.4；配置开关不等于查询链路已接入。
+6.3导入与Qdrant写入、后续6.4只读Hybrid检索代码已实现；配置开关不等于实际查询已联调通过。
 
 ### 源文件存储分工（6.3已实现本机适配，OSS待扩展）
 
@@ -44,7 +44,7 @@ API/Worker在开发时使用同一根目录或共享卷；本地key禁止路径�
 | 011_embedding_governance | embedding_execution_budgets / embedding_execution_attempts |
 
 ```text
-knowledge_documents（归属、范围、分类、删除状态、外发授权）
+knowledge_documents（归属、范围、历史类别列、删除状态、外发授权；历史类别不再参与业务）
   └─ knowledge_document_versions（原文/hash、状态、固定模型/版本/维度）
        ├─ knowledge_chunks（片段、位置、hash、全文索引，不存向量）
        └─ knowledge_index_jobs（索引状态及重试次数）
@@ -52,7 +52,7 @@ knowledge_documents（归属、范围、分类、删除状态、外发授权）
 
 版本/片段复合外键防止不同文档、租户、模型空间混用；current_version_id限定本文件版本。
 默认private仅本人读，tenant仅同租户共享；共享读者不能修改资料或创建所有者索引任务。
-标签只分类，不声明ACL。KnowledgeService.set_visibility只根据认证所有者修改范围，暂无HTTP入口。
+历史类别值不声明ACL，当前接口不接收或展示。KnowledgeService.set_visibility只根据认证所有者修改范围。
 知识表启用且FORCE RLS；Repository仍显式限定tenant/user、范围、删除状态。
 KnowledgeEvidenceRepository只返回当前ready版本且仍与旧引用完全一致的可访问片段。
 

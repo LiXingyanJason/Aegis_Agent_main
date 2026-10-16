@@ -4,7 +4,8 @@ from contextvars import ContextVar
 
 
 _purpose = ContextVar("model_call_purpose", default=None)
-PURPOSES = frozenset({"main_routing", "main_routing_repair", "model_completion", "model_json"})
+PURPOSES = frozenset({"main_routing", "main_routing_repair", "model_completion", "model_json",
+    "knowledge_planning", "knowledge_planning_repair", "knowledge_answer", "knowledge_answer_repair"})
 
 
 @contextmanager

@@ -23,8 +23,7 @@ class KnowledgeQueryService:
         invocation = plan.to_invocation()
         definition = self._tools.get_definition(invocation.tool_name)
         context = TenantContext(tenant_id=run.tenant_id, user_id=run.user_id)
-        summary = {"top_k": plan.top_k, "rewrite_count": len(plan.query_rewrites),
-                   "category": plan.filters.category}
+        summary = {"top_k": plan.top_k, "rewrite_count": len(plan.query_rewrites)}
         started = monotonic()
         preparation_error = None
         async with self._database.session() as session:
@@ -72,6 +71,8 @@ class KnowledgeQueryService:
         output = {"evidence_count": len(result.evidence), "sources": [
             {"document_id": str(item.document_id), "version_id": str(item.version_id),
              "chunk_id": str(item.chunk_id)} for item in result.evidence]}
+        if result.retrieval is not None:
+            output['retrieval'] = result.retrieval.model_dump(mode='json')
         async with self._database.session() as session:
             async with tenant_transaction(session, context):
                 await self._tool_calls.succeed(session, tool_call_id=call_id, tenant_id=run.tenant_id,

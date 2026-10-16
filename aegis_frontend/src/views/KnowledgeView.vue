@@ -10,6 +10,7 @@ import {
   setKnowledgeActivation,
   startKnowledgeIndex,
   uploadKnowledgeFile,
+  getKnowledgeDocument, deleteKnowledgeDocument, setKnowledgeVisibility,
 } from '../api/knowledge'
 import { useAuthStore } from '../store/auth'
 
@@ -19,7 +20,6 @@ const mode = ref('file')
 const fileInput = ref(null)
 const selectedFile = ref(null)
 const title = ref('')
-const category = ref('project')
 const visibility = ref('private')
 const content = ref('')
 const isSensitive = ref(false)
@@ -27,6 +27,11 @@ const requestId = ref(crypto.randomUUID())
 const search = ref('')
 const statusFilter = ref('all')
 const documents = ref([])
+const offset = ref(0)
+const documentDetail = ref(null)
+const detailOpen = ref(false)
+const detailError = ref('')
+let detailRequest = 0
 const jobs = ref({})
 const loading = ref(false)
 const uploading = ref(false)
@@ -50,10 +55,6 @@ const canImport = computed(() => Boolean(
   && (mode.value === 'file' ? selectedFile.value : content.value.trim())
   && !uploading.value,
 ))
-
-function categoryLabel(value) {
-  return { project: '项目', policy: '制度', contract: '合同', minutes: '会议纪要' }[value] ?? value
-}
 
 function statusLabel(value) {
   return {
@@ -96,7 +97,7 @@ async function loadDocuments({ silent = false } = {}) {
   if (!silent) loading.value = true
   listError.value = ''
   try {
-    const items = await listKnowledgeDocuments(100)
+    const items = await listKnowledgeDocuments(100, offset.value)
     if (!mounted) return
     documents.value = Array.isArray(items) ? items : []
     const activeIds = new Set(documents.value.map((item) => item.job_id).filter(Boolean))
@@ -182,7 +183,7 @@ async function importDocument() {
   uploading.value = true
   importError.value = ''
   const metadata = {
-    title: title.value.trim(), category: category.value, visibility: visibility.value,
+    title: title.value.trim(), visibility: visibility.value,
     client_request_id: requestId.value, is_sensitive: isSensitive.value,
     external_embedding_allowed: false,
   }
@@ -262,6 +263,50 @@ async function signOut() {
   await router.replace({ name: 'login' })
 }
 
+async function showDetail(document) {
+  const request = ++detailRequest
+  documentDetail.value = null
+  detailError.value = ''
+  detailOpen.value = true
+  try {
+    const result = await getKnowledgeDocument(document.document_id)
+    if (request === detailRequest && detailOpen.value) documentDetail.value = result
+  } catch (cause) {
+    if (request === detailRequest) detailError.value = errorMessage(cause, '资料详情暂不可用。')
+  }
+}
+
+async function shareDocument(document) {
+  const next = document.visibility === 'tenant' ? 'private' : 'tenant'
+  try {
+    await ElMessageBox.confirm(next === 'tenant' ? '允许同租户成员读取此资料吗？启用状态仍独立控制。' : '收回共享后，其他成员的新检索与来源读取将被拒绝。', '更改可见范围')
+  } catch { return }
+  busyDocumentId.value = document.document_id
+  try {
+    await setKnowledgeVisibility(document.document_id, next)
+    await loadDocuments({ silent: true })
+  } catch (cause) { setActionError(document.document_id, errorMessage(cause, '更改范围失败。')) }
+  finally { busyDocumentId.value = null }
+}
+
+async function removeDocument(document) {
+  try {
+    await ElMessageBox.confirm(`删除「${document.title}」后立即停止新的检索和来源读取。源文件与审计保留，不物理清除向量。`, '确认删除资料', { type: 'warning' })
+  } catch { return }
+  busyDocumentId.value = document.document_id
+  try {
+    await deleteKnowledgeDocument(document.document_id)
+    await loadDocuments({ silent: true })
+    ElMessage.success('资料已移除，后续访问已停止。')
+  } catch (cause) { setActionError(document.document_id, errorMessage(cause, '删除资料失败。')) }
+  finally { busyDocumentId.value = null }
+}
+
+async function changePage(delta) {
+  offset.value = Math.max(0, offset.value + delta * 100)
+  await loadDocuments()
+}
+
 onMounted(() => {
   mounted = true
   loadDocuments()
@@ -276,6 +321,16 @@ onUnmounted(() => {
 
 <template>
   <main class="workspace">
+    <el-dialog v-model="detailOpen" title="资料详情" @close="detailRequest += 1; documentDetail = null">
+      <p v-if="detailError" role="alert">{{ detailError }}</p>
+      <template v-else-if="documentDetail">
+        <h3>{{ documentDetail.title }}</h3>
+        <p>{{ documentDetail.version_label }} · {{ statusLabel(documentDetail.index_status) }}</p>
+        <p>已索引 {{ documentDetail.indexed_chunks }} 个片段 · {{ documentDetail.enabled ? '已启用' : '未启用' }}</p>
+        <p>{{ documentDetail.visibility === 'tenant' ? '同租户共享' : '私有' }}；管理权以服务端核验为准。</p>
+      </template>
+      <p v-else>正在读取…</p>
+    </el-dialog>
     <aside class="sidebar">
       <div class="brand"><span class="mark">⌾</span>Aegis PA</div>
       <p class="nav-label app-nav-label">工作空间</p>
@@ -336,24 +391,11 @@ onUnmounted(() => {
             <label class="knowledge-field" for="knowledge-title">资料标题</label>
             <el-input id="knowledge-title" v-model="title" maxlength="200" placeholder="例如：虚构项目说明" />
 
-            <div class="knowledge-field-row">
-              <div>
-                <label class="knowledge-field" for="knowledge-category">分类</label>
-                <el-select id="knowledge-category" v-model="category" style="width: 100%">
-                  <el-option label="项目" value="project" />
-                  <el-option label="制度" value="policy" />
-                  <el-option label="合同" value="contract" />
-                  <el-option label="会议纪要" value="minutes" />
-                </el-select>
-              </div>
-              <div>
-                <label class="knowledge-field" for="knowledge-visibility">可见范围</label>
-                <el-select id="knowledge-visibility" v-model="visibility" style="width: 100%">
-                  <el-option label="仅自己" value="private" />
-                  <el-option label="同租户共享" value="tenant" />
-                </el-select>
-              </div>
-            </div>
+            <label class="knowledge-field" for="knowledge-visibility">可见范围</label>
+            <el-select id="knowledge-visibility" v-model="visibility" style="width: 100%">
+              <el-option label="仅自己" value="private" />
+              <el-option label="同租户共享" value="tenant" />
+            </el-select>
 
             <div class="knowledge-consent">
               <el-checkbox v-model="isSensitive">此资料包含敏感内容</el-checkbox>
@@ -394,7 +436,7 @@ onUnmounted(() => {
                   <span class="knowledge-document-icon" aria-hidden="true">▤</span>
                   <div>
                     <h3>{{ document.title }}</h3>
-                    <p>{{ categoryLabel(document.category) }} · {{ document.visibility === 'tenant' ? '同租户共享' : '仅自己' }} · {{ formatTime(document.created_at) }}</p>
+                    <p>{{ document.visibility === 'tenant' ? '同租户共享' : '仅自己' }} · {{ formatTime(document.created_at) }}</p>
                   </div>
                 </div>
                 <div class="knowledge-document-statuses">
@@ -411,15 +453,19 @@ onUnmounted(() => {
               <p v-if="document.job_id && jobErrors[document.job_id]" class="knowledge-job-error">{{ jobErrors[document.job_id] }}</p>
               <p v-if="actionErrors[document.document_id]" class="knowledge-job-error">{{ actionErrors[document.document_id] }}</p>
               <div class="knowledge-document-bottom">
+                <el-button size="small" @click="showDetail(document)">详情</el-button>
                 <span v-if="!document.can_manage" class="knowledge-shared-notice">共享资料 · 仅所有者可管理</span>
                 <div v-else class="knowledge-document-actions">
                   <el-button v-if="document.index_status === 'failed' && document.job_id" size="small" :loading="busyDocumentId === document.document_id" @click="retryIndex(document)">重试索引</el-button>
                   <el-button v-else size="small" :disabled="document.index_status !== 'not_indexed' || document.is_sensitive || busyDocumentId === document.document_id" :loading="busyDocumentId === document.document_id" @click="confirmIndex(document)">{{ document.index_status === 'ready' ? '已向量化' : ['queued', 'running'].includes(document.index_status) ? '索引中' : '建立索引' }}</el-button>
                   <el-button size="small" :type="document.enabled ? 'danger' : 'primary'" plain :disabled="(!document.enabled && (document.index_status !== 'ready' || document.is_sensitive)) || busyDocumentId === document.document_id" :loading="busyDocumentId === document.document_id" @click="toggleEnabled(document)">{{ document.enabled ? '禁用资料' : '启用资料' }}</el-button>
+                  <el-button size="small" :disabled="busyDocumentId === document.document_id" @click="shareDocument(document)">{{ document.visibility === 'tenant' ? '收回共享' : '共享' }}</el-button>
+                  <el-button size="small" type="danger" plain :disabled="busyDocumentId === document.document_id" @click="removeDocument(document)">删除</el-button>
                 </div>
               </div>
             </article>
             <p v-if="!loading && !listError && !filteredDocuments.length" class="knowledge-empty">暂无符合条件的资料。</p>
+            <div class="knowledge-pages"><el-button :disabled="offset === 0 || loading" @click="changePage(-1)">上一页</el-button><span>第 {{ offset / 100 + 1 }} 页 · 筛选仅作用于当前页</span><el-button :disabled="documents.length < 100 || loading" @click="changePage(1)">下一页</el-button></div>
           </div>
         </section>
       </div>
@@ -428,6 +474,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.knowledge-pages { display:flex;gap:12px;justify-content:center;align-items:center;font-size:12px;padding:16px; }
 .knowledge-content { min-width: 0; }
 .knowledge-notice { flex: none; margin-bottom: 18px; }
 .knowledge-layout { display: grid; min-height: 0; flex: 1; grid-template-columns: minmax(310px, 360px) minmax(0, 1fr); gap: 18px; }
@@ -447,7 +494,6 @@ onUnmounted(() => {
 .knowledge-text-entry { margin-bottom: 14px; }
 .knowledge-text-entry label, .knowledge-field { display: block; margin: 16px 0 7px; color: #344054; font-size: 12px; font-weight: 700; }
 .knowledge-text-entry label { margin-top: 0; }
-.knowledge-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .knowledge-consent { display: grid; gap: 4px; margin: 18px 0; }
 .knowledge-consent :deep(.el-checkbox) { height: auto; align-items: flex-start; white-space: normal; }
 .knowledge-consent p { margin: 5px 0 0; color: #667085; font-size: 11px; line-height: 1.5; }

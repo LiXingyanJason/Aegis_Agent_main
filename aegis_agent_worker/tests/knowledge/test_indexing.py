@@ -10,7 +10,7 @@ from aegis_agent_worker.indexing.chunker import chunk_text
 from aegis_agent_worker.storage.local_document_storage import LocalDocumentStorage
 from aegis_agent_worker.service.knowledge.knowledge_index_service import KnowledgeIndexService
 from aegis_agent_worker.embedding.contracts import EmbeddingProfile
-from aegis_agent_worker.vector.qdrant_index import QdrantVectorIndex
+from aegis_agent_worker.vector.qdrant_index import QdrantVectorIndex, PAYLOAD_INDEXES
 from aegis_agent_worker.vector.contracts import VectorIndexError
 from aegis_agent_worker.worker.index_worker import parse_message
 
@@ -50,7 +50,8 @@ async def test_vector_create_and_write_require_confirmation_without_text_payload
         if request.method=='GET' and len(calls)==1:
             return httpx.Response(404)
         if request.method=='GET':
-            return httpx.Response(200,json={'status':'ok','result':{'config':{'params':{'vectors':{'size':3,'distance':'Cosine'}}},'points_count':0}})
+            return httpx.Response(200,json={'status':'ok','result':{'config':{'params':{'vectors':{'size':3,'distance':'Cosine'}}},'points_count':0,
+                'payload_schema':{key:{'data_type':value} for key,value in PAYLOAD_INDEXES.items()}}})
         if request.url.path.endswith('/points'):
             assert request.url.query==b'wait=true'
             return httpx.Response(200,json={'status':'ok','result':{'status':'completed'}})
@@ -81,7 +82,7 @@ def scenario():
     job=dict(id=message['job_id'],document_id=UUID(int=4),version_id=UUID(int=5),source_text=None,
         storage_backend='local',storage_key=str(UUID(int=6)),source_bytes=len(raw),source_hash=sha256(raw).hexdigest(),
         embedding_provider='openai_compatible',embedding_model='test',embedding_model_version='v1',embedding_dimensions=3,
-        category='project',visibility='private',is_sensitive=False,external_embedding_allowed=True)
+        visibility='private',is_sensitive=False,external_embedding_allowed=True)
     settings=SimpleNamespace(knowledge_index_lease_seconds=180,knowledge_index_max_claims=3,
         knowledge_max_source_bytes=262144,embedding_provider='openai_compatible',embedding_model='test',
         embedding_model_version='v1',embedding_dimensions=3,qdrant_collection='test',embedding_max_batch_items=10)

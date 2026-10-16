@@ -13,7 +13,7 @@ USER=SimpleNamespace(id=UUID(int=10),tenant_id=UUID(int=1))
 
 
 def metadata(**values):
-    return KnowledgeImportMetadata(title='测试',category='project',client_request_id='test',external_embedding_allowed=True,**values)
+    return KnowledgeImportMetadata(title='测试',client_request_id='test',external_embedding_allowed=True,**values)
 
 
 def imports(tmp_path):
@@ -72,7 +72,7 @@ async def test_sql_failure_cleans_only_new_source(tmp_path):
 
 
 def test_metadata_does_not_accept_paths_or_identity():
-    with pytest.raises(ValueError): KnowledgeImportMetadata(title='test',category='project',client_request_id='x',tenant_id='other')
+    with pytest.raises(ValueError): KnowledgeImportMetadata(title='test',client_request_id='x',tenant_id='other')
 
 
 @pytest.mark.asyncio

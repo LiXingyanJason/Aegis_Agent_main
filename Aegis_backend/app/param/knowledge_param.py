@@ -6,7 +6,6 @@ from pydantic import BaseModel, ConfigDict, Field, StrictBool
 class KnowledgeImportMetadata(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     title: str = Field(min_length=1, max_length=200)
-    category: Literal["project", "policy", "contract", "minutes"]
     client_request_id: str = Field(min_length=1, max_length=128)
     visibility: Literal["private", "tenant"] = "private"
     external_embedding_allowed: bool = False
@@ -25,3 +24,8 @@ class KnowledgeIndexStartParam(BaseModel):
 class KnowledgeActivationParam(BaseModel):
     model_config = ConfigDict(extra="forbid")
     enabled: StrictBool
+
+
+class KnowledgeVisibilityParam(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    visibility: Literal['private','tenant']

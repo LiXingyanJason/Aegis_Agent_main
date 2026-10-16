@@ -4,6 +4,32 @@ import httpx
 from aegis_agent_worker.vector.contracts import VectorIndexError
 
 
+# 与查询过滤及按文档清理使用的payload字段一致；不包含正文。
+PAYLOAD_INDEXES = {
+    'tenant_id': 'keyword', 'version_id': 'keyword', 'document_id': 'keyword',
+    'model_provider': 'keyword', 'model': 'keyword', 'model_version': 'keyword',
+    'dimensions': 'integer',
+}
+
+
+def _missing_payload_indexes(current):
+    schema = current.get('payload_schema', {})
+    if not isinstance(schema, dict):
+        raise VectorIndexError('QDRANT_INDEX_SCHEMA_INVALID', '集合过滤索引配置无效')
+    missing = []
+    for field, expected in PAYLOAD_INDEXES.items():
+        if field not in schema:
+            missing.append(field)
+            continue
+        entry = schema[field]
+        actual = entry.get('data_type') if isinstance(entry, dict) else None
+        # 已有UUID索引同样支持字符串UUID精确过滤，不删除重建。
+        compatible = {expected, 'uuid'} if field in {'tenant_id', 'version_id', 'document_id'} else {expected}
+        if actual not in compatible:
+            raise VectorIndexError('QDRANT_INDEX_SCHEMA_MISMATCH', '集合过滤索引类型不匹配，不自动删除重建')
+    return missing
+
+
 class QdrantVectorIndex:
     def __init__(self,settings,client=None):
         self._settings,self._client=settings,client
@@ -43,6 +69,23 @@ class QdrantVectorIndex:
         vectors=current['config']['params']['vectors']
         if vectors.get('size')!=profile.dimensions or vectors.get('distance')!='Cosine':
             raise VectorIndexError('QDRANT_PROFILE_MISMATCH','集合维度/距离与模型空间不一致，不自动删除重建')
+        return await self.ensure_payload_indexes(current)
+
+    async def ensure_payload_indexes(self, current=None):
+        """索引端幂等补建过滤索引，也可修复已有集合；查询端不持有写权限。"""
+        if current is None:
+            current = await self._request('GET', '')
+        missing = _missing_payload_indexes(current)
+        for field in missing:
+            result = await self._request('PUT', '/index?wait=true', payload={
+                'field_name': field, 'field_schema': PAYLOAD_INDEXES[field],
+            })
+            if not isinstance(result, dict) or result.get('status') != 'completed':
+                raise VectorIndexError('QDRANT_WRITE_UNCONFIRMED', '过滤索引创建尚未确认完成')
+        if missing:
+            current = await self._request('GET', '')
+            if _missing_payload_indexes(current):
+                raise VectorIndexError('QDRANT_INDEX_UNCONFIRMED', '集合仍缺少必要过滤索引')
         return current
 
     async def upsert(self,points):

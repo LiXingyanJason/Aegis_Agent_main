@@ -143,9 +143,21 @@ D:\anaconda\envs\Aegis\python.exe -m alembic upgrade head --sql
 
 ## 排查提示
 
+### 015：共享索引绑定与软删除策略
+
+当前head为`016_knowledge_category_default`。先备份并停止旧API／Worker，再执行`python -m alembic upgrade head`，一起更新主后端、Agent Worker及Index Worker。
+
+016仅为停用的知识资料类别列添加兼容默认值，不改写历史类别数据；新版上传接口不再接收类别、列表与详情不再返回类别，检索不按类别过滤。必须先迁移再部署新版API。
+版本增加vector_namespace／vector_collection，从已有索引任务回填，不创建新索引或云端资源。
+共享检索从已授权版本读取绑定，不再依赖仅所有者可见的私人索引任务。
+RLS允许所有者处理自身已删除文档的元数据以完成软删除；应用查询仍显式排除deleted_at，
+内容子表的SELECT与ALL策略、索引任务策略同时排除删除资料，不能只修改文档策略。
+无跨租户或共享者管理授权放宽，不取消FORCE RLS。降级前停新版服务，会移除版本绑定列并恢复旧策略；不删资料或云向量。
+本轮仅临时schema验证并回滚，未升级现有业务库。详见[6.6说明](../../aegis_agent_worker/文档/15-知识资料接口-SSE与来源卡片-阶段6.6.md)。
+
 ### 013：上传、索引与启用分离
 
-当前head为`013_knowledge_lifecycle`。先备份、停止旧查询代码、执行`python -m alembic upgrade head`，再部署新版API／Worker。
+本阶段revision为`013_knowledge_lifecycle`，当前已追加至015。先备份、停止旧查询代码、执行`python -m alembic upgrade head`，再部署新版API／Worker。
 上传幂等凭据迁至文档；未索引版本允许模型空间为空。文档新增enabled，旧资料与新资料均默认false。
 已完成索引不会重建，已有排队任务不会取消；ready资料须所有者显式启用后才可交付证据。
 013降级遇到模型空间为空的上传资料会拒绝；降级会移除启用标记及新上传幂等字段，须备份并停止查询，不能stamp绕过。

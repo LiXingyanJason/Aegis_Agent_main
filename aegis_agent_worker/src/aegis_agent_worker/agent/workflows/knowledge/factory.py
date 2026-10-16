@@ -12,10 +12,11 @@ class KnowledgeWorkflowFactory:
     evidence_service: object | None = None
     artifact_service: object | None = None
     enabled: bool = False
+    progress_service: object | None = None
 
     def register(self, registry):
         registry.register("knowledge_query", KnowledgeQueryWorkflow(
-            self.agent, self.query_service, self.evidence_service, self.artifact_service).build())
+            self.agent, self.query_service, self.evidence_service, self.artifact_service,self.progress_service).build())
         if self.enabled:
             registry.register_capability(ConversationCapability(domain="knowledge", intent="query_knowledge",
                 workflow="knowledge_query", description="检索已授权公司政策、合同、会议纪要或项目资料并附来源；未配置则明确不可用"))

@@ -22,9 +22,9 @@ class KnowledgeImportRepository:
     async def create(self, session, user, metadata, *, storage_key, filename, mime, source_bytes, source_hash, request_hash):
         document, version = uuid4(), uuid4()
         await session.execute(text("""INSERT INTO knowledge_documents
-          (id,tenant_id,user_id,title,category,is_sensitive,external_embedding_allowed,client_request_id,request_hash,enabled)
-          VALUES(:id,:tenant,:user,:title,:category,:sensitive,:external,:request,:hash,false)"""),
-          dict(id=document, tenant=user.tenant_id, user=user.id, title=metadata.title, category=metadata.category,
+          (id,tenant_id,user_id,title,is_sensitive,external_embedding_allowed,client_request_id,request_hash,enabled)
+          VALUES(:id,:tenant,:user,:title,:sensitive,:external,:request,:hash,false)"""),
+          dict(id=document, tenant=user.tenant_id, user=user.id, title=metadata.title,
                sensitive=metadata.is_sensitive,external=metadata.external_embedding_allowed,request=metadata.client_request_id,hash=request_hash))
         # 先按RLS默认私有创建，再由认证所有者显式分享。
         if metadata.visibility == "tenant":
@@ -39,17 +39,19 @@ class KnowledgeImportRepository:
         return dict(document_id=document, version_id=version, job_id=None, status="uploaded",
                     index_status="not_indexed",enabled=False,idempotent_replay=False)
 
-    async def list_documents(self, session, user, limit):
-        return (await session.execute(text("""SELECT d.id AS document_id,d.title,d.category,d.visibility,d.created_at,
+    async def list_documents(self, session, user, limit, offset=0):
+        return (await session.execute(text("""SELECT d.id AS document_id,d.title,d.visibility,d.created_at,
           v.id AS version_id,j.id AS job_id,d.enabled,d.is_sensitive,d.external_embedding_allowed,
           (d.user_id=:user) AS can_manage,
-          CASE WHEN j.id IS NULL THEN 'not_indexed' WHEN j.status='succeeded' AND v.status='ready' THEN 'ready'
+          CASE WHEN v.status='ready' THEN 'ready' WHEN j.id IS NULL THEN
+            CASE WHEN v.status IN ('failed','indexing','retired') THEN CASE WHEN v.status='indexing' THEN 'running' WHEN v.status='retired' THEN 'unavailable' ELSE v.status END ELSE 'not_indexed' END
+            WHEN j.status='succeeded' AND v.status='ready' THEN 'ready'
             WHEN j.status='succeeded' THEN 'unavailable' ELSE j.status END AS index_status
           FROM knowledge_documents d
           JOIN knowledge_document_versions v ON v.document_id=d.id AND v.tenant_id=d.tenant_id AND v.version_no=1
-          LEFT JOIN knowledge_index_jobs j ON j.version_id=v.id AND j.tenant_id=d.tenant_id
+          LEFT JOIN knowledge_index_jobs j ON j.version_id=v.id AND j.tenant_id=d.tenant_id AND j.user_id=:user
           WHERE d.tenant_id=:tenant AND (d.user_id=:user OR d.visibility='tenant') AND d.deleted_at IS NULL
-          ORDER BY d.created_at DESC,d.id LIMIT :limit"""),dict(tenant=user.tenant_id,user=user.id,limit=limit))).mappings().all()
+          ORDER BY d.created_at DESC,d.id LIMIT :limit OFFSET :offset"""),dict(tenant=user.tenant_id,user=user.id,limit=limit,offset=offset))).mappings().all()
 
     async def job(self, session, user, job_id):
         return (await session.execute(text("""SELECT j.id AS job_id,j.document_id,j.version_id,j.status,j.attempt_count,
