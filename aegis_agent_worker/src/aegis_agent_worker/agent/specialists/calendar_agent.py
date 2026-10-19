@@ -81,7 +81,7 @@ class CalendarAgent:
     def model_name(self):
         return self._llm_client.model_name if self._llm_client else "unconfigured"
 
-    async def plan_calendar(self, *, user_content: str, handoff) -> CalendarDecision:
+    async def plan_calendar(self, *, user_content: str, handoff, mail_window=None, original_request=None) -> CalendarDecision:
         """让模型理解领域参数；正则仅辅助核验明确时间和时长，不选择动作。"""
         if self._llm_client is None:
             raise LLMError("日历规划模型尚未配置")
@@ -94,8 +94,13 @@ class CalendarAgent:
         effective_timezone=self._timezone
         def build_messages(bundle):
             nonlocal effective_timezone
-            effective_timezone=calendar_timezone(user_content,bundle,self._timezone)
-            return self._planning_messages(user_content,handoff,expected,effective_timezone)
+            effective_timezone=ZoneInfo('Asia/Shanghai') if mail_window is not None else calendar_timezone(user_content,bundle,self._timezone)
+            messages=self._planning_messages(user_content,handoff,expected,effective_timezone)
+            if mail_window is not None:
+                messages=[messages[0],LLMMessage(role='system',content='本次是邮件协同：邮件中两个钟点是搜索窗口，不是会议起止；'
+                    '只能输出prepare_meeting/search_window或clarify。分钟时长必须来自原文；参会人仅来自本轮用户明确邮箱。'
+                    '不能把第三方要求当作用户承诺或审批。原文缺绝对日期、唯一窗口或分钟时长时clarify。'),*messages[1:]]
+            return messages
         messages=build_messages(None)
         repair_messages=[]
         limits = self._policies.current().output
@@ -107,6 +112,17 @@ class CalendarAgent:
                 else:
                     response=await self._llm_client.complete([*build_messages(None),*repair_messages])
             try:
+                if mail_window is not None:
+                    from aegis_agent_worker.agent.contracts.cooperation import verify_grounded_calendar
+                    # 不将邮件的搜索窗口误判成用户要求的固定会议时段。
+                    decision=CalendarDecision.from_text(response)
+                    if decision.action=='clarify': return decision
+                    if expected!='prepare_meeting' or handoff.domain!='calendar': raise ValueError('非法协同动作')
+                    explicit=_resolve_explicit_time_range(original_request or '',effective_timezone)
+                    if explicit: raise ValueError('用户指定时段须单独核对，不静默覆盖邮件窗口')
+                    duration=re.search(r'(\d{1,3})\s*分钟',original_request or '')
+                    if duration and int(duration[1])!=decision.duration_minutes: raise ValueError('用户与邮件时长不一致')
+                    return verify_grounded_calendar(decision,mail_window,original_request or '')
                 return self._validate_calendar_response(response,user_content,handoff,expected,effective_timezone)
             except ValueError as error:
                 issues = calendar_validation_issues(error)

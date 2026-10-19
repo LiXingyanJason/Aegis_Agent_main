@@ -181,6 +181,13 @@ export const useConversationStore = defineStore('conversation', {
       const runIndex = this.runs.findIndex((run) => run.run_id === runId)
       if (runIndex === -1) return false
 
+      if (event.event_type === 'cooperation_step_completed') {
+        // 固定协同步骤仅用于后端审计；前端只推进断线续传游标。
+        // 不从其中的 draft_id、approval_item_id 或邮件引用创建卡片、审批或外部操作。
+        this.runEventNos[runId] = eventNo
+        return true
+      }
+
       const payload = event.payload ?? {}
       const run = {
         ...this.runs[runIndex],

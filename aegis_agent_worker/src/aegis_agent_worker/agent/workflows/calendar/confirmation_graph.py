@@ -56,7 +56,7 @@ class CalendarConfirmationWorkflow:
         self._planning_audit = planning_audit
         self._memory_context=memory_context
 
-    def build(self) -> Any:
+    def build(self, *, from_validated_plan: bool = False) -> Any:
         """构建“查询候选→模型推荐→草稿确认→写入”的会议安排流程。"""
         graph = StateGraph(TaskGraphState)
         graph.add_node("calendar_planning", CalendarPlanningWorkflow(self._calendar_agent, self._planning_audit,self._memory_context).build())
@@ -66,8 +66,11 @@ class CalendarConfirmationWorkflow:
         graph.add_node("create_calendar_draft", self._create_draft)
         graph.add_node("wait_for_calendar_approval", self._wait)
         graph.add_node("finish_calendar_approval", self._finish)
-        graph.add_edge(START, "calendar_planning")
-        graph.add_edge("calendar_planning", "prepare_calendar_confirmation")
+        if from_validated_plan:
+            graph.add_edge(START, "prepare_calendar_confirmation")
+        else:
+            graph.add_edge(START, "calendar_planning")
+            graph.add_edge("calendar_planning", "prepare_calendar_confirmation")
         graph.add_edge("prepare_calendar_confirmation", "query_calendar_availability")
         graph.add_conditional_edges(
             "query_calendar_availability",

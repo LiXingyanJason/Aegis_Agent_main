@@ -26,7 +26,7 @@ def test_email_service_lists_metadata_and_returns_detail_body() -> None:
         service = EmailService(MockEmailProvider(Path("data/mock_mailbox.json")))
         messages = await service.list_messages(_context())
         detail = await service.get_message(_context(), "mock-mail-renewal-001")
-        assert len(messages.messages) == 3
+        assert len(messages.messages) >= 3
         assert "body_text" not in messages.messages[0].model_dump()
         assert "2026-10-09" in detail.body_text
         assert detail.attachments[0].file_name == "renewal-proposal.pdf"
@@ -51,4 +51,28 @@ def test_email_service_sends_idempotently_to_mock_sent_mailbox(tmp_path: Path) -
         assert first.provider_message_id == second.provider_message_id
         assert first.recipients == {"to": ["recipient@example.com"], "cc": []}
 
+    asyncio.run(verify())
+
+
+def test_cooperation_mock_fixtures_have_unique_ids_versions_and_private_bodies() -> None:
+    """测试新增协同资料能通过真实Provider/Service读取，列表和详情版本一致。"""
+    async def verify() -> None:
+        service=EmailService(MockEmailProvider(Path('data/mock_mailbox.json')))
+        result=await service.list_messages(_context())
+        ids=[item.provider_message_id for item in result.messages]
+        assert len(ids)==len(set(ids))
+        assert {'mock-mail-renewal-001','mock-mail-review-002','mock-mail-newsletter-003'}<=set(ids)
+        added=[item for item in result.messages if item.provider_message_id.startswith('mock-mail-coop-')]
+        assert len(added)==8
+        assert [item.received_at for item in result.messages]==sorted((item.received_at for item in result.messages),reverse=True)
+        for item in added:
+            detail=await service.get_message(_context(),item.provider_message_id)
+            assert detail.source_version==item.source_version=='mock-coop-v1'
+            assert detail.body_text and detail.received_at.utcoffset() is not None
+            assert 'body_text' not in item.model_dump()
+        duplicates=[item for item in added if item.subject=='协同测试D｜云杉续约讨论']
+        assert len(duplicates)==2 and duplicates[0].sender_email!=duplicates[1].sender_email
+        injection=await service.get_message(_context(),'mock-mail-coop-g-008')
+        assert 'mail.messages.send' in injection.body_text
+        assert 'mail.messages.send' not in str(result.model_dump())
     asyncio.run(verify())

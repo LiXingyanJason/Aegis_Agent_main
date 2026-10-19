@@ -8,6 +8,7 @@ import KnowledgeSourceDialog from '../components/KnowledgeSourceDialog.vue'
 import { citationParts, knowledgeRetrievalSummary, knowledgeSearchError } from '../utils/knowledge'
 import RunInputPanel from '../components/RunInputPanel.vue'
 import RunMemoryContextDialog from '../components/RunMemoryContextDialog.vue'
+import RunFailureNotice from '../components/RunFailureNotice.vue'
 import { useAuthStore } from '../store/auth'
 import { useConversationStore } from '../store/conversation'
 
@@ -414,6 +415,7 @@ async function startRunStream(runId, conversationId) {
           event_type: sseEvent.event,
         })
         if (!handled) return
+        if (sseEvent.event === 'cooperation_step_completed') return
         error.value = ''
         if (['artifacts_ready', 'assistant_message_completed'].includes(sseEvent.event)) {
           await refreshArtifactsForRun(runId, sseEvent.data?.payload?.conversation_id ?? conversationId)
@@ -571,15 +573,21 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
                   </div>
                 </div>
                 <p v-if="item.role === 'assistant' && conversations.artifactErrors[item.run_id] && !artifactsForMessage(item).some((artifact) => artifact.artifact_type === 'knowledge_sources')" role="alert" class="muted">展示结果暂不可用，未使用旧缓存。<button type="button" class="knowledge-citation" @click="refreshArtifactsForRun(item.run_id, activeConversation?.conversation_id)">重新读取卡片</button></p>
+                <RunFailureNotice v-if="item.role === 'user'" :run="meetingRunForMessage(item)" />
                 <template v-if="item.role === 'user' && meetingRunForMessage(item) && meetingPreview(meetingRunForMessage(item))">
                   <div v-for="run in [meetingRunForMessage(item)]" :key="'meeting-plan-' + run.run_id" class="message meeting-plan-message">
                     <div class="avatar">A</div>
                     <div class="meeting-plan-card">
-                      <b>{{ meetingPlanHeading(run) }}</b>
-                      <p>{{ meetingPreview(run).title || '创建日历事件' }}</p>
-                      <dl>
-                        <div><dt>开始</dt><dd>{{ formatDateTime(meetingPreview(run).start_at) }}</dd></div>
-                        <div><dt>结束</dt><dd>{{ formatDateTime(meetingPreview(run).end_at) }}</dd></div>
+                      <div class="meeting-plan-head">
+                        <span class="meeting-plan-kind">会议草稿</span>
+                        <span class="meeting-plan-state" :class="{ 'is-pending': canConfirmMeeting(run) }">{{ meetingPlanHeading(run) }}</span>
+                      </div>
+                      <h3>{{ meetingPreview(run).title || '待确认会议' }}</h3>
+                      <div class="meeting-plan-schedule" aria-label="会议时间">
+                        <div><span>开始</span><strong>{{ formatDateTime(meetingPreview(run).start_at) }}</strong></div>
+                        <div><span>结束</span><strong>{{ formatDateTime(meetingPreview(run).end_at) }}</strong></div>
+                      </div>
+                      <dl v-if="meetingPreview(run).attendees?.length || meetingPreview(run).calendar_name" class="meeting-plan-details">
                         <div v-if="meetingPreview(run).attendees?.length"><dt>参与者</dt><dd>{{ formatCalendarData(meetingPreview(run).attendees) }}</dd></div>
                         <div v-if="meetingPreview(run).calendar_name"><dt>日历</dt><dd>{{ meetingPreview(run).calendar_name }}</dd></div>
                       </dl>
@@ -593,8 +601,11 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
                           </span>
                         </template>
                       </div>
-                      <router-link v-if="canConfirmMeeting(run)" class="run-approval-link" :to="{ name: 'confirmations', query: { run_id: run.run_id } }">核对并逐项确认</router-link>
-                      <span v-else-if="meetingPlanOutcome(run)" class="meeting-plan-outcome">{{ meetingPlanOutcome(run) }}</span>
+                      <div class="meeting-plan-footer">
+                        <span v-if="canConfirmMeeting(run)" class="meeting-plan-notice">尚未写入日历，需由你逐项确认</span>
+                        <span v-else-if="meetingPlanOutcome(run)" class="meeting-plan-outcome">{{ meetingPlanOutcome(run) }}</span>
+                        <router-link v-if="canConfirmMeeting(run)" class="meeting-plan-action" :to="{ name: 'confirmations', query: { run_id: run.run_id } }">核对并逐项确认 <span aria-hidden="true">→</span></router-link>
+                      </div>
                     </div>
                   </div>
                 </template>
@@ -628,7 +639,7 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
                     <span class="badge neutral">{{ run.status }}</span>
                   </div>
                   <p class="run-id">任务 ID：{{ run.run_id }}</p>
-                  <el-button size="small" text @click="memoryRunId = run.run_id">查看记忆使用情况</el-button>
+                  <el-button class="run-memory-button" size="small" type="primary" plain @click="memoryRunId = run.run_id">查看记忆使用记录</el-button>
                   <p v-if="run.model_provider || run.model_name" class="run-id">模型：{{ [run.model_provider, run.model_name].filter(Boolean).join(' / ') }}</p>
                   <p v-if="run.result_summary" class="run-detail">{{ run.result_summary }}</p>
                   <p v-if="run.error_message" class="run-error">{{ run.error_message }}</p>

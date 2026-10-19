@@ -62,6 +62,18 @@ KNOWLEDGE_CONTRACT_POLICY = replace(LEGACY_POLICY, execution=replace(
                       for kind, tools in LEGACY_POLICY.execution.tool_scopes),
 ))
 
+# 新版本单独允许协同读取邮件正文，不改写旧任务的白名单或余额。
+COOPERATION_POLICY = replace(LEGACY_POLICY, execution=replace(
+    LEGACY_POLICY.execution, version='harness-v3-fixed-cooperation',max_tools=8,
+    tool_scopes=tuple((kind,tools | frozenset({'mail.messages.get'}) if kind=='conversation' else tools)
+        for kind,tools in LEGACY_POLICY.execution.tool_scopes),
+))
+COOPERATION_KNOWLEDGE_POLICY = replace(COOPERATION_POLICY,execution=replace(
+    COOPERATION_POLICY.execution,version='harness-v3-cooperation-knowledge',
+    tool_scopes=tuple((kind,tools | frozenset({'knowledge.search'}) if kind=='conversation' else tools)
+        for kind,tools in COOPERATION_POLICY.execution.tool_scopes),
+))
+
 
 class PolicyProvider:
     def __init__(self, profiles=None, default_version="harness-v1"):

@@ -69,8 +69,8 @@ def test_list_messages_returns_mock_mail_without_body() -> None:
         response = _request(client, 2, "tools/call", {"name": "mail.messages.list", "arguments": {}, "_meta": META})
     content = response["result"]["structuredContent"]
     assert response["result"]["isError"] is False
-    assert content["messages"][0]["subject"] == "2026 年服务续约确认"
-    assert "body_text" not in content["messages"][0]
+    assert any(item['subject']=='2026 年服务续约确认' for item in content['messages'])
+    assert all('body_text' not in item for item in content['messages'])
 
 
 def test_get_message_returns_body_and_rejects_invalid_context() -> None:

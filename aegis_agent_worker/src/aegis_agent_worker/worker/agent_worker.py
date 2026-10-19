@@ -39,7 +39,9 @@ from aegis_agent_worker.service.mail.mail_revision_service import MailRevisionSe
 from aegis_agent_worker.service.runtime.card_context_service import CardContextService
 from aegis_agent_worker.service.runtime.main_context_tool_service import MainContextToolService
 from aegis_agent_worker.harness.policy_provider import PolicyProvider
-from aegis_agent_worker.harness.policy_provider import LEGACY_POLICY, KNOWLEDGE_CONTRACT_POLICY
+from aegis_agent_worker.harness.policy_provider import LEGACY_POLICY, KNOWLEDGE_CONTRACT_POLICY, COOPERATION_POLICY, COOPERATION_KNOWLEDGE_POLICY
+from aegis_agent_worker.agent.workflows.cooperation.factory import CooperationWorkflowFactory
+from aegis_agent_worker.service.cooperation.fixed_meeting_service import FixedMeetingService
 from aegis_agent_worker.agent.specialists.knowledge_agent import KnowledgeAgent
 from aegis_agent_worker.agent.workflows.knowledge.factory import KnowledgeWorkflowFactory
 from aegis_agent_worker.service.knowledge.evidence_service import EvidenceService
@@ -73,8 +75,10 @@ async def run_worker() -> None:
         # SQLAlchemy 使用 asyncpg URL；LangGraph 的 AsyncPostgresSaver 使用 psycopg URL。
         async with AsyncPostgresSaver.from_conn_string(settings.database_psycopg_url) as checkpointer:
             await checkpointer.setup() # 建立checkpointer数据库表，我们通过run_id关联每一个checkpointer
-            policies = PolicyProvider((LEGACY_POLICY, KNOWLEDGE_CONTRACT_POLICY),
-                default_version=KNOWLEDGE_CONTRACT_POLICY.version if settings.knowledge_query_enabled else LEGACY_POLICY.version)
+            default_policy=(COOPERATION_KNOWLEDGE_POLICY if settings.knowledge_query_enabled else COOPERATION_POLICY) if settings.fixed_cooperation_enabled else (
+                KNOWLEDGE_CONTRACT_POLICY if settings.knowledge_query_enabled else LEGACY_POLICY)
+            policies = PolicyProvider((LEGACY_POLICY, KNOWLEDGE_CONTRACT_POLICY,COOPERATION_POLICY,COOPERATION_KNOWLEDGE_POLICY),
+                default_version=default_policy.version)
             harness = HarnessExecutor(database, policy_provider=policies)
             llm_client = GuardedLLMClient(OpenAICompatibleClient(settings), harness)
             events = RunEventPublisher(redis)
@@ -126,13 +130,18 @@ async def run_worker() -> None:
                 enabled=settings.knowledge_query_enabled,
                 progress_service=KnowledgeWorkflowProgress(database,runs,events),
             )
+            workflow_factories=(calendar_workflows,mail_workflows,knowledge_workflows)
+            if settings.fixed_cooperation_enabled:
+                workflow_factories=(*workflow_factories,CooperationWorkflowFactory(
+                    mail_workflows.mail_agent,mail_workflows.query_service,calendar_workflows.calendar_agent,
+                    calendar_confirmation,FixedMeetingService(database,runs,tools,events),memory_context))
             orchestrator = AgentOrchestrator(
                 database,
                 llm_client,
                 runs=runs,
                 context_service=context_service,
                 events=events,
-                workflow_factories=(calendar_workflows, mail_workflows, knowledge_workflows),
+                workflow_factories=workflow_factories,
                 checkpointer=checkpointer,
                 mail_tasks=mail_tasks,
                 memory_context=memory_context,

@@ -20,6 +20,9 @@ class TaskGraphState(TypedDict, total=False):
     main_decision: dict[str, Any]
     reply_context: list[dict[str, Any]]  # 仅只读卡片安全结果，不能证明外部业务已执行
     handoff: dict[str, Any]
+    cooperation_input: dict[str, Any]  # 固定链路的可信来源引用；不含邮件正文
+    cooperation_results: dict[str, Any]  # 按固定step_id隔离结果，不覆盖其他步骤
+    cooperation_error: str
     knowledge_plan: dict[str, Any]
     knowledge_evidence: list[dict[str, Any]]
     knowledge_answer: dict[str, Any]
