@@ -1,5 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { memoryUsageState, memoryPurposeLabel, memoryAttemptStatus, memorySelectionReason, memorySourceKind, tokenCount, memoryExclusionLabels } from '../src/utils/memoryUsage.js'
 import { memoryPayload, memoryConfirmPayload, memoryState, memoryFormFromRecord, memoryErrorMessage, memoryTypeLabel, memorySourceLabel, memoryStatusDisplay, memoryTimezoneOptions } from '../src/utils/memory.js'
 
 test('timezone picker provides common IANA options and preserves existing non-listed settings', () => {
@@ -8,6 +9,23 @@ test('timezone picker provides common IANA options and preserves existing non-li
   assert.ok(options.some(option => option.value === 'America/Toronto'))
   assert.equal(memoryTimezoneOptions('Asia/Shanghai').filter(option => option.value === 'Asia/Shanghai').length, 1)
   assert.equal(memoryTimezoneOptions().some(option => option.value === 'America/Toronto'), false)
+})
+
+test('memory usage shows unknown tokens and inactive records without treating diagnostics as instructions', () => {
+  assert.equal(tokenCount(null), '未知')
+  assert.equal(tokenCount(0), '0')
+  assert.equal(memoryUsageState('deleted'), '已删除')
+  assert.equal(memoryPurposeLabel('unknown malicious instruction'), '其他模型调用')
+  assert.equal(memoryAttemptStatus('succeeded'), '已完成')
+  assert.equal(memorySelectionReason('relevant_confirmed_preference'), '相关且已确认的设置')
+  assert.equal(memorySourceKind('manual'), '手动添加')
+  assert.equal(memorySelectionReason('malicious prompt'), '未记录选择原因')
+  assert.deepEqual(memoryExclusionLabels({ summary_conflict: 2, full_prompt: 'never render', input_budget: -1 }), [
+    { key: 'summary_conflict', label: '摘要冲突，未注入', count: 2 },
+  ])
+  assert.deepEqual(memoryExclusionLabels({ recall_limit: 3 }), [
+    { key: 'recall_limit', label: '达到候选召回上限', count: 3 },
+  ])
 })
 
 const form = {
@@ -42,6 +60,17 @@ test('review uses the saved source version rather than unsaved form input', () =
   const state = memoryFormFromRecord(saved)
   assert.equal(state.sourceVersion, 'server-verified-version')
   assert.equal(state.content, '规范化内容')
+})
+
+test('revoked memory can be saved as pending with its saved fields and current version', () => {
+  const saved = { memory_id: 'saved-id', version: 3, status: 'revoked', content: '下午优先',
+    memory_type: 'entity', is_sensitive: false, expires_at: null, source_kind: 'manual',
+    entity: { key: 'meeting_preferences', preferred_time_of_day: 'afternoon', avoid_weekdays: [1], strength: 'soft' } }
+  const payload = memoryPayload(memoryFormFromRecord(saved), saved.version)
+  assert.equal(payload.expected_version, 3)
+  assert.equal(payload.content, '下午优先')
+  assert.deepEqual(payload.entity, saved.entity)
+  assert.equal('status' in payload, false)
 })
 
 test('structured description may be empty and generated text is not replayed as a custom note on edit', () => {
@@ -85,10 +114,17 @@ test('列表将类型、状态与来源分开展示，并保留敏感记忆限�
   assert.equal(memoryTypeLabel({ memory_type: 'long_term_summary' }), '长期摘要')
   assert.equal(memorySourceLabel({ source_kind: 'knowledge_document' }), '知识资料')
   assert.deepEqual(memoryStatusDisplay({ status: 'confirmed', is_sensitive: true, prompt_eligible: false }), {
-    label: '已确认', tone: 'confirmed', note: '不进入模型',
+    label: '未生效', tone: 'inactive', note: '已确认，但不进入模型',
+  })
+  assert.deepEqual(memoryStatusDisplay({ status: 'confirmed', source_available: true, is_sensitive: false, prompt_eligible: true }), {
+    label: '生效中', tone: 'confirmed', note: null,
+  })
+  assert.deepEqual(memoryStatusDisplay({ status: 'revoked' }), {
+    label: '未生效', tone: 'inactive', note: '已撤销',
   })
   assert.equal(memoryStatusDisplay({ status: 'pending' }).tone, 'pending')
-  assert.equal(memoryStatusDisplay({ status: 'confirmed', source_available: false }).label, '来源失效')
+  assert.equal(memoryStatusDisplay({ status: 'confirmed', source_available: false }).label, '未生效')
+  assert.equal(memoryStatusDisplay({ status: 'confirmed', source_available: false }).note, '来源失效')
 })
 
 test('validation errors do not echo rejected secret inputs', () => {

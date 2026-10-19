@@ -7,6 +7,7 @@ import KnowledgeSourceCard from '../components/KnowledgeSourceCard.vue'
 import KnowledgeSourceDialog from '../components/KnowledgeSourceDialog.vue'
 import { citationParts, knowledgeRetrievalSummary, knowledgeSearchError } from '../utils/knowledge'
 import RunInputPanel from '../components/RunInputPanel.vue'
+import RunMemoryContextDialog from '../components/RunMemoryContextDialog.vue'
 import { useAuthStore } from '../store/auth'
 import { useConversationStore } from '../store/conversation'
 
@@ -25,6 +26,7 @@ const inputPanelKey = ref(0)
 const inputFollowup = ref('')
 const selectedSource = ref(null)
 const sourceRunId = ref(null)
+const memoryRunId = ref(null)
 let inputPollTimer = null
 let inputPollingRunId = null
 let pollTimer = null
@@ -36,6 +38,7 @@ let streamRetryTimer = null
 let selectionVersion = 0
 
 const activeConversation = computed(() => conversations.current)
+watch(() => activeConversation.value?.conversation_id, () => { memoryRunId.value = null })
 const isSubmitting = computed(() => conversations.creating || conversations.sending)
 const hasMailCandidates = computed(() => Object.values(conversations.artifactsByRun)
   .some((artifacts) => artifacts.some((artifact) => artifact.artifact_type === 'mail_candidates')))
@@ -625,6 +628,7 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
                     <span class="badge neutral">{{ run.status }}</span>
                   </div>
                   <p class="run-id">任务 ID：{{ run.run_id }}</p>
+                  <el-button size="small" text @click="memoryRunId = run.run_id">查看记忆使用情况</el-button>
                   <p v-if="run.model_provider || run.model_name" class="run-id">模型：{{ [run.model_provider, run.model_name].filter(Boolean).join(' / ') }}</p>
                   <p v-if="run.result_summary" class="run-detail">{{ run.result_summary }}</p>
                   <p v-if="run.error_message" class="run-error">{{ run.error_message }}</p>
@@ -706,6 +710,7 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
         </div>
       </div>
     </section>
+    <RunMemoryContextDialog :run-id="memoryRunId" @close="memoryRunId = null" />
   </main>
 </template>
 

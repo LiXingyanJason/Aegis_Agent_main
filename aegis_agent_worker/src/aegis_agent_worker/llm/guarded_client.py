@@ -76,6 +76,8 @@ class GuardedLLMClient:
                             - sum(len(item.content) for item in messages))
                     audit.update(memory_policy_version=bundle.policy_version,
                                  memory_selection_reason=reason)
+                    if bundle.selection_report is not None:
+                        audit.update(memory_selection_details=bundle.selection_report.model_dump(mode='json'))
                     if prepare_messages is not None:
                         messages=prepare_messages(bundle)
                     if bundle.items:
@@ -90,6 +92,12 @@ class GuardedLLMClient:
             if (sum(len(item.content) for item in messages)>self._harness.policy.max_input_chars
                     and bundle is not None and bundle.items):
                 # 纯工厂可能因时区长度变化增加输入；审计前回退无记忆并同步重建时间语义。
+                details=audit.get('memory_selection_details')
+                if details is not None:
+                    details['excluded_counts']['input_budget']=details['excluded_counts'].get('input_budget',0)+len(bundle.items)
+                    maximum=get_execution().policy_bundle.memory.max_audit_items
+                    details['excluded']=[*details['excluded'],*[
+                        dict(memory_id=str(item.memory_id),version=item.version,reason='input_budget') for item in bundle.items]][:maximum]
                 bundle=bundle.model_copy(update={'items':()})
                 messages=prepare_messages(None) if prepare_messages is not None else original_messages
                 audit.update(memory_selection_reason='memory_budget_exhausted')

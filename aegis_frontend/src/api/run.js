@@ -6,6 +6,11 @@ export async function getRunDetail(runId) {
   return response.data.data
 }
 
+export async function getRunContextSummary(runId, { signal } = {}) {
+  const response = await http.get('/runs/' + encodeURIComponent(runId) + '/context-summary', { signal })
+  return response.data.data
+}
+
 function runEventsUrl(runId) {
   const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
   return apiBaseUrl + '/runs/' + encodeURIComponent(runId) + '/events'

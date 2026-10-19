@@ -68,5 +68,15 @@
     "attendees": [],
     "description": "会议时间为 2026-10-15 15:00～15:50（北京时间），时长 50 分钟。",
     "location": null
+  },
+  {
+    "external_event_id": "mock-event-6b85b7dc-3b94-50e3-8f6a-68dca4d37863",
+    "idempotency_key": "calendar:760dbc65-9283-43f1-a322-4dc3887ce10f:1",
+    "title": "待确认会议",
+    "start_at": "2026-10-21T01:00:00+00:00",
+    "end_at": "2026-10-21T03:00:00+00:00",
+    "attendees": [],
+    "description": "拟安排于2026-10-21下午，时长2小时；具体开始时间和参会人尚待确认。",
+    "location": null
   }
 ]

@@ -105,6 +105,90 @@ def worker_reader():
 
 
 @pytest.mark.asyncio
+async def test_020_recall_before_limit_revoke_and_safe_usage_metadata(database):
+    """新迁移、生产检索SQL及取消确认仅在随机schema内执行，fixture统一回滚。"""
+    from psycopg import sql
+    from psycopg.errors import CheckViolation
+    from app.repository.memory_usage_repository import MemoryUsageRepository
+    conn,session,user,other,legacy,_,role=database
+    conn.execute('RESET ROLE')
+    conn.execute('''CREATE TABLE run_execution_attempts(id uuid PRIMARY KEY,run_id uuid,tenant_id uuid,user_id uuid,
+        kind text,purpose text,status text,started_at timestamptz DEFAULT now(),
+        prompt_tokens int,completion_tokens int,total_tokens int)''')
+    conn.execute('''CREATE TABLE run_memory_usages(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid,
+        run_id uuid,memory_id uuid REFERENCES memory_items(id),usage_purpose varchar(32),included_in_prompt boolean,
+        exclusion_reason varchar(256),display_summary varchar(1000),created_at timestamptz DEFAULT now())''')
+    run,attempt=uuid4(),uuid4()
+    conn.execute("INSERT INTO agent_runs VALUES(%s,%s,%s,'completed',now(),NULL)",(run,user.tenant_id,user.id))
+    conn.execute("INSERT INTO run_execution_attempts(id,run_id,tenant_id,user_id,kind,purpose,status) VALUES(%s,%s,%s,%s,'model','conversation_reply','completed')",
+                 (attempt,run,user.tenant_id,user.id))
+    conn.execute("INSERT INTO run_memory_usages(tenant_id,run_id,memory_id,usage_purpose,included_in_prompt,display_summary) VALUES(%s,%s,%s,'context',true,'旧正文副本')",
+                 (user.tenant_id,run,legacy))
+    for name in ('018_memory_call_usage','019_calendar_memory_preferences','020_memory_selection_and_revocation'):
+        path=Path(__file__).resolve().parents[2]/f'migrations/versions/{name}.py'
+        spec=importlib.util.spec_from_file_location(name,path);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        with patch.object(module,'op',SimpleNamespace(execute=conn.execute)): module.upgrade()
+    # 020降级只撤销结构，不复活已清理审计正文；可再升级。
+    adapter=SimpleNamespace(execute=conn.execute,drop_column=lambda table,column:
+        conn.execute(sql.SQL('ALTER TABLE {} DROP COLUMN {}').format(sql.Identifier(table),sql.Identifier(column))))
+    with patch.object(module,'op',adapter):
+        module.downgrade()
+        module.upgrade()
+    assert conn.execute('SELECT display_summary FROM run_memory_usages').fetchone()['display_summary'] is None
+    with pytest.raises(CheckViolation),conn.transaction():
+        conn.execute("UPDATE run_memory_usages SET display_summary='不得再存正文'")
+    with pytest.raises(CheckViolation),conn.transaction():
+        conn.execute("UPDATE run_execution_attempts SET memory_selection_details='[]'::jsonb")
+    schema=conn.execute('SELECT current_schema() AS name').fetchone()['name']
+    conn.execute(sql.SQL('GRANT SELECT,INSERT,UPDATE ON ALL TABLES IN SCHEMA {} TO {}').format(sql.Identifier(schema),sql.Identifier(role)))
+    conn.execute(sql.SQL('SET LOCAL ROLE {}').format(sql.Identifier(role)))
+    # 超过原先50条最近记录：较旧但相关性更强的记录必须仍可召回。
+    for index in range(55):
+        conn.execute("INSERT INTO memory_items(tenant_id,user_id,content,source,status,confirmed_at) VALUES(%s,%s,%s,'user_confirmed','confirmed',now())",
+                     (user.tenant_id,user.id,f'邮件会议安排{index}'))
+    old=conn.execute("INSERT INTO memory_items(tenant_id,user_id,content,source,status,confirmed_at,created_at,updated_at) VALUES(%s,%s,'邮件回复语气正式','user_confirmed','confirmed',now(),'2000-01-01','2000-01-01') RETURNING id",
+                     (user.tenant_id,user.id)).fetchone()['id']
+    pending=await draft(session,user,content='邮件回复语气待确认')
+    sensitive=await draft(session,user,content='邮件回复语气敏感',sensitivity='sensitive')
+    await MemoryLifecycleRepository().confirm(session,user,sensitive,1)
+    reader=worker_reader()
+    hints=dict(types=['long_term_summary','entity'],terms=['邮件','回复','语气'],affinity=[],entity_keys=[],task='邮件回复语气')
+    policy=SimpleNamespace(recall_timeout_seconds=2,strong_term_matches=2,candidate_limit=50)
+    rows=await reader.recall_candidates(session,tenant_id=user.tenant_id,user_id=user.id,hints=hints,policy=policy)
+    assert len(rows)==51 and rows[0]['id']==old and not {pending,sensitive}&{row['id'] for row in rows}
+    owner=SimpleNamespace(id=run,tenant_id=user.tenant_id,user_id=user.id)
+    bundle=SimpleNamespace(items=[SimpleNamespace(memory_id=old,version=1,memory_type='long_term_summary',excerpt='只用于调用',
+        source=SimpleNamespace(kind='manual',object_id=old,version='1'),selection_reason='confirmed_summary')],
+        purpose='conversation_reply',policy_version='memory-contract-v1')
+    await reader.record_bundle_usage(session,run=owner,attempt_id=attempt,bundle=bundle)
+    usage_repo=MemoryUsageRepository()
+    usages=await usage_repo.usages(session,user,run,[attempt],50)
+    assert usages[0]['current_status']=='available' and 'content' not in usages[0] and 'display_summary' not in usages[0]
+    assert (await usage_repo.attempts(session,user,run,50))[0]['total_tokens'] is None
+    token,_=await MemoryRepository().create_deletion_request(session,tenant_id=user.tenant_id,user_id=user.id,memory_id=old)
+    await MemoryLifecycleRepository().revoke(session,user,old,1)
+    changed=conn.execute('SELECT status,version FROM memory_items WHERE id=%s',(old,)).fetchone()
+    assert changed==dict(status='revoked',version=2)
+    assert conn.execute('SELECT status FROM memory_deletion_tokens WHERE memory_id=%s',(old,)).fetchone()['status']=='revoked'
+    assert old not in {row['id'] for row in await reader.recall_candidates(session,tenant_id=user.tenant_id,user_id=user.id,hints=hints,policy=policy)}
+    assert (await usage_repo.usages(session,user,run,[attempt],50))[0]['current_status']=='inactive'
+    with pytest.raises(MemoryWriteError): await MemoryLifecycleRepository().revoke(session,user,old,1)
+    assert await MemoryRepository().delete_memory(session,tenant_id=user.tenant_id,user_id=user.id,memory_id=old,deletion_token=token)=='invalid_token'
+    conn.execute("SELECT set_config('app.tenant_id',%s,true),set_config('app.user_id',%s,true)",(str(other.tenant_id),str(other.id)))
+    assert await usage_repo.usages(session,other,run,[attempt],50)==[]
+    assert await usage_repo.attempts(session,other,run,50)==[]
+    with pytest.raises(MemoryWriteError) as denied: await MemoryLifecycleRepository().revoke(session,other,old,2)
+    assert denied.value.code=='MEMORY_NOT_FOUND'
+    conn.execute("SELECT set_config('app.tenant_id',%s,true),set_config('app.user_id',%s,true)",(str(user.tenant_id),str(user.id)))
+    with pytest.raises(MemoryWriteError): await MemoryLifecycleRepository().confirm(session,user,old,2)
+    # 撤销后不得直接确认；编辑成新pending版本，核对确认后才能再次生效。
+    await MemoryLifecycleRepository().save_draft(session,user,MemoryUpdateParam(content='邮件回复语气正式',expected_version=2,
+        memory_type='long_term_summary',sensitivity='normal',source_kind='manual',expires_at=None),memory_id=old)
+    await MemoryLifecycleRepository().confirm(session,user,old,3)
+    assert (await usage_repo.usages(session,user,run,[attempt],50))[0]['current_status']=='changed'
+
+
+@pytest.mark.asyncio
 async def test_018_attempt_usage_metadata_tokens_and_owner_constraint(database):
     """018及Worker真实SQL仅作用于本fixture随机schema，结束统一回滚。"""
     from psycopg import sql

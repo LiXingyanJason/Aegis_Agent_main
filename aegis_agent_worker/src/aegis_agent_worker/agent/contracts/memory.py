@@ -177,6 +177,22 @@ class MemoryContextItem(MemoryModel):
         return MemoryCandidate.safe_content(value)
 
 
+class MemorySelectionIssue(MemoryModel):
+    memory_id: UUID
+    version: int = Field(strict=True,ge=1)
+    reason: Literal['not_relevant','purpose_type_denied','entity_key_denied','invalid_record',
+        'entity_preferred','summary_conflict','ambiguous_summary','duplicate_memory',
+        'item_budget','char_budget','byte_budget','input_budget','recall_limit']
+
+
+class MemorySelectionReport(MemoryModel):
+    ranking_policy_version: str = Field(min_length=1,max_length=64)
+    candidates_considered: int = Field(strict=True,ge=0,le=500)
+    recall_truncated: bool = False
+    excluded: tuple[MemorySelectionIssue,...] = Field(default=(),max_length=50)
+    excluded_counts: dict[str,int] = Field(default_factory=dict,max_length=16)
+
+
 class MemoryContextBundle(MemoryModel):
     """为一次任务、某一种模型用途选出的记忆集合"""
     tenant_id: UUID
@@ -189,6 +205,7 @@ class MemoryContextBundle(MemoryModel):
     items: tuple[MemoryContextItem, ...] = Field(default=(), max_length=50)
     # Token未知不填0；字符/UTF-8字节不是计费Token。
     estimated_tokens: int | None = Field(default=None, strict=True, ge=0)
+    selection_report: MemorySelectionReport | None = None
 
     @model_validator(mode='after')
     def valid_items(self):

@@ -36,7 +36,8 @@ LEGACY_POLICY = PolicyBundle(
     # 独立记忆额度；7.4统一调用边界启用，不改变harness-v1执行预算。
     memory=MemoryContextPolicy(version="memory-contract-v1", max_items=5, max_item_chars=400,
         max_total_chars=1500, max_content_bytes=6000, max_estimated_tokens=None,candidate_limit=50,
-        calendar_version='calendar-memory-v1'),
+        calendar_version='calendar-memory-v1',ranking_version='memory-rank-v1',max_query_terms=32,
+        max_task_chars=4000,max_audit_items=50,strong_term_matches=2,recall_timeout_seconds=2),
     execution=TaskExecutionPolicy(version="harness-v1", max_models=10, max_tools=6, active_seconds=120,
         max_input_chars=48000, max_output_chars=80000, model_timeout_seconds=60, tool_timeout_seconds=20,
         tool_scopes=(

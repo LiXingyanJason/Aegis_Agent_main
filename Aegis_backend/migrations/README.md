@@ -223,3 +223,16 @@ downgrade会丢弃新增字段/审计，存在无法用旧格式表达的有效�
 存在新实体（包括删除记录）或相关调用审计时拒绝降级；需人工导出处理，不自动删除。
 迁移及真实SQL已在随机临时schema/受限角色内回滚验证，未迁移业务库。详见[日历记忆](../../aegis_agent_worker/文档/阶段1/20-日历逐步骤结构化记忆接入.md)。
 
+### 020：记忆选择诊断、撤销与旧审计正文清理（当前版本）
+
+先停止API写入及Agent Worker、备份数据库，再执行`python -m alembic upgrade 020_memory_selection_revoke`，然后统一更新API/Worker/前端。
+父revision为019_calendar_memory_preferences；不要只迁移到旧文档的017/018/019后启动当前Worker。
+
+新增run_execution_attempts.memory_selection_details（仅ID/版本/安全原因/数量，最大24000字节）与权限前置召回索引。
+**清空全部历史run_memory_usages.display_summary正文副本**，保留memory_items源正文和ID/使用事实；增加禁止再次保存审计正文的约束及记忆变更清理触发器。
+旧Worker若仍写此列将失败，不支持混跑。应用角色需要run_memory_usages的UPDATE及新列必要权限，保留现有RLS；不提升超级用户。
+
+取消确认复用既有revoked状态，不新增自动确认、统一过期时间或时间衰减。
+降级前停新版服务并备份；downgrade不恢复已清理的旧正文，恢复须用事前备份。未自动迁移业务库。
+详见[7.5部署、选择与撤销](../../aegis_agent_worker/文档/阶段1/21-记忆优先级用户管理与撤销-阶段7.5.md)。
+

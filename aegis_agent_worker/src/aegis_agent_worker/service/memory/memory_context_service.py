@@ -5,10 +5,13 @@ import json
 from dataclasses import dataclass
 from uuid import UUID
 from datetime import datetime, timezone
+from collections import Counter
 from sqlalchemy.exc import SQLAlchemyError, NoResultFound
 from pydantic import ValidationError, TypeAdapter
 
 from aegis_agent_worker.agent.contracts.memory import MemoryContextBundle, MemoryContextItem, MemorySourceRef, MemoryEntity
+from aegis_agent_worker.agent.contracts.memory import MemorySelectionReport,MemorySelectionIssue
+from aegis_agent_worker.service.memory.selection import recall_hints,describe_candidate,rank_and_resolve
 from aegis_agent_worker.harness.exceptions import HarnessError
 from aegis_agent_worker.harness.policy_provider import DEFAULT_POLICIES
 
@@ -43,7 +46,8 @@ class MemoryContextService:
                     conversation_id=run.conversation_id, purpose=purpose,
                     policy_version=policy.version_for(purpose), selected_at=datetime.now(timezone.utc))
         def empty(reason):
-            return MemoryContextBundle(**base), reason
+            return MemoryContextBundle(**base,selection_report=MemorySelectionReport(
+                ranking_policy_version=policy.ranking_version,candidates_considered=0)), reason
         if not policy.types_for(purpose):
             return empty('purpose_denied')
         if purpose=='calendar_planning':
@@ -56,20 +60,32 @@ class MemoryContextService:
         if remaining_chars <= 0:
             return empty('input_budget_exhausted')
         context = TenantContext(tenant_id=run.tenant_id, user_id=run.user_id)
+        hints=recall_hints(purpose,task_text,policy)
         try:
             async with self._database.session() as session:
                 async with tenant_transaction(session, context):
                     # 从用户在这个“长期记忆”页面保存的记录中的全部条目。同时包含“长期摘要”和“实体记忆”
-                    candidates = await self._repository.list_active_non_sensitive(
-                        session, tenant_id=run.tenant_id, user_id=run.user_id,limit=policy.candidate_limit)
+                    recall=getattr(self._repository,'recall_candidates',None)
+                    if recall is not None:
+                        candidates=await recall(session,tenant_id=run.tenant_id,user_id=run.user_id,hints=hints,policy=policy)
+                    else:
+                        # 仅兼容旧只读Repository测试替身；生产MemoryRepository始终使用权限前置排名SQL。
+                        candidates=await self._repository.list_active_non_sensitive(
+                            session,tenant_id=run.tenant_id,user_id=run.user_id,limit=policy.candidate_limit)
         except (SQLAlchemyError, OSError, TimeoutError):
             return empty('memory_unavailable')
-        terms = _terms(task_text)
-        items = []
-        budget_limited = False
+        truncated=len(candidates)>policy.candidate_limit
+        candidates=candidates[:policy.candidate_limit]
+        prepared=[]; issues=[];counts=Counter()
+        def exclude(row,reason):
+            counts[reason]+=1
+            if len(issues)<policy.max_audit_items:
+                try: issues.append(MemorySelectionIssue(memory_id=row['id'],version=row['version'],reason=reason))
+                except (ValueError,KeyError): pass
         for row in candidates:
             # 检查 用途 是否允许 该类型的记忆
             if row.get('memory_type') not in policy.types_for(purpose):
+                exclude(row,'purpose_type_denied')
                 continue
             try:
                 if row['memory_type']=='entity':
@@ -78,40 +94,57 @@ class MemoryContextService:
                     if isinstance(entity,str): entity=json.loads(entity)
                     entity=TypeAdapter(MemoryEntity).validate_python(entity).model_dump(mode='json')
                     if entity['key'] not in policy.entity_keys_for(purpose):
+                        exclude(row,'entity_key_denied')
                         continue
                     row={**row,'entity_value':entity}
-                # 判断与当前任务是否相关 _select_relevant 使用确定性的词项和少量领域规则
+                # 判断与当前任务是否相关，使用确定性的词项和少量领域规则。
                 # 日历用途只接收白名单结构字段，不以自由文本说明推断偏好或日期。
-                selected = ([SelectedMemory(row['id'],json.dumps(entity,ensure_ascii=False,sort_keys=True),row['source'])]
-                    if purpose.startswith('calendar_') else _select_relevant([row], terms, policy=policy))
-                if not selected:
+                candidate=describe_candidate(row,hints,policy)
+                if candidate is None:
+                    exclude(row,'not_relevant')
                     continue
+                prepared.append(candidate)
+            except (ValidationError,ValueError,TypeError,KeyError):
+                exclude(row,'invalid_record')
+        ranked,conflicts=rank_and_resolve(prepared)
+        for candidate,reason in conflicts: exclude(candidate['row'],reason)
+        items=[]
+        for candidate in ranked:
+            row=candidate['row']
+            if len(items)>=policy.item_limit_for(purpose):
+                exclude(row,'item_budget');continue
+            try:
                 # 取得安全摘录，控制单条长度
-                content = selected[0].content[:policy.max_item_chars]
-                if row['memory_type'] == 'entity' and len(selected[0].content) > policy.max_item_chars:
-                    continue
+                content = candidate['content'][:policy.max_item_chars]
+                if row['memory_type']=='entity' and len(candidate['content'])>policy.max_item_chars:
+                    exclude(row,'char_budget');continue
                 manual=row['source_kind']=='manual'
                 source = MemorySourceRef(kind=row['source_kind'],
                     object_id=row['id'] if manual else row['source_object_id'],
                     version=str(row['version']) if manual else row['source_version'])
                 item = MemoryContextItem(memory_id=row['id'], tenant_id=run.tenant_id,
                     user_id=run.user_id, version=row['version'], memory_type=row['memory_type'],
-                    source=source, excerpt=content, selection_reason='relevant_confirmed_preference')
+                    source=source, excerpt=content, selection_reason='confirmed_summary'
+                        if row['memory_type']=='long_term_summary' else 'relevant_confirmed_preference')
                 # 试着加入，并检查总预算
                 bundle = MemoryContextBundle(**base, items=tuple([*items, item]))
-                if (bundle.content_chars > policy.max_total_chars or bundle.content_bytes > policy.max_content_bytes
-                    or len(self.format_bundle(bundle)) > remaining_chars):
-                    budget_limited = True
-                    continue
+                if bundle.content_chars>policy.max_total_chars:
+                    exclude(row,'char_budget');continue
+                if bundle.content_bytes>policy.max_content_bytes:
+                    exclude(row,'byte_budget');continue
+                if len(self.format_bundle(bundle))>remaining_chars:
+                    exclude(row,'input_budget');continue
                 items.append(item)
-                if len(items) >= policy.item_limit_for(purpose):
-                    break
             except (ValidationError, ValueError, TypeError, KeyError):
                 # 坏记录不向日志输出正文，也不扩展格式修复/模型重试。
-                continue
-        reason = ('selected_limited' if budget_limited else 'selected') if items else (
-            'memory_budget_exhausted' if budget_limited else 'no_relevant_memory')
-        return MemoryContextBundle(**base, items=tuple(items)), reason
+                exclude(row,'invalid_record')
+        conflict_count=sum(counts[key] for key in ('entity_preferred','summary_conflict','ambiguous_summary'))
+        budget_count=sum(counts[key] for key in ('item_budget','char_budget','byte_budget','input_budget'))
+        reason=('selected_with_exclusions' if conflict_count else 'selected_limited' if budget_count else 'selected') if items else (
+            'memory_conflict_excluded' if conflict_count else 'memory_budget_exhausted' if budget_count else 'no_relevant_memory')
+        report=MemorySelectionReport(ranking_policy_version=policy.ranking_version,candidates_considered=len(candidates),
+            recall_truncated=truncated,excluded=tuple(issues),excluded_counts=dict(counts))
+        return MemoryContextBundle(**base,items=tuple(items),selection_report=report),reason
 
     @staticmethod
     def format_bundle(bundle):

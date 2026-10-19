@@ -64,6 +64,7 @@ class ExecutionRepository:
         total_tokens: int | None = None,
         memory_count: int | None = None, memory_policy_version: str | None = None,
         memory_selection_reason: str | None = None,
+        memory_selection_details: dict | None = None,
     ) -> None:
         await session.execute(text("""
             UPDATE run_execution_attempts
@@ -71,8 +72,9 @@ class ExecutionRepository:
                 model_provider=:provider,model_name=:model,prompt_tokens=:prompt,
                 completion_tokens=:completion,total_tokens=:total,
                 memory_count=:memory_count,memory_policy_version=:memory_policy,
-                memory_selection_reason=:memory_reason WHERE id=:id
+                memory_selection_reason=:memory_reason,memory_selection_details=CAST(:memory_details AS jsonb) WHERE id=:id
         """), dict(status=status, code=error_code, id=attempt_id, purpose=purpose,
                    provider=model_provider, model=model_name, prompt=prompt_tokens,
                    completion=completion_tokens, total=total_tokens,memory_count=memory_count,
-                   memory_policy=memory_policy_version,memory_reason=memory_selection_reason))
+                   memory_policy=memory_policy_version,memory_reason=memory_selection_reason,
+                   memory_details=json.dumps(memory_selection_details) if memory_selection_details is not None else None))

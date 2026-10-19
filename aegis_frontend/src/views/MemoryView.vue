@@ -1,7 +1,8 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
-import { memoryPayload, memoryConfirmPayload, memoryState, memoryFormFromRecord, memoryErrorMessage, memoryTypeLabel, memorySourceLabel, memoryStatusDisplay, memoryTimezoneOptions } from '../utils/memory'
+import { computed, h, onMounted, ref, watch } from 'vue'
+import { memoryPayload, memoryConfirmPayload, memoryFormFromRecord, memoryErrorMessage, memoryTypeLabel, memorySourceLabel, memoryStatusDisplay, memoryTimezoneOptions } from '../utils/memory'
 import { useRouter } from 'vue-router'
+import { ElMessageBox } from 'element-plus'
 import {
   confirmMemory,
   createMemory,
@@ -10,6 +11,7 @@ import {
   listMemories,
   requestMemoryDeletion,
   updateMemory,
+  revokeMemory,
 } from '../api/memory'
 import { useAuthStore } from '../store/auth'
 
@@ -24,6 +26,7 @@ const error = ref('')
 const editorVisible = ref(false)
 const detailLoading = ref(false)
 const saving = ref(false)
+const revokingId = ref(null)
 const editorError = ref('')
 const editing = ref(null)
 const deleteVisible = ref(false)
@@ -32,19 +35,28 @@ const deleteError = ref('')
 const deletionToken = ref('')
 const deletionExpiresAt = ref(null)
 const memoryForm = ref(emptyMemoryForm())
-const reviewed = ref(false)
+const confirmingId = ref(null)
 const dirty = ref(false)
 const conflict = ref(null)
+const conflictTarget = ref(null)
 const conflictRecord = ref(null)
+const conflictVisible = ref(false)
+const conflictError = ref('')
 const replaceReviewed = ref(false)
-watch(memoryForm, () => { dirty.value = true; reviewed.value = false }, { deep: true, flush: 'sync' })
+watch(memoryForm, () => { dirty.value = true }, { deep: true, flush: 'sync' })
 watch(editorVisible, (visible) => {
   if (!visible) {
     memoryForm.value = emptyMemoryForm()
-    reviewed.value = false
     dirty.value = false
+  }
+})
+watch(conflictVisible, (visible) => {
+  if (!visible) {
     conflict.value = null
+    conflictTarget.value = null
     conflictRecord.value = null
+    conflictError.value = ''
+    replaceReviewed.value = false
   }
 })
 
@@ -97,9 +109,6 @@ function openNewMemory() {
   editorError.value = ''
   memoryForm.value = emptyMemoryForm()
   dirty.value = false
-  reviewed.value = false
-  conflict.value = null
-  conflictRecord.value = null
   editorVisible.value = true
 }
 
@@ -109,16 +118,11 @@ async function openEditMemory(memoryId) {
   editorError.value = ''
   editing.value = null
   memoryForm.value = emptyMemoryForm()
-  conflict.value = null
-  conflictRecord.value = null
   try {
     const memory = await getMemory(memoryId)
     editing.value = memory
     memoryForm.value = memoryFormFromRecord(memory)
     dirty.value = false
-    reviewed.value = false
-    conflict.value = null
-    conflictRecord.value = null
   } catch (cause) {
     editorError.value = detailMessage(cause, '加载记忆详情失败。')
   } finally {
@@ -129,6 +133,7 @@ async function openEditMemory(memoryId) {
 async function saveMemory() {
   const content = memoryForm.value.content.trim()
   if (memoryForm.value.memoryType !== 'entity' && !content) return
+  const wasRevoked = editing.value?.status === 'revoked'
   saving.value = true
   editorError.value = ''
   try {
@@ -140,10 +145,8 @@ async function saveMemory() {
     // 用服务端实际保存/规范化后的值回填，核对的不是未保存输入或伪造来源版本。
     memoryForm.value = memoryFormFromRecord(editing.value)
     dirty.value = false
-    reviewed.value = false
-    conflict.value = null
-    conflictRecord.value = null
     await loadMemories()
+    if (wasRevoked) editorVisible.value = false
   } catch (cause) {
     editorError.value = detailMessage(cause, '保存长期记忆失败。')
   } finally {
@@ -151,36 +154,126 @@ async function saveMemory() {
   }
 }
 
-async function confirmSavedMemory() {
-  if (!editing.value || dirty.value || !reviewed.value || editing.value.status !== 'pending') return
-  if (conflict.value && (!conflictRecord.value || !replaceReviewed.value)) return
-  saving.value = true
-  editorError.value = ''
+async function cancelConfirmation(memory) {
+  if (revokingId.value) return
   try {
-    editing.value = await confirmMemory(memoryConfirmPayload(editing.value, conflict.value ? conflictRecord.value : null))
-    editorVisible.value = false
+    await ElMessageBox.confirm('取消后，此记忆不再用于后续模型调用。以后可再次核对并确认生效。', '取消记忆生效', { confirmButtonText: '取消生效', cancelButtonText: '保持生效', type: 'warning' })
+  } catch { return }
+  revokingId.value = memory.memory_id
+  try {
+    await revokeMemory(memory.memory_id, memory.version)
+    await loadMemories()
+  } catch (cause) {
+    if (cause.response?.status === 409) {
+      await loadMemories()
+      error.value = error.value
+        ? '记忆状态或版本已变化，刷新失败；请重试刷新后核对当前记录。'
+        : '记忆状态或版本已变化，列表已刷新；请核对当前记录后再操作。'
+    } else {
+      error.value = memoryErrorMessage(cause, '取消确认失败，请刷新后核对版本。')
+    }
+  } finally { revokingId.value = null }
+}
+
+function savedMemoryReview(memory) {
+  return h('div', { style: { maxHeight: '55vh', overflowY: 'auto', overflowWrap: 'anywhere', textAlign: 'left' } }, [
+    h('p', '请核对服务端已保存的内容、字段、来源和有效期。确认后，此记忆将用于后续符合条件的任务。'),
+    h('p', `内容：${memory.content || '—'}`),
+    h('p', `类型：${memoryTypeLabel(memory)} · 敏感性：${memory.is_sensitive ? '敏感（不进入模型）' : '普通'}`),
+    memory.entity ? h('p', `设置：${JSON.stringify(memory.entity)}`) : null,
+    h('p', `来源：${memorySourceLabel(memory)} · 有效期：${memory.expires_at ? formatTime(memory.expires_at) : '长期有效'}`),
+    h('p', `版本：${memory.version}`),
+  ])
+}
+
+async function confirmListedMemory(memory) {
+  if (!['pending', 'revoked'].includes(memory.status) || confirmingId.value) return
+  confirmingId.value = memory.memory_id
+  try {
+    const saved = await getMemory(memory.memory_id)
+    if (saved.status !== memory.status || saved.version !== memory.version) {
+      await loadMemories()
+      error.value = '记忆状态或版本已变化，请核对刷新后的记录再操作。'
+      return
+    }
+    try {
+      await ElMessageBox.confirm(savedMemoryReview(saved), saved.status === 'revoked' ? '重新确认记忆生效' : '确认记忆生效', {
+        confirmButtonText: '确认生效', cancelButtonText: '再检查一下', type: 'warning',
+      })
+    } catch { return }
+    let target = saved
+    if (saved.status === 'revoked') {
+      // 服务端不接受直接确认 revoked；先用已核对的详情保存为 pending，再用返回的新版本确认。
+      target = await updateMemory(saved.memory_id, memoryPayload(memoryFormFromRecord(saved), saved.version))
+      await loadMemories()
+    }
+    await submitMemoryConfirmation(target)
+  } catch (cause) {
+    error.value = detailMessage(cause, '确认失败，请刷新列表后重试。')
+  } finally { confirmingId.value = null }
+}
+
+async function submitMemoryConfirmation(target, replacement = null) {
+  try {
+    await confirmMemory(memoryConfirmPayload(target, replacement))
+    conflictVisible.value = false
+    conflict.value = null
+    conflictTarget.value = null
+    conflictRecord.value = null
     await loadMemories()
   } catch (cause) {
     const detail = cause.response?.data?.detail
-    editorError.value = detailMessage(cause, '确认失败，请重新核对。')
     if (detail?.code === 'MEMORY_ENTITY_CONFLICT') {
       conflict.value = detail
+      conflictTarget.value = target
       conflictRecord.value = null
       replaceReviewed.value = false
+      conflictError.value = ''
+      conflictVisible.value = true
     } else if (detail?.code === 'MEMORY_REPLACEMENT_STALE') {
       conflict.value = null
+      conflictTarget.value = null
       conflictRecord.value = null
       replaceReviewed.value = false
-      reviewed.value = false
+      conflictVisible.value = false
+      await loadMemories()
+      error.value = '待替换的记录已变化，请重新核对后再确认。'
+    } else {
+      const message = detailMessage(cause, '确认失败，请重新核对。')
+      if (cause.response?.status === 409) await loadMemories()
+      if (conflictVisible.value) conflictError.value = message
+      else error.value = message
     }
-  } finally { saving.value = false }
+  }
 }
 
 async function reviewConflict() {
   try {
-    conflictRecord.value = await getMemory(conflict.value.conflicting_memory_id)
+    const record = await getMemory(conflict.value.conflicting_memory_id)
+    if (record.version !== conflict.value.conflicting_version || record.status !== 'confirmed') {
+      conflictRecord.value = null
+      replaceReviewed.value = false
+      conflictError.value = '待替换记录已变化，请关闭后重新确认。'
+      return
+    }
+    conflictRecord.value = record
     replaceReviewed.value = false
-  } catch (cause) { editorError.value = detailMessage(cause, '旧记录已变，请刷新重试。') }
+  } catch (cause) { conflictError.value = detailMessage(cause, '旧记录已变，请刷新重试。') }
+}
+
+async function confirmReplacement() {
+  if (!conflictTarget.value || !conflictRecord.value || !replaceReviewed.value || confirmingId.value) return
+  const target = conflictTarget.value
+  const replacement = conflictRecord.value
+  confirmingId.value = target.memory_id
+  try {
+    try {
+      await ElMessageBox.confirm('确认以这条新设置替换已核对的旧记录？两条记录不会合并。', '确认替换并生效', {
+        confirmButtonText: '替换并生效', cancelButtonText: '再检查一下', type: 'warning',
+      })
+    } catch { return }
+    await submitMemoryConfirmation(target, replacement)
+  } finally { confirmingId.value = null }
 }
 
 async function requestDelete(memoryId) {
@@ -250,7 +343,7 @@ onMounted(() => { void loadMemories() })
       <header class="page-header">
         <div>
           <h1>长期记忆</h1>
-          <p class="muted">仅由你主动维护。保存或编辑后待确认，核对确认后生效；敏感、过期或来源失效的记录不进入模型。设置项保存为偏好，不修改连接权限或服务器时区。</p>
+          <p class="muted">仅由你主动维护。保存或编辑后待确认，核对确认后生效；取消确认后不再用于后续模型调用。敏感、过期或来源失效的记录不进入模型。相关的结构化设置优先于同主题摘要，用户当前明确要求始终优先于偏好；设置不修改连接权限或服务器时区。</p>
         </div>
         <el-button type="primary" @click="openNewMemory">新增偏好</el-button>
       </header>
@@ -298,6 +391,8 @@ onMounted(() => { void loadMemories() })
                 <td class="memory-actions">
                   <div class="memory-action-group">
                     <el-button size="small" plain type="primary" @click="openEditMemory(memory.memory_id)">查看 / 编辑</el-button>
+                    <el-button v-if="memory.status === 'pending' || memory.status === 'revoked'" size="small" text type="primary" :disabled="Boolean(confirmingId)" :loading="confirmingId === memory.memory_id" @click="confirmListedMemory(memory)">确认生效</el-button>
+                    <el-button v-else-if="memory.status === 'confirmed'" size="small" text :disabled="Boolean(revokingId)" :loading="revokingId === memory.memory_id" @click="cancelConfirmation(memory)">取消生效</el-button>
                     <el-button size="small" text type="danger" :loading="deleteLoading" @click="requestDelete(memory.memory_id)">删除</el-button>
                   </div>
                 </td>
@@ -315,8 +410,9 @@ onMounted(() => { void loadMemories() })
     <el-dialog v-model="editorVisible" :close-on-click-modal="!saving && !detailLoading" :close-on-press-escape="!saving && !detailLoading" :show-close="!saving && !detailLoading" :title="editing ? '查看 / 编辑偏好' : '新增偏好'" width="min(560px, calc(100vw - 32px))">
       <div v-loading="detailLoading">
         <el-alert v-if="editorError" :title="editorError" type="error" :closable="false" show-icon />
+        <el-alert v-if="editing?.status === 'revoked'" title="此记忆已撤销。核对后先保存为待确认，再到列表点击“确认生效”；保存本身不会立即生效。" type="info" :closable="false" show-icon />
         <el-form v-if="!detailLoading" :disabled="saving" label-position="top">
-          <p v-if="editing">版本 {{ editing.version }} · {{ memoryState(editing) }}</p>
+          <p v-if="editing">版本 {{ editing.version }} · {{ memoryStatusDisplay(editing).label }}<span v-if="memoryStatusDisplay(editing).note">（{{ memoryStatusDisplay(editing).note }}）</span></p>
           <el-form-item label="记忆类型">
             <el-select v-model="memoryForm.memoryType">
               <el-option label="长期摘要 / 偏好" value="long_term_summary" />
@@ -364,12 +460,6 @@ onMounted(() => { void loadMemories() })
             <p class="memory-form-help">高危秘密（如密码、API Key、私钥、完整银行卡信息）不会被允许保存。</p>
           </el-form-item>
         </el-form>
-        <el-checkbox v-if="editing?.status === 'pending'" v-model="reviewed" :disabled="dirty">我已核对已保存的内容、字段、来源和有效期，确认生效</el-checkbox>
-        <div v-if="conflict">
-          <p>同一设置已有确认值，请先查看旧记录，再明确选择替换。</p>
-          <el-button @click="reviewConflict">查看待替换记录</el-button>
-          <template v-if="conflictRecord"><p>{{ conflictRecord.content }}</p><pre>{{ JSON.stringify(conflictRecord.entity, null, 2) }}</pre><p>版本 {{ conflictRecord.version }} · {{ memoryState(conflictRecord) }}</p><el-checkbox v-model="replaceReviewed">我明确替换这条旧记录，不合并两者</el-checkbox></template>
-        </div>
       </div>
       <template #footer>
         <el-button :disabled="saving || detailLoading" @click="editorVisible = false">取消</el-button>
@@ -378,8 +468,24 @@ onMounted(() => { void loadMemories() })
           :loading="saving"
           :disabled="detailLoading || (memoryForm.memoryType !== 'entity' && !memoryForm.content.trim()) || (editing && !['pending','confirmed','revoked'].includes(editing.status))"
           @click="saveMemory"
-        >保存（待确认）</el-button>
-        <el-button type="primary" :loading="saving" :disabled="!editing || editing.status !== 'pending' || dirty || !reviewed || (conflict && (!conflictRecord || !replaceReviewed))" @click="confirmSavedMemory">确认生效</el-button>
+        >{{ editing?.status === 'revoked' ? '保存为待确认' : '保存（待确认）' }}</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="conflictVisible" title="核对待替换的设置" width="min(560px, calc(100vw - 32px))">
+      <el-alert v-if="conflictError" :title="conflictError" type="error" :closable="false" show-icon />
+      <p>同一设置已有确认值。请查看旧记录，并明确选择是否替换。</p>
+      <p v-if="conflictTarget">新记录：{{ conflictTarget.content }} · 版本 {{ conflictTarget.version }}</p>
+      <el-button :disabled="Boolean(confirmingId)" @click="reviewConflict">查看待替换记录</el-button>
+      <template v-if="conflictRecord">
+        <p>旧记录：{{ conflictRecord.content }}</p>
+        <pre v-if="conflictRecord.entity">{{ JSON.stringify(conflictRecord.entity, null, 2) }}</pre>
+        <p>版本 {{ conflictRecord.version }} · {{ memoryStatusDisplay(conflictRecord).label }}<span v-if="memoryStatusDisplay(conflictRecord).note">（{{ memoryStatusDisplay(conflictRecord).note }}）</span></p>
+        <el-checkbox v-model="replaceReviewed">我明确替换这条旧记录，不合并两者</el-checkbox>
+      </template>
+      <template #footer>
+        <el-button :disabled="Boolean(confirmingId)" @click="conflictVisible = false">取消</el-button>
+        <el-button type="primary" :loading="Boolean(confirmingId)" :disabled="!conflictRecord || !replaceReviewed" @click="confirmReplacement">替换并生效</el-button>
       </template>
     </el-dialog>
 

@@ -79,6 +79,8 @@ async def test_allowed_calls_have_attempt_scoped_bundle_and_unknown_token_usage(
     assert bundle.purpose==purpose and bundle.conversation_id is None and bundle.items[0].version==2
     assert bundle.estimated_tokens is None and audit[1]['prompt_tokens'] is None
     assert audit[1]['memory_count']==1 and audit[1]['purpose']==purpose
+    assert audit[1]['memory_selection_details']['ranking_policy_version']=='memory-rank-v1'
+    assert audit[1]['memory_selection_details']['candidates_considered']==1
     assert '邮件语气正式' not in str(audit)
     messages=client.complete.await_args.args[0]
     assert messages[0].role=='system' and messages[1].role=='user' and messages[-1].content=='当前要求'
@@ -133,7 +135,7 @@ async def test_supplier_usage_is_whole_call_not_per_memory_cost():
 async def test_limits_and_unavailable_memory_fail_without_personalization():
     profile=replace(LEGACY_POLICY,memory=replace(LEGACY_POLICY.memory,max_items=1,max_total_chars=400))
     run,service,_,_,memories,_=setup(profile)
-    memories.rows=[row(),row('邮件更简洁。')]
+    memories.rows=[row(),row('邮件事项先核对联系人。')]
     bundle,reason=await service.prepare_call(run,purpose='mail_reply_draft',task_text='邮件',remaining_chars=10000)
     assert len(bundle.items)==1
     bundle,reason=await service.prepare_call(run,purpose='mail_reply_draft',task_text='邮件',remaining_chars=1)

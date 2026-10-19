@@ -31,6 +31,11 @@ export async function updateMemory(memoryId, payload) {
   return response.data.data
 }
 
+export async function revokeMemory(memoryId, expectedVersion) {
+  const response = await http.post('/memories/' + memoryId + '/revoke', { expected_version: expectedVersion })
+  return response.data.data
+}
+
 export async function requestMemoryDeletion(memoryId) {
   const response = await http.post('/memories/' + memoryId + '/deletion-requests')
   return response.data.data

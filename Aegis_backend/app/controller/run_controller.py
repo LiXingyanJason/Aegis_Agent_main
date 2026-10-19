@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status,Response,Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import StreamingResponse
 
@@ -16,11 +16,24 @@ from app.event.run_event import RunEvent, run_event_channel
 from app.security.dependencies import CurrentUser, get_current_user, get_tenant_session
 from app.service.run_service import RunService
 from app.vo.run_vo import RunDetailVO, RunStepDetailVO
+from app.service.memory_context_summary_service import MemoryContextSummaryService
+from app.vo.run_context_vo import RunContextSummaryVO
 
 router = APIRouter(prefix="/runs", tags=["runs"])
 _run_service = RunService()
+_memory_context_summary=MemoryContextSummaryService()
 
 _terminal_event_types = {"run_completed", "run_failed", "run_cancelled"}
+
+
+@router.get('/{run_id}/context-summary')
+async def get_context_summary(run_id:UUID,response:Response,limit:int=Query(default=50,ge=1,le=100),
+    current_user:CurrentUser=Depends(get_current_user),session:AsyncSession=Depends(get_tenant_session)) -> dict[str,RunContextSummaryVO]:
+    """按任务归属返回调用级记忆ID/版本/来源/当前状态；不返回正文或完整Prompt。"""
+    response.headers['Cache-Control']='no-store'
+    result=await _memory_context_summary.get(session,current_user.user,run_id,limit)
+    if result is None: raise HTTPException(404,detail='任务不存在或无权访问',headers={'Cache-Control':'no-store'})
+    return success(result)
 
 
 @router.get("/{run_id}")

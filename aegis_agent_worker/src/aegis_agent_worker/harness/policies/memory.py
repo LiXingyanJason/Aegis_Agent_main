@@ -15,6 +15,12 @@ class MemoryContextPolicy:
     max_estimated_tokens: int | None = None
     candidate_limit: int = 50
     calendar_version: str = 'calendar-memory-v1'
+    ranking_version: str = 'memory-rank-v1'
+    max_query_terms: int = 32
+    max_task_chars: int = 4000
+    max_audit_items: int = 50
+    strong_term_matches: int = 2
+    recall_timeout_seconds: int = 2
 
     def version_for(self,purpose):
         return self.calendar_version if purpose in CALENDAR_MEMORY_KEYS else self.version
@@ -42,6 +48,12 @@ class MemoryContextPolicy:
             raise ValueError('记忆策略版本无效')
         if not self.calendar_version or len(self.calendar_version)>64:
             raise ValueError('日历记忆策略版本无效')
+        if not self.ranking_version or len(self.ranking_version)>64:
+            raise ValueError('记忆排名策略版本无效')
+        for name,maximum in (('max_query_terms',64),('max_task_chars',12000),('max_audit_items',50),
+                              ('strong_term_matches',64),('recall_timeout_seconds',10)):
+            if type(getattr(self,name)) is not int or not 1<=getattr(self,name)<=maximum:
+                raise ValueError('记忆排名策略额度无效')
         for name, maximum in (('candidate_limit',500),('max_items', 50), ('max_item_chars', 4000),
                               ('max_total_chars', 200000), ('max_content_bytes', 800000)):
             value = getattr(self, name)

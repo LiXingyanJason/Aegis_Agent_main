@@ -16,6 +16,10 @@ class MemoryService:
         self._repository = repository or MemoryRepository()
         self._lifecycle=lifecycle or MemoryLifecycleRepository()
 
+    async def revoke_memory(self,session,user,memory_id,param):
+        await self._lifecycle.revoke(session,user,memory_id,param.expected_version)
+        return await self.get_memory(session,user,memory_id)
+
     async def list_memories(self, session: AsyncSession, user: LocalUser, query: str | None, cursor: UUID | None, limit: int) -> list[dict]:
         return await self._repository.list_memories(session, tenant_id=user.tenant_id, user_id=user.id, query=query, cursor=cursor, limit=limit)
 

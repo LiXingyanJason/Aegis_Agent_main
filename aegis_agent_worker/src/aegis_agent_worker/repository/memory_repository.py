@@ -2,6 +2,7 @@
 
 from typing import Any
 from uuid import UUID
+import json
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +10,54 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 class MemoryRepository:
     """仅暴露读取非敏感记忆和记录实际使用情况的最小能力。"""
+
+    async def recall_candidates(self,session,*,tenant_id,user_id,hints,policy):
+        """权限前置；SQL按相关档位排序后才LIMIT，不先截取最近记录。"""
+        await session.execute(text("SELECT set_config('statement_timeout',:timeout,true)"),
+                              {'timeout':str(policy.recall_timeout_seconds*1000)})
+        result=await session.execute(text("""
+          WITH eligible AS MATERIALIZED (
+            SELECT id,content,source,updated_at,memory_type,entity_value,version,
+                   source_kind,source_object_id,source_version,entity_key
+            FROM memory_items WHERE tenant_id=:tenant_id AND user_id=:user_id
+              AND deleted_at IS NULL AND is_sensitive=false AND sensitivity='normal'
+              AND status='confirmed' AND confirmed_at IS NOT NULL AND (expires_at IS NULL OR expires_at>now())
+              AND aegis_memory_source_accessible(tenant_id,user_id,source_kind,source_object_id,source_version)
+              AND memory_type IN (SELECT jsonb_array_elements_text(CAST(:types AS jsonb)))
+          ), scored AS (
+            SELECT e.*,
+              (SELECT count(*) FROM jsonb_array_elements_text(CAST(:terms AS jsonb)) t(value)
+                WHERE strpos(lower(e.content),t.value)>0) AS matches,
+              EXISTS(SELECT 1 FROM jsonb_array_elements_text(CAST(:affinity AS jsonb)) t(value)
+                WHERE strpos(lower(e.content),t.value)>0) AS affinity,
+              CASE WHEN memory_type='entity' THEN entity_key
+                WHEN content ~* '时区|北京时间|Asia/|UTC' THEN 'timezone'
+                WHEN content ~ '语气|措辞|风格|正式|简洁|友好|礼貌' THEN 'reply_style'
+                WHEN content ~ '会议|开会|安排|空闲' THEN 'meeting_preferences'
+                WHEN content ~* '联系人|邮箱|email' THEN 'contact' ELSE 'unknown' END AS topic
+            FROM eligible e
+          ), matched AS MATERIALIZED (
+            SELECT *,CASE WHEN memory_type='entity' THEN 3 WHEN matches>=:strong THEN 2 ELSE 1 END AS match_tier
+            FROM scored WHERE (memory_type='long_term_summary' AND (matches>0 OR affinity)) OR
+              (memory_type='entity' AND entity_key IN (SELECT jsonb_array_elements_text(CAST(:keys AS jsonb)))
+                AND (entity_key<>'contact' OR
+                  (length(entity_value->>'name')>0 AND strpos(:task,lower(entity_value->>'name'))>0) OR
+                  (length(entity_value->>'email')>0 AND strpos(:task,lower(entity_value->>'email'))>0)))
+          ), topics AS (
+            SELECT topic,count(DISTINCT lower(btrim(content))) FILTER(WHERE memory_type='long_term_summary')>1 AS summary_conflicted,
+              bool_or(memory_type='entity') AS has_entity_topic FROM matched GROUP BY topic
+          )
+          SELECT m.*,t.summary_conflicted,t.has_entity_topic,
+            EXISTS(SELECT 1 FROM matched WHERE memory_type='entity') AS has_any_entity
+          FROM matched m JOIN topics t USING(topic)
+          ORDER BY CASE WHEN m.memory_type='long_term_summary' AND (t.summary_conflicted OR t.has_entity_topic OR
+            (m.topic='unknown' AND EXISTS(SELECT 1 FROM matched WHERE memory_type='entity'))) THEN 1 ELSE 0 END,
+            m.match_tier DESC,CASE WHEN m.memory_type='entity' THEN 0 ELSE m.matches END DESC,
+            m.updated_at DESC,m.id DESC LIMIT :limit
+        """),dict(tenant_id=tenant_id,user_id=user_id,types=json.dumps(hints['types']),terms=json.dumps(hints['terms']),
+            affinity=json.dumps(hints['affinity']),keys=json.dumps(hints['entity_keys']),task=hints['task'],
+            strong=policy.strong_term_matches,limit=policy.candidate_limit+1))
+        return [dict(row) for row in result.mappings().all()]
 
     async def list_active_non_sensitive(
         self, session: AsyncSession, *, tenant_id: UUID, user_id: UUID, limit: int = 50

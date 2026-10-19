@@ -85,15 +85,20 @@ export function memorySourceLabel(memory) {
 
 export function memoryStatusDisplay(memory) {
   const state = memoryState(memory)
-  const label = state === '已确认 · 不进入模型' ? '已确认' : state
-  const tone = label === '已确认' ? 'confirmed'
-    : label === '待确认' ? 'pending'
-      : ['来源失效', '已过期'].includes(label) ? 'unavailable' : 'inactive'
+  const active = memory.status === 'confirmed'
+    && memory.source_available !== false
+    && (!memory.expires_at || new Date(memory.expires_at).getTime() > Date.now())
+    && !memory.is_sensitive
+    && memory.prompt_eligible !== false
+  const label = active ? '生效中' : '未生效'
+  const tone = active ? 'confirmed' : state === '待确认' ? 'pending'
+    : ['来源失效', '已过期'].includes(state) ? 'unavailable' : 'inactive'
+  const note = active ? null : state === '已确认 · 不进入模型' || (memory.status === 'confirmed' && memory.prompt_eligible === false)
+    ? '已确认，但不进入模型' : state
   return {
     label,
     tone,
-    note: label === '已确认' && (memory.is_sensitive || memory.prompt_eligible === false)
-      ? '不进入模型' : null,
+    note,
   }
 }
 

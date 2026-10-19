@@ -101,3 +101,16 @@ class MemoryLifecycleRepository:
     async def _revoke_tokens(self,session,user,identifier):
         await session.execute(text("UPDATE memory_deletion_tokens SET status='revoked' WHERE memory_id=:id AND tenant_id=:tenant AND requested_by=:user AND status='active'"),
                               dict(id=identifier,tenant=user.tenant_id,user=user.id))
+
+    async def revoke(self,session,user,memory_id,expected_version):
+        """版本CAS取消确认，不删正文；恢复须重新编辑/核对，不自动确认。"""
+        await self.lock(session,user)
+        row=(await session.execute(text('SELECT version,status FROM memory_items WHERE id=:id AND tenant_id=:tenant AND user_id=:user AND deleted_at IS NULL FOR UPDATE'),
+            dict(id=memory_id,tenant=user.tenant_id,user=user.id))).mappings().first()
+        if row is None: raise MemoryWriteError('MEMORY_NOT_FOUND','记忆不存在或无权访问',404)
+        if row['version']!=expected_version: raise MemoryWriteError('MEMORY_VERSION_CONFLICT','版本已变化，请刷新后核对')
+        if row['status']!='confirmed': raise MemoryWriteError('MEMORY_STATE_CONFLICT','只有已确认的记忆可以取消确认')
+        await session.execute(text("UPDATE memory_items SET status='revoked',version=version+1,updated_at=now() WHERE id=:id AND tenant_id=:tenant AND user_id=:user"),
+                              dict(id=memory_id,tenant=user.tenant_id,user=user.id))
+        await self._revoke_tokens(session,user,memory_id)
+        return memory_id

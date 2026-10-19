@@ -11,6 +11,7 @@ from app.param.memory_create_param import MemoryCreateParam,MemoryUpdateParam
 from app.repository.memory_lifecycle_repository import MemoryWriteError
 import json
 from app.param.memory_delete_param import MemoryDeleteParam
+from app.param.memory_revoke_param import MemoryRevokeParam
 from app.security.dependencies import CurrentUser, get_current_user, get_tenant_session
 from app.service.memory_service import MemoryService
 from app.vo.memory_vo import (
@@ -115,6 +116,14 @@ async def request_memory_deletion(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="记忆不存在或无权访问")
     token, expires_at = result
     return success(MemoryDeletionRequestVO(memory_id=memory_id, deletion_token=token, expires_at=expires_at))
+
+
+@router.post('/{memory_id}/revoke')
+async def revoke_memory(memory_id:UUID,param:MemoryRevokeParam,
+    current_user:CurrentUser=Depends(get_current_user),session:AsyncSession=Depends(get_tenant_session)) -> dict[str,MemoryVO]:
+    """用户按版本取消确认，立即从下次模型调用候选中排除。"""
+    item=await _write(_memory_service.revoke_memory(session,current_user.user,memory_id,param))
+    return success(_to_memory_vo(item))
 
 
 @router.post("/{memory_id}/delete")
