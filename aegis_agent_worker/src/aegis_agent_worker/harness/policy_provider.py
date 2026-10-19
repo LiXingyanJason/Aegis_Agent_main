@@ -8,6 +8,7 @@ from aegis_agent_worker.harness.policies.workflow import MainContextPolicy, Mail
 from aegis_agent_worker.harness.policies.output import OutputPolicy
 from aegis_agent_worker.harness.policies.memory import MemoryContextPolicy
 from aegis_agent_worker.harness.policies.session_memory import SessionMemoryPolicy
+from aegis_agent_worker.harness.policies.cooperation import CooperationPlanPolicy
 
 
 @dataclass(frozen=True)
@@ -18,10 +19,12 @@ class PolicyBundle:
     output: OutputPolicy = field(default_factory=OutputPolicy)
     memory: MemoryContextPolicy = field(default_factory=MemoryContextPolicy)
     session_memory: SessionMemoryPolicy = field(default_factory=SessionMemoryPolicy)
+    cooperation: CooperationPlanPolicy = field(default_factory=CooperationPlanPolicy)
     def __post_init__(self):
         for name, kind in (("execution", TaskExecutionPolicy), ("main_context", MainContextPolicy),
                            ("mail_collection", MailCollectionPolicy), ("output", OutputPolicy),
-                           ("memory", MemoryContextPolicy), ("session_memory", SessionMemoryPolicy)):
+                           ("memory", MemoryContextPolicy), ("session_memory", SessionMemoryPolicy),
+                           ("cooperation",CooperationPlanPolicy)):
             if not isinstance(getattr(self, name), kind):
                 raise ValueError(f"策略包{name}类型无效")
     @property
@@ -73,6 +76,13 @@ COOPERATION_KNOWLEDGE_POLICY = replace(COOPERATION_POLICY,execution=replace(
     tool_scopes=tuple((kind,tools | frozenset({'knowledge.search'}) if kind=='conversation' else tools)
         for kind,tools in COOPERATION_POLICY.execution.tool_scopes),
 ))
+
+COOPERATION_PLAN_POLICY = replace(COOPERATION_POLICY,execution=replace(
+    COOPERATION_POLICY.execution,version='harness-v4-cooperation-plan'),cooperation=CooperationPlanPolicy(
+        version='cooperation-plan-v1',max_steps=6,max_dependencies=5,max_plan_bytes=8000,
+        max_step_result_bytes=8000,max_results_bytes=24000))
+COOPERATION_PLAN_KNOWLEDGE_POLICY = replace(COOPERATION_KNOWLEDGE_POLICY,execution=replace(
+    COOPERATION_KNOWLEDGE_POLICY.execution,version='harness-v4-cooperation-plan-knowledge'),cooperation=COOPERATION_PLAN_POLICY.cooperation)
 
 
 class PolicyProvider:

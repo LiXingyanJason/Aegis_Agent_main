@@ -39,8 +39,10 @@ from aegis_agent_worker.service.mail.mail_revision_service import MailRevisionSe
 from aegis_agent_worker.service.runtime.card_context_service import CardContextService
 from aegis_agent_worker.service.runtime.main_context_tool_service import MainContextToolService
 from aegis_agent_worker.harness.policy_provider import PolicyProvider
-from aegis_agent_worker.harness.policy_provider import LEGACY_POLICY, KNOWLEDGE_CONTRACT_POLICY, COOPERATION_POLICY, COOPERATION_KNOWLEDGE_POLICY
+from aegis_agent_worker.harness.policy_provider import (LEGACY_POLICY, KNOWLEDGE_CONTRACT_POLICY,
+    COOPERATION_POLICY, COOPERATION_KNOWLEDGE_POLICY,COOPERATION_PLAN_POLICY,COOPERATION_PLAN_KNOWLEDGE_POLICY)
 from aegis_agent_worker.agent.workflows.cooperation.factory import CooperationWorkflowFactory
+from aegis_agent_worker.agent.specialists.cooperation_planner import CooperationPlanner
 from aegis_agent_worker.service.cooperation.fixed_meeting_service import FixedMeetingService
 from aegis_agent_worker.agent.specialists.knowledge_agent import KnowledgeAgent
 from aegis_agent_worker.agent.workflows.knowledge.factory import KnowledgeWorkflowFactory
@@ -77,7 +79,10 @@ async def run_worker() -> None:
             await checkpointer.setup() # 建立checkpointer数据库表，我们通过run_id关联每一个checkpointer
             default_policy=(COOPERATION_KNOWLEDGE_POLICY if settings.knowledge_query_enabled else COOPERATION_POLICY) if settings.fixed_cooperation_enabled else (
                 KNOWLEDGE_CONTRACT_POLICY if settings.knowledge_query_enabled else LEGACY_POLICY)
-            policies = PolicyProvider((LEGACY_POLICY, KNOWLEDGE_CONTRACT_POLICY,COOPERATION_POLICY,COOPERATION_KNOWLEDGE_POLICY),
+            if settings.cooperation_planning_enabled:
+                default_policy=COOPERATION_PLAN_KNOWLEDGE_POLICY if settings.knowledge_query_enabled else COOPERATION_PLAN_POLICY
+            policies = PolicyProvider((LEGACY_POLICY, KNOWLEDGE_CONTRACT_POLICY,COOPERATION_POLICY,COOPERATION_KNOWLEDGE_POLICY,
+                COOPERATION_PLAN_POLICY,COOPERATION_PLAN_KNOWLEDGE_POLICY),
                 default_version=default_policy.version)
             harness = HarnessExecutor(database, policy_provider=policies)
             llm_client = GuardedLLMClient(OpenAICompatibleClient(settings), harness)
@@ -134,7 +139,9 @@ async def run_worker() -> None:
             if settings.fixed_cooperation_enabled:
                 workflow_factories=(*workflow_factories,CooperationWorkflowFactory(
                     mail_workflows.mail_agent,mail_workflows.query_service,calendar_workflows.calendar_agent,
-                    calendar_confirmation,FixedMeetingService(database,runs,tools,events),memory_context))
+                    calendar_confirmation,FixedMeetingService(database,runs,tools,events),memory_context,
+                    plan_enabled=settings.cooperation_planning_enabled,
+                    planner=CooperationPlanner(llm_client,policy_provider=policies) if settings.cooperation_planning_enabled else None))
             orchestrator = AgentOrchestrator(
                 database,
                 llm_client,

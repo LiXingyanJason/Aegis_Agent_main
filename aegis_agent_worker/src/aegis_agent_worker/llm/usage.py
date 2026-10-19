@@ -7,7 +7,8 @@ _purpose = ContextVar("model_call_purpose", default=None)
 PURPOSES = frozenset({"main_routing", "main_routing_repair", "model_completion", "model_json",
     "calendar_planning", "calendar_draft_personalization", "calendar_recommendation",
     "conversation_reply", "mail_reply_draft", "mail_draft_revision", "mail_extraction", "mail_collection", "mail_planning",
-    "knowledge_planning", "knowledge_planning_repair", "knowledge_answer", "knowledge_answer_repair", "cooperation_mail_evidence"})
+    "knowledge_planning", "knowledge_planning_repair", "knowledge_answer", "knowledge_answer_repair", "cooperation_mail_evidence",
+    "cooperation_planning", "cooperation_planning_repair"})
 
 
 @contextmanager

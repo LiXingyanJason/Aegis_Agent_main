@@ -60,6 +60,8 @@ class TaskGraph:
         registered_workflows = registry.names()
         self._capabilities = registry.capabilities()
         self._workflow_router = WorkflowRouter(self._capabilities, registered_workflows)
+        from aegis_agent_worker.agent.routing.cooperation_registry import CooperationRegistry
+        CooperationRegistry(registry.cooperation_capabilities(),registered_workflows,self._capabilities)
         # 生产对话能力唯一来源：领域Factory注册的ConversationCapability。
         # 显式页面任务按数据库run_type直达；审批/问答恢复由GraphRunner.resume恢复检查点。
 
@@ -114,8 +116,8 @@ class TaskGraph:
         #     "calendar_read": "calendar_read",
         #     "calendar_confirmation": "calendar_confirmation",
         #     "mail_query": "mail_query",返回对话卡,点击对话卡直接执行对应流程,不走自然语言,因此该路由没有mail_send_confirmation等
-        #     "knowledge_query": "knowledge_query"
-        # }
+        #     "knowledge_query": "knowledge_query",
+        #     "mail_calendar_meeting": "mail_calendar_meeting",}
 
         if "calendar_read" in registered_workflows:
             graph.add_edge("calendar_read", "generate_reply")
@@ -127,6 +129,9 @@ class TaskGraph:
             graph.add_edge("mail_query", END)
         if "mail_calendar_meeting" in registered_workflows:
             graph.add_edge("mail_calendar_meeting", END)
+        # 步骤适配节点不在普通能力/run_type路由中；8.2仅注册，8.3再接通通用调度。
+        for capability in registry.cooperation_capabilities():
+            graph.add_edge(capability.workflow,END)
         if "knowledge_query" in registered_workflows:
             graph.add_edge("knowledge_query", END)
         if "mail_reply_draft" in registered_workflows:

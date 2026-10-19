@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     app_timezone: str = "Asia/Shanghai"
     session_memory_enabled: bool = False  # 7.2有界工作索引缓存，独立开关灰度
     fixed_cooperation_enabled: bool = False  # 8.1固定邮件→日历草稿；不启用动态计划
+    cooperation_planning_enabled: bool = False  # 8.2受限模型计划，依赖8.1开关
     knowledge_query_enabled: bool = False  # 6.4真实检索显式开启；不将Mock能力提供给主Agent
     knowledge_lexical_fallback_allowed: bool = False  # 显式允许Qdrant服务故障时仅全文检索；不绕过Embedding治理
     knowledge_index_queue_name: str = "aegis:knowledge-index-jobs"
@@ -89,6 +90,12 @@ class Settings(BaseSettings):
     email_mcp_url: AnyHttpUrl | None = None
     email_mcp_api_key: SecretStr | None = None
     email_mcp_timeout_seconds: float = 20.0
+
+    @model_validator(mode='after')
+    def validate_cooperation_planning(self):
+        if self.cooperation_planning_enabled and not self.fixed_cooperation_enabled:
+            raise ValueError('COOPERATION_PLANNING_ENABLED requires FIXED_COOPERATION_ENABLED')
+        return self
 
     @property
     def database_async_url(self) -> str:

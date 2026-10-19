@@ -79,3 +79,14 @@ class FixedMeetingService:
                 event=await self._runs.append_event(session,run_id=run.id,tenant_id=run.tenant_id,
                     event_type='cooperation_step_completed',payload=result.model_dump(mode='json'))
                 if self._events: self._events.publish_after_commit(event)
+
+    async def record_plan(self, run, metadata):
+        """规划独立于主路由审计；仅允许安全元数据，事务提交后通知。"""
+        payload = {key: value for key, value in metadata.items() if key in {
+            'outcome', 'repair_count', 'step_count', 'plan_digest', 'catalog_version',
+            'catalog_digest', 'policy_version', 'duration_ms'}}
+        async with self._database.session() as session:
+            async with tenant_transaction(session, TenantContext(tenant_id=run.tenant_id, user_id=run.user_id)):
+                event = await self._runs.append_event(session, run_id=run.id, tenant_id=run.tenant_id,
+                    event_type='cooperation_plan_completed', payload=payload)
+                if self._events: self._events.publish_after_commit(event)

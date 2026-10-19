@@ -13,6 +13,7 @@ from aegis_agent_worker.agent.contracts.decision import MainDecision,ResourceRef
 from aegis_agent_worker.agent.specialists.mail_agent import MailAgent,MailAgentError
 from aegis_agent_worker.agent.specialists.calendar_agent import CalendarAgent
 from aegis_agent_worker.agent.specialists.main_agent import MainAgent
+from aegis_agent_worker.agent.specialists.cooperation_planner import CooperationPlanner
 from aegis_agent_worker.agent.workflows.cooperation.factory import CooperationWorkflowFactory
 from aegis_agent_worker.agent.graph.task_graph import TaskGraph,TaskGraphDependencies
 from aegis_agent_worker.agent.graph.graph_registry import GraphRegistry
@@ -38,28 +39,33 @@ class Client:
         self.complete_json=self.complete
 
 
-def setup():
+def setup(*,plan_enabled=False,plan_response=None):
     mail_client=Client(json.dumps(dict(action='query',query={'action':'filter','keywords':['续约']})),json.dumps({'excerpt':EXCERPT},ensure_ascii=False))
     calendar_client=Client(json.dumps(PLAN),json.dumps(dict(title='续约沟通',attendees=[],selected_slot_id=SLOT['slot_id'],reason='可信候选可容纳50分钟')))
     mail,calendar=MailAgent(mail_client),CalendarAgent(llm_client=calendar_client)
     query=SimpleNamespace(query=AsyncMock(return_value=([dict(id=SOURCE.id,source_version='v1')],'mock')))
-    source=SimpleNamespace(read_source=AsyncMock(return_value=dict(EMAIL)),verify_source=AsyncMock(),record=AsyncMock())
+    source=SimpleNamespace(read_source=AsyncMock(return_value=dict(EMAIL)),verify_source=AsyncMock(),record=AsyncMock(),record_plan=AsyncMock())
     confirmation=SimpleNamespace(
         query_available_slots=AsyncMock(return_value={'availability':{'duration_minutes':50,'candidates':[SLOT]}}),
         create_recommended_draft=AsyncMock(return_value={'draft_id':str(UUID(int=7)),'approval_item_id':str(UUID(int=8)),
             'awaiting_confirmation':True,'assistant_content':'请核对会议草稿'}),
         create_approved_event=AsyncMock(return_value='external-1'))
-    factory=CooperationWorkflowFactory(mail,query,calendar,confirmation,source)
-    main=MainAgent(Client(json.dumps(dict(decision='delegate',domain='mail',
-        intent='arrange_meeting_from_mail',instruction=REQUEST))))
+    responses=[json.dumps(dict(decision='delegate',domain='mail',intent='arrange_meeting_from_mail',instruction=REQUEST))]
+    if plan_enabled: responses.append(plan_response or '{}')
+    main_client=Client(*responses)
+    factory=CooperationWorkflowFactory(mail,query,calendar,confirmation,source,plan_enabled=plan_enabled,
+        planner=CooperationPlanner(main_client) if plan_enabled else None)
+    main=MainAgent(main_client)
     context=SimpleNamespace(load_history=AsyncMock(return_value=[{'role':'user','content':REQUEST}]))
     dependencies=TaskGraphDependencies(context_service=context,lifecycle=object(),llm_client=Client(),system_prompt='test',
         workflow_factories=(factory,),main_agent=main,decision_context_service=SimpleNamespace(record_decision=AsyncMock()))
-    graph=TaskGraph(dependencies).build(checkpointer=MemorySaver())
+    checkpointer=MemorySaver()
+    graph=TaskGraph(dependencies).build(checkpointer=checkpointer)
     state={key:str(UUID(int=index)) for index,key in enumerate(('run_id','tenant_id','user_id','conversation_id'),1)}
     state['run_type']='conversation'
     return SimpleNamespace(graph=graph,state=state,config={'configurable':{'thread_id':state['run_id']}},
-        source=source,query=query,confirmation=confirmation,mail_client=mail_client,calendar_client=calendar_client,factory=factory)
+        source=source,query=query,confirmation=confirmation,mail_client=mail_client,calendar_client=calendar_client,factory=factory,
+        main_client=main_client,dependencies=dependencies,checkpointer=checkpointer)
 
 
 @pytest.mark.asyncio

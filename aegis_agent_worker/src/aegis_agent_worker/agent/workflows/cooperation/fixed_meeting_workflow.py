@@ -14,6 +14,7 @@ from aegis_agent_worker.agent.workflows.calendar.confirmation_graph import Calen
 from aegis_agent_worker.agent.specialists.mail_agent import MailAgentError
 from aegis_agent_worker.repository.run_repository import ClaimedRun
 from aegis_agent_worker.tool.contracts import ToolError
+from aegis_agent_worker.agent.workflows.cooperation.plan_state import verify_plan_state,update_plan_progress,verify_step_inputs
 
 
 def run_from(state):
@@ -21,8 +22,9 @@ def run_from(state):
         user_id=UUID(state['user_id']),conversation_id=UUID(state['conversation_id']))
 
 
-def result_update(state,result):
-    return {'cooperation_results':{**state.get('cooperation_results',{}),result.step_id:result.model_dump(mode='json')}}
+def result_update(state,result,plan_registry=None):
+    return {'cooperation_results':{**state.get('cooperation_results',{}),result.step_id:result.model_dump(mode='json')},
+        **update_plan_progress(state,result,plan_registry)}
 
 
 def mail_result(state):
@@ -35,11 +37,13 @@ def mail_result(state):
 
 class CooperationCalendarWorkflow(CalendarConfirmationWorkflow):
     """复用日历候选/草稿/审批执行节点，增加跨领域来源守卫。"""
-    def __init__(self,calendar_agent,confirmation_service,source_service,memory_context=None):
+    def __init__(self,calendar_agent,confirmation_service,source_service,memory_context=None,plan_registry=None):
         super().__init__(calendar_agent,confirmation_service,memory_context=memory_context)
         self._source_service=source_service
+        self._plan_registry=plan_registry
 
     async def _prepare(self,state):
+        verify_step_inputs(state,self._plan_registry,'calendar_candidates')
         source=mail_result(state)
         try:
             await self._source_service.verify_source(run_from(state),source.source,source.source_digest)
@@ -54,6 +58,7 @@ class CooperationCalendarWorkflow(CalendarConfirmationWorkflow):
             'handoff':internal.model_dump(mode='json')})
 
     async def _query_availability(self,state):
+        verify_step_inputs(state,self._plan_registry,'calendar_candidates')
         update=await super()._query_availability(state)
         if update.get('availability'):
             availability=update['availability']
@@ -74,10 +79,15 @@ class CooperationCalendarWorkflow(CalendarConfirmationWorkflow):
             result=TaskStepResult(step_id='calendar_candidates',status='succeeded',source=mail_result(state).source,
                 candidate_ids=tuple(item.slot_id for item in candidates),candidate_version=snapshot_digest(availability))
             await self._source_service.record(run_from(state),result)
-            return {**update,'availability':availability,**result_update(state,result)}
+            return {**update,'availability':availability,**result_update(state,result,self._plan_registry)}
         return update
 
+    async def _generate_draft(self,state):
+        verify_step_inputs(state,self._plan_registry,'meeting_draft')
+        return await super()._generate_draft(state)
+
     async def _create_draft(self,state):
+        verify_step_inputs(state,self._plan_registry,'meeting_draft')
         source=mail_result(state)
         try:
             candidates=TaskStepResult.model_validate(state['cooperation_results']['calendar_candidates'])
@@ -91,11 +101,13 @@ class CooperationCalendarWorkflow(CalendarConfirmationWorkflow):
             result=TaskStepResult(step_id='meeting_draft',status='waiting_confirmation',source=source.source,
                 draft_id=UUID(update['draft_id']),approval_item_id=UUID(update['approval_item_id']))
             await self._source_service.record(run_from(state),result)
-            return {**update,**result_update(state,result)}
+            return {**update,**result_update(state,result,self._plan_registry)}
         return update
 
     async def _finish(self,state):
+        verify_plan_state(state,self._plan_registry)
         if state.get('approval_decision')=='approved' and not state.get('confirmation_error'):
+            verify_step_inputs(state,self._plan_registry,'meeting_draft')
             source=mail_result(state)
             # 恢复不重新调用LLM或生成草稿；fresh读取只验证原邮件，最终写入仍仅用批准版本。
             await self._source_service.verify_source(run_from(state),source.source,source.source_digest,fresh=True)
@@ -107,31 +119,74 @@ class CooperationCalendarWorkflow(CalendarConfirmationWorkflow):
             result=TaskStepResult(step_id='meeting_draft',status='completed' if state.get('approval_decision')=='approved' else 'rejected',
                 source=mail_result(state).source,draft_id=UUID(state['draft_id']),approval_item_id=UUID(state['approval_item_id']))
         await self._source_service.record(run_from(state),result)
-        return {**update,**result_update(state,result)}
+        return {**update,**result_update(state,result,self._plan_registry)}
 
 
 class FixedMeetingWorkflow:
-    def __init__(self,mail_agent,query_service,calendar_agent,confirmation_service,source_service,memory_context=None):
+    def __init__(self,mail_agent,query_service,calendar_agent,confirmation_service,source_service,memory_context=None,plan_registry=None,planner=None):
         self._mail,self._query,self._calendar,self._source=mail_agent,query_service,calendar_agent,source_service
         self._confirmation,self._memory=confirmation_service,memory_context
+        self._plan_registry=plan_registry
+        self._planner=planner
 
     def build(self):
         graph=StateGraph(TaskGraphState)
         graph.add_node('find_source_mail',self._find)
         graph.add_node('extract_and_handoff',self._handoff)
-        graph.add_node('calendar_meeting',CooperationCalendarWorkflow(self._calendar,self._confirmation,self._source,self._memory).build(from_validated_plan=True))
-        graph.add_edge(START,'find_source_mail')
+        graph.add_node('calendar_meeting',CooperationCalendarWorkflow(self._calendar,self._confirmation,self._source,self._memory,self._plan_registry).build(from_validated_plan=True))
+        if self._plan_registry is not None:
+            from aegis_agent_worker.agent.workflows.cooperation.planning_workflow import CooperationPlanningWorkflow
+            graph.add_node('plan_cooperation',CooperationPlanningWorkflow(
+                self._planner,self._plan_registry,self._source).build())
+            graph.add_edge(START,'plan_cooperation')
+            graph.add_conditional_edges('plan_cooperation',lambda s:'finish' if s.get('cooperation_error') else 'execute',
+                {'finish':END,'execute':'find_source_mail'})
+        else:
+            graph.add_edge(START,'find_source_mail')
         graph.add_conditional_edges('find_source_mail',lambda s:'finish' if s.get('cooperation_error') else 'collect',{'finish':END,'collect':'extract_and_handoff'})
         graph.add_conditional_edges('extract_and_handoff',lambda s:'finish' if s.get('cooperation_error') else 'calendar',{'finish':END,'calendar':'calendar_meeting'})
         graph.add_edge('calendar_meeting',END)
         return graph.compile()
 
+    def build_step(self,phase):
+        """真实预构建适配子图供静态目录绑定；8.2不通过这些节点执行动态调度。"""
+        calendar=CooperationCalendarWorkflow(self._calendar,self._confirmation,self._source,self._memory,self._plan_registry)
+        graph=StateGraph(TaskGraphState)
+        def guard(state):
+            verify_plan_state(state,self._plan_registry,required=True)
+            return {}
+        graph.add_node('verify_plan',guard)
+        graph.add_edge(START,'verify_plan')
+        if phase=='mail_requirements':
+            graph.add_node('find_source_mail',self._find)
+            graph.add_node('extract_and_handoff',self._handoff)
+            graph.add_edge('verify_plan','find_source_mail')
+            graph.add_conditional_edges('find_source_mail',lambda s:'finish' if s.get('cooperation_error') else 'collect',
+                {'finish':END,'collect':'extract_and_handoff'})
+            graph.add_edge('extract_and_handoff',END)
+        elif phase=='calendar_candidates':
+            graph.add_node('prepare',calendar._prepare)
+            graph.add_node('query',calendar._query_availability)
+            graph.add_edge('verify_plan','prepare');graph.add_edge('prepare','query');graph.add_edge('query',END)
+        elif phase=='meeting_draft':
+            graph.add_node('generate',calendar._generate_draft)
+            graph.add_node('save',calendar._create_draft)
+            graph.add_node('wait',calendar._wait)
+            graph.add_node('finish',calendar._finish)
+            graph.add_edge('verify_plan','generate')
+            graph.add_conditional_edges('generate',lambda s:'save' if s.get('calendar_meeting_draft') and not s.get('confirmation_error') else 'finish',
+                {'save':'save','finish':'finish'})
+            graph.add_edge('save','wait');graph.add_edge('wait','finish');graph.add_edge('finish',END)
+        else: raise ValueError('未注册的协同步骤')
+        return graph.compile()
+
     async def _unavailable(self,state,code,message):
         result=TaskStepResult(step_id='mail_requirements',status='unavailable',issue_code=code)
         await self._source.record(run_from(state),result)
-        return {'cooperation_error':code,'assistant_content':message,**result_update(state,result)}
+        return {'cooperation_error':code,'assistant_content':message,**result_update(state,result,self._plan_registry)}
 
     async def _find(self,state):
+        verify_plan_state(state,self._plan_registry,required=self._plan_registry is not None)
         handoff=AgentHandoff.model_validate(state['handoff'])
         if handoff.domain!='mail' or handoff.intent!='arrange_meeting_from_mail':
             raise ValueError('固定协同入口无效')
@@ -157,6 +212,7 @@ class FixedMeetingWorkflow:
             return await self._unavailable(state,'requirements_unclear','无法形成安全的邮件查询，请补充邮件主题或重新选择。')
 
     async def _handoff(self,state):
+        verify_step_inputs(state,self._plan_registry,'mail_requirements')
         source=TaskStepInput.model_validate(state['cooperation_input']).source
         try:
             email=await self._source.read_source(run_from(state),source)
@@ -177,4 +233,4 @@ class FixedMeetingWorkflow:
         result=TaskStepResult(step_id='mail_requirements',status='succeeded',source=source,
             source_digest=snapshot_digest(email),calendar_decision=decision)
         await self._source.record(run_from(state),result)
-        return {'calendar_decision':decision.model_dump(mode='json'),**result_update(state,result)}
+        return {'calendar_decision':decision.model_dump(mode='json'),**result_update(state,result,self._plan_registry)}

@@ -23,6 +23,13 @@ class TaskGraphState(TypedDict, total=False):
     cooperation_input: dict[str, Any]  # 固定链路的可信来源引用；不含邮件正文
     cooperation_results: dict[str, Any]  # 按固定step_id隔离结果，不覆盖其他步骤
     cooperation_error: str
+    cooperation_plan: dict[str, Any]
+    cooperation_plan_binding: dict[str, Any]  # 代码验证的目录/策略版本、摘要与确定顺序
+    cooperation_progress: dict[str, Any]  # step_id→状态/结果引用，不复制结果正文
+    cooperation_current_step: str
+    cooperation_status: str
+    cooperation_plan_audit: dict[str, Any]
+    cooperation_clarification: dict[str, str]
     knowledge_plan: dict[str, Any]
     knowledge_evidence: list[dict[str, Any]]
     knowledge_answer: dict[str, Any]

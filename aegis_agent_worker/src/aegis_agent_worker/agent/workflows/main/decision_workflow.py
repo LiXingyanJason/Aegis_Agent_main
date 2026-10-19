@@ -266,6 +266,7 @@ class MainDecisionWorkflow:
                            state["decision_outcome"], state["decision_duration_ms"])
         return {}
 
+
     async def _record(self, state, decision, outcome, duration_ms):
         """图层提供审计内容，Service 执行持久化与事件发布。"""
         await self._context_service.record_decision(
