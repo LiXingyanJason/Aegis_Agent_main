@@ -1,0 +1,83 @@
+// 长期记忆只从用户维护页面写入；不接入任务对话或自动提取。
+export function memoryFormFromRecord(memory) {
+  return {
+    content: memory.content, isSensitive: memory.is_sensitive,
+    memoryType: memory.memory_type, entityKey: memory.entity?.key || 'timezone',
+    entityValue: memory.entity?.value || 'Asia/Shanghai',
+    contactName: memory.entity?.name || '', contactEmail: memory.entity?.email || '',
+    expiresAt: memory.expires_at ? new Date(memory.expires_at) : null,
+    sourceKind: memory.source_kind, sourceObjectId: memory.source_object_id || '', sourceVersion: memory.source_version || '',
+  }
+}
+
+export function memoryPayload(form, version) {
+  const payload = {
+    content: form.content.trim(), memory_type: form.memoryType, scope: 'user',
+    sensitivity: form.isSensitive ? 'sensitive' : 'normal',
+    expires_at: form.expiresAt ? new Date(form.expiresAt).toISOString() : null,
+    source_kind: form.sourceKind,
+  }
+  if (form.memoryType === 'entity') {
+    payload.entity = form.entityKey === 'contact'
+      ? { key: 'contact', name: form.contactName.trim(), email: form.contactEmail.trim() }
+      : { key: form.entityKey, value: form.entityValue }
+  }
+  if (form.sourceKind !== 'manual') {
+    payload.source_object_id = form.sourceObjectId.trim()
+    if (form.sourceVersion.trim()) payload.source_version = form.sourceVersion.trim()
+  }
+  if (version !== undefined) payload.expected_version = version
+  return payload
+}
+
+export function memoryConfirmPayload(memory, replacement) {
+  const payload = { memory_id: memory.memory_id, expected_version: memory.version }
+  if (replacement) {
+    payload.replace_memory_id = replacement.memory_id
+    payload.replace_version = replacement.version
+  }
+  return payload
+}
+
+export function memoryState(memory) {
+  if (memory.status === 'superseded') return '已被替换'
+  if (memory.status === 'pending') return '待确认'
+  if (memory.status === 'revoked') return '已撤销'
+  if (memory.source_available === false) return '来源失效'
+  if (memory.expires_at && new Date(memory.expires_at).getTime() <= Date.now()) return '已过期'
+  return memory.is_sensitive ? '已确认 · 不进入模型' : '已确认'
+}
+
+export function memoryTypeLabel(memory) {
+  if (memory.memory_type !== 'entity') return '长期摘要'
+  const entity = { timezone: '默认时区', reply_style: '邮件语气', contact: '常用联系人' }
+  return `设置 · ${entity[memory.entity_key] ?? '其他'}`
+}
+
+export function memorySourceLabel(memory) {
+  const source = { manual: '手动录入', run: '已完成任务', knowledge_document: '知识资料' }
+  return source[memory.source_kind]
+    ?? (memory.source === 'user_confirmed' ? '用户确认' : memory.source === 'user_input' ? '用户输入' : '来源未标明')
+}
+
+export function memoryStatusDisplay(memory) {
+  const state = memoryState(memory)
+  const label = state === '已确认 · 不进入模型' ? '已确认' : state
+  const tone = label === '已确认' ? 'confirmed'
+    : label === '待确认' ? 'pending'
+      : ['来源失效', '已过期'].includes(label) ? 'unavailable' : 'inactive'
+  return {
+    label,
+    tone,
+    note: label === '已确认' && (memory.is_sensitive || memory.prompt_eligible === false)
+      ? '不进入模型' : null,
+  }
+}
+
+export function memoryErrorMessage(cause, fallback) {
+  const detail = cause.response?.data?.detail
+  // 不把Pydantic原始input（可能是被拒绝的秘密）复制到页面错误消息。
+  if (Array.isArray(detail)) return '输入未通过校验，请核对类型、时区、邮箱、敏感级别、来源、有效期和版本。'
+  if (detail && typeof detail === 'object') return detail.message || fallback
+  return detail || cause.message || fallback
+}

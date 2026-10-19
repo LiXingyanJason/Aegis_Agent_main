@@ -6,7 +6,24 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
-class MemoryVO(BaseModel):
+class MemoryMetadataVO(BaseModel):
+    memory_type: str = 'long_term_summary'
+    scope: str = 'user'
+    entity_key: str | None = None
+    status: str = 'pending'
+    version: int = 1
+    sensitivity: str = 'normal'
+    confirmed_at: datetime | None = None
+    expires_at: datetime | None = None
+    source_kind: str = 'manual'
+    source_object_id: UUID | None = None
+    source_version: str | None = None
+    supersedes_id: UUID | None = None
+    source_available: bool = True
+    prompt_eligible: bool = False
+
+
+class MemoryVO(MemoryMetadataVO):
     """一条用户可管理的长期记忆。"""
 
     memory_id: UUID
@@ -16,9 +33,10 @@ class MemoryVO(BaseModel):
     is_sensitive: bool
     created_at: datetime
     updated_at: datetime
+    entity: dict | None = None
 
 
-class MemoryListItemVO(BaseModel):
+class MemoryListItemVO(MemoryMetadataVO):
     """列表项目；敏感正文被脱敏，需通过详情接口查看。"""
 
     memory_id: UUID

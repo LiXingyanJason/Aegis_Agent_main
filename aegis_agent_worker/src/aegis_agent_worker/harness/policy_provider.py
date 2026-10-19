@@ -6,6 +6,8 @@ from aegis_agent_worker.harness.exceptions import HarnessError
 from aegis_agent_worker.harness.policies.execution import TaskExecutionPolicy
 from aegis_agent_worker.harness.policies.workflow import MainContextPolicy, MailCollectionPolicy
 from aegis_agent_worker.harness.policies.output import OutputPolicy
+from aegis_agent_worker.harness.policies.memory import MemoryContextPolicy
+from aegis_agent_worker.harness.policies.session_memory import SessionMemoryPolicy
 
 
 @dataclass(frozen=True)
@@ -14,9 +16,12 @@ class PolicyBundle:
     main_context: MainContextPolicy = field(default_factory=MainContextPolicy)
     mail_collection: MailCollectionPolicy = field(default_factory=MailCollectionPolicy)
     output: OutputPolicy = field(default_factory=OutputPolicy)
+    memory: MemoryContextPolicy = field(default_factory=MemoryContextPolicy)
+    session_memory: SessionMemoryPolicy = field(default_factory=SessionMemoryPolicy)
     def __post_init__(self):
         for name, kind in (("execution", TaskExecutionPolicy), ("main_context", MainContextPolicy),
-                           ("mail_collection", MailCollectionPolicy), ("output", OutputPolicy)):
+                           ("mail_collection", MailCollectionPolicy), ("output", OutputPolicy),
+                           ("memory", MemoryContextPolicy), ("session_memory", SessionMemoryPolicy)):
             if not isinstance(getattr(self, name), kind):
                 raise ValueError(f"策略包{name}类型无效")
     @property
@@ -25,6 +30,12 @@ class PolicyBundle:
 
 # 已发布版本必须固定全部值。以后调整默认值应新增版本，不能修改此快照。
 LEGACY_POLICY = PolicyBundle(
+    session_memory=SessionMemoryPolicy(version="session-work-v1",ttl_seconds=1800,max_user_sessions=32,
+        max_tasks=6,max_cards=4,max_cache_bytes=12000,history_items=20,history_chars=12000,
+        message_chars=4000,redis_timeout_seconds=1.0),
+    # 新契约的独立版本；尚未接入旧注入路径，不改变harness-v1执行预算。
+    memory=MemoryContextPolicy(version="memory-contract-v1", max_items=5, max_item_chars=400,
+        max_total_chars=1500, max_content_bytes=6000, max_estimated_tokens=None),
     execution=TaskExecutionPolicy(version="harness-v1", max_models=10, max_tools=6, active_seconds=120,
         max_input_chars=48000, max_output_chars=80000, model_timeout_seconds=60, tool_timeout_seconds=20,
         tool_scopes=(

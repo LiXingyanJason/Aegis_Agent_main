@@ -11,6 +11,7 @@ from app.controller.run_controller import router as run_router
 from app.controller.mail_controller import router as mail_router
 from app.controller.todo_controller import router as todo_router
 from app.controller.memory_controller import router as memory_router
+from app.controller.session_memory_controller import router as session_memory_router
 from app.controller.calendar_controller import router as calendar_router
 from app.controller.agent_input_controller import router as agent_input_router
 from app.service.agent_input_service import AgentInputService
@@ -72,6 +73,7 @@ app.include_router(run_router)
 app.include_router(mail_router)
 app.include_router(todo_router)
 app.include_router(memory_router)
+app.include_router(session_memory_router)
 app.include_router(calendar_router)
 app.include_router(agent_input_router)
 app.include_router(knowledge_router)

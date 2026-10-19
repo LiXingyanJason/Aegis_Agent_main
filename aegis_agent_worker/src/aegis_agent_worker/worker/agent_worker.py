@@ -46,6 +46,9 @@ from aegis_agent_worker.service.knowledge.evidence_service import EvidenceServic
 from aegis_agent_worker.repository.knowledge_evidence_repository import KnowledgeEvidenceRepository
 from aegis_agent_worker.service.mail.mail_planning_service import MailPlanningService
 from aegis_agent_worker.service.memory.memory_context_service import MemoryContextService
+from aegis_agent_worker.service.memory.session_memory_service import SessionMemoryService
+from aegis_agent_worker.service.runtime.conversation_context_service import ConversationContextService
+from aegis_agent_worker.storage.session_memory_cache import RedisSessionMemoryCache
 from aegis_agent_worker.service.runtime.conversation_artifact_service import ConversationArtifactService
 from aegis_agent_worker.service.calendar.calendar_tool_execution_service import CalendarToolExecutionService
 from aegis_agent_worker.service.knowledge.knowledge_query_service import KnowledgeQueryService
@@ -76,6 +79,11 @@ async def run_worker() -> None:
             llm_client = GuardedLLMClient(OpenAICompatibleClient(settings), harness)
             events = RunEventPublisher(redis)
             runs = AgentRunRepository()
+            session_memory = SessionMemoryService(database,
+                RedisSessionMemoryCache(redis,policies.current().session_memory),
+                policy_provider=policies) if settings.session_memory_enabled else None
+            context_service = ConversationContextService(database,runs,session_memory=session_memory,
+                policy_provider=policies)
             input_requests=InputRequestService(database,runs,events)
             memory_context = MemoryContextService(database)
             cards = CardContextService(database, policy_provider=policies)
@@ -121,6 +129,7 @@ async def run_worker() -> None:
                 database,
                 llm_client,
                 runs=runs,
+                context_service=context_service,
                 events=events,
                 workflow_factories=(calendar_workflows, mail_workflows, knowledge_workflows),
                 checkpointer=checkpointer,

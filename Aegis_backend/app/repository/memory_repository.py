@@ -10,6 +10,12 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
+MEMORY_COLUMNS="""m.*,aegis_memory_source_accessible(m.tenant_id,m.user_id,m.source_kind,m.source_object_id,m.source_version)
+ AS source_available, (m.status='confirmed' AND NOT m.is_sensitive AND m.sensitivity='normal'
+ AND (m.expires_at IS NULL OR m.expires_at>now()) AND m.deleted_at IS NULL
+ AND aegis_memory_source_accessible(m.tenant_id,m.user_id,m.source_kind,m.source_object_id,m.source_version)) AS prompt_eligible"""
+
+
 class MemoryRepository:
     """所有查询均显式限定租户、用户和未删除状态。"""
 
@@ -17,7 +23,7 @@ class MemoryRepository:
         """按更新时间倒序搜索用户的有效记忆，使用最后一项 ID 作为游标。"""
         result = await session.execute(
             text(
-                "SELECT id, content, source, is_sensitive, updated_at FROM memory_items "
+                "SELECT "+MEMORY_COLUMNS+" FROM memory_items m "
                 "WHERE tenant_id=:tenant_id AND user_id=:user_id AND deleted_at IS NULL "
                 "AND (CAST(:query AS varchar) IS NULL OR content ILIKE '%' || CAST(:query AS varchar) || '%') "
                 "AND (CAST(:cursor AS uuid) IS NULL OR (updated_at, id) < ("
@@ -32,37 +38,13 @@ class MemoryRepository:
     async def find_memory(self, session: AsyncSession, *, tenant_id: UUID, user_id: UUID, memory_id: UUID) -> dict[str, Any] | None:
         """读取当前用户的一条尚未删除记忆。"""
         result = await session.execute(
-            text("SELECT id, content, source, source_run_id, is_sensitive, created_at, updated_at FROM memory_items WHERE id=:memory_id AND tenant_id=:tenant_id AND user_id=:user_id AND deleted_at IS NULL"),
+            text("SELECT "+MEMORY_COLUMNS+" FROM memory_items m WHERE id=:memory_id AND tenant_id=:tenant_id AND user_id=:user_id AND deleted_at IS NULL"),
             {"memory_id": memory_id, "tenant_id": tenant_id, "user_id": user_id},
         )
         row = result.mappings().first()
         return None if row is None else dict(row)
 
-    async def create_memory(self, session: AsyncSession, *, tenant_id: UUID, user_id: UUID, content: str, is_sensitive: bool, source: str, source_run_id: UUID | None = None) -> dict[str, Any] | None:
-        """保存手动输入或已确认的偏好；确认来源任务必须属于当前用户。"""
-        if source_run_id is not None:
-            owned = await session.execute(
-                text("SELECT 1 FROM agent_runs WHERE id=:run_id AND tenant_id=:tenant_id AND user_id=:user_id"),
-                {"run_id": source_run_id, "tenant_id": tenant_id, "user_id": user_id},
-            )
-            if owned.mappings().first() is None:
-                return None
-        result = await session.execute(
-            text("INSERT INTO memory_items (tenant_id,user_id,content,source,source_run_id,is_sensitive) VALUES (:tenant_id,:user_id,:content,:source,:source_run_id,:is_sensitive) RETURNING id"),
-            {"tenant_id": tenant_id, "user_id": user_id, "content": content, "source": source, "source_run_id": source_run_id, "is_sensitive": is_sensitive},
-        )
-        return await self.find_memory(session, tenant_id=tenant_id, user_id=user_id, memory_id=result.mappings().one()["id"])
-
-    async def update_memory(self, session: AsyncSession, *, tenant_id: UUID, user_id: UUID, memory_id: UUID, content: str, is_sensitive: bool) -> dict[str, Any] | None:
-        """修改记忆并废止旧的删除令牌，避免旧确认删除新版内容。"""
-        result = await session.execute(
-            text("UPDATE memory_items SET content=:content,is_sensitive=:is_sensitive,updated_at=now() WHERE id=:memory_id AND tenant_id=:tenant_id AND user_id=:user_id AND deleted_at IS NULL RETURNING id"),
-            {"memory_id": memory_id, "tenant_id": tenant_id, "user_id": user_id, "content": content, "is_sensitive": is_sensitive},
-        )
-        if result.mappings().first() is None:
-            return None
-        await session.execute(text("UPDATE memory_deletion_tokens SET status='revoked' WHERE memory_id=:memory_id AND requested_by=:user_id AND status='active'"), {"memory_id": memory_id, "user_id": user_id})
-        return await self.find_memory(session, tenant_id=tenant_id, user_id=user_id, memory_id=memory_id)
+    # 保存/编辑/确认统一迁入MemoryLifecycleRepository；不保留绕过确认和版本校验的旧写路径。
 
     async def create_deletion_request(self, session: AsyncSession, *, tenant_id: UUID, user_id: UUID, memory_id: UUID) -> tuple[str, datetime] | None:
         """为一条有效记忆签发十分钟有效的删除令牌，仅持久化哈希。"""
@@ -88,7 +70,7 @@ class MemoryRepository:
             return "invalid_token"
         if row["status"] != "active" or row["expires_at"] <= datetime.now(timezone.utc):
             return "invalid_token"
-        result = await session.execute(text("UPDATE memory_items SET deleted_at=now(),deleted_by=:user_id,updated_at=now() WHERE id=:memory_id AND tenant_id=:tenant_id AND user_id=:user_id AND deleted_at IS NULL RETURNING id"), {"memory_id": memory_id, "tenant_id": tenant_id, "user_id": user_id})
+        result = await session.execute(text("UPDATE memory_items SET deleted_at=now(),deleted_by=:user_id,status='deleted',version=version+1,updated_at=now() WHERE id=:memory_id AND tenant_id=:tenant_id AND user_id=:user_id AND deleted_at IS NULL RETURNING id"), {"memory_id": memory_id, "tenant_id": tenant_id, "user_id": user_id})
         if result.mappings().first() is None:
             return "not_found"
         await session.execute(text("UPDATE memory_deletion_tokens SET status='used',used_at=now() WHERE id=:token_id"), {"token_id": row["id"]})

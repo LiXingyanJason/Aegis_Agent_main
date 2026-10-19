@@ -196,3 +196,13 @@ RLS允许所有者处理自身已删除文档的元数据以完成软删除；�
 | `relation already exists` | 数据库可能已由旧脚本初始化；不要继续重试 `upgrade`，先确认版本并使用 `stamp`。 |
 | RLS 导致迁移失败 | 迁移由数据库管理员连接执行，检查该连接是否有 DDL 权限；不要在迁移中复用普通用户请求的租户上下文。 |
 
+### 017：手动长期记忆生命周期
+
+先停旧API写入与旧Agent Worker并备份，再执行`python -m alembic upgrade 017_memory_manual_lifecycle`，
+然后一起更新API、Worker与前端。旧Worker仅按is_sensitive读取，不能与新pending记录混跑。
+旧手动有效记录回填confirmed/确认时间、旧敏感布尔显式映射；不删除原数据或重建向量。
+新增memory_item_revisions审计（无正文副本）及实体部分唯一索引，来源函数为SECURITY INVOKER。
+运行角色需要新表写/读权限及来源事实读取权限，保持RLS，不将应用账户提升为超级用户。
+downgrade会丢弃新增字段/审计，存在无法用旧格式表达的有效数据时主动拒绝；必须先人工导出处理。
+实现测试只在随机临时schema/受限角色内回滚运行，未升级业务数据库。
+

@@ -1,0 +1,224 @@
+"""017真实PG测试：临时schema/受限角色全部回滚，无业务库迁移。"""
+from datetime import datetime,timezone,timedelta
+import importlib.util
+import os
+from pathlib import Path
+import re
+from types import SimpleNamespace
+from unittest.mock import patch
+from uuid import uuid4
+
+import pytest
+
+from app.param.memory_create_param import MemoryCreateParam,MemoryUpdateParam
+from app.repository.memory_repository import MemoryRepository
+from app.repository.memory_lifecycle_repository import MemoryLifecycleRepository,MemoryWriteError
+
+pytestmark=pytest.mark.skipif(os.getenv('AEGIS_MEMORY_DB_TESTS')!='1',reason='显式启用可回滚记忆迁移测试')
+
+
+@pytest.fixture
+def database():
+    import psycopg
+    from psycopg import sql
+    from psycopg.rows import dict_row
+    from app.config.settings import get_settings
+    conn=psycopg.connect(get_settings().database_async_url.replace('postgresql+asyncpg://','postgresql://'),connect_timeout=5,row_factory=dict_row)
+    schema,role='aegis_memory_test_'+uuid4().hex,'aegis_memory_role_'+uuid4().hex
+    user=SimpleNamespace(id=uuid4(),tenant_id=uuid4())
+    other=SimpleNamespace(id=uuid4(),tenant_id=uuid4())
+    try:
+        conn.execute(sql.SQL('CREATE SCHEMA {}').format(sql.Identifier(schema)))
+        conn.execute(sql.SQL('SET LOCAL search_path TO {},public').format(sql.Identifier(schema)))
+        conn.execute("SET LOCAL statement_timeout='5s'")
+        conn.execute('CREATE TABLE tenants(id uuid PRIMARY KEY)')
+        conn.execute('CREATE TABLE users(id uuid PRIMARY KEY,tenant_id uuid)')
+        conn.execute('CREATE TABLE conversations(id uuid PRIMARY KEY,tenant_id uuid,user_id uuid,status text)')
+        conn.execute('CREATE TABLE agent_runs(id uuid PRIMARY KEY,tenant_id uuid,user_id uuid,status text,updated_at timestamptz,conversation_id uuid)')
+        conn.execute('CREATE TABLE knowledge_documents(id uuid PRIMARY KEY,tenant_id uuid,user_id uuid,visibility text,deleted_at timestamptz,enabled boolean,is_sensitive boolean,external_embedding_allowed boolean,current_version_id uuid)')
+        conn.execute('CREATE TABLE knowledge_document_versions(id uuid PRIMARY KEY,tenant_id uuid,document_id uuid,status text)')
+        conn.execute("""CREATE TABLE memory_items(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid,user_id uuid,
+          content text,source text,is_sensitive boolean DEFAULT false,source_run_id uuid,created_at timestamptz DEFAULT now(),
+          updated_at timestamptz DEFAULT now(),deleted_at timestamptz,deleted_by uuid)""")
+        conn.execute("""CREATE TABLE memory_deletion_tokens(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid,memory_id uuid,
+          requested_by uuid,token_hash text,status text,expires_at timestamptz,used_at timestamptz)""")
+        for setting,name in (('app.tenant_id','aegis_current_tenant_id'),('app.user_id','aegis_current_user_id')):
+            conn.execute(f"CREATE FUNCTION {name}() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT NULLIF(current_setting('{setting}',true),'')::uuid $$")
+        for actor in (user,other):
+            conn.execute('INSERT INTO tenants VALUES (%s)',(actor.tenant_id,))
+            conn.execute('INSERT INTO users VALUES (%s,%s)',(actor.id,actor.tenant_id))
+        legacy=uuid4()
+        conn.execute("INSERT INTO memory_items(id,tenant_id,user_id,content,source,is_sensitive) VALUES(%s,%s,%s,'原有偏好','user_input',false)",(legacy,user.tenant_id,user.id))
+        conn.execute("INSERT INTO memory_items(tenant_id,user_id,content,source,is_sensitive) VALUES(%s,%s,'原有敏感偏好','user_input',true)",(user.tenant_id,user.id))
+        path=Path(__file__).resolve().parents[2]/'migrations/versions/017_memory_manual_lifecycle.py'
+        spec=importlib.util.spec_from_file_location('memory_migration',path);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        with patch.object(module,'op',SimpleNamespace(execute=conn.execute)): module.upgrade()
+        conn.execute('ALTER TABLE memory_items ENABLE ROW LEVEL SECURITY')
+        conn.execute('CREATE POLICY memory_owner ON memory_items USING(tenant_id=aegis_current_tenant_id() AND user_id=aegis_current_user_id()) WITH CHECK(tenant_id=aegis_current_tenant_id() AND user_id=aegis_current_user_id())')
+        conn.execute(sql.SQL('CREATE ROLE {} NOLOGIN NOSUPERUSER NOBYPASSRLS').format(sql.Identifier(role)))
+        conn.execute(sql.SQL('GRANT USAGE ON SCHEMA {} TO {}').format(sql.Identifier(schema),sql.Identifier(role)))
+        conn.execute(sql.SQL('GRANT SELECT,INSERT,UPDATE ON ALL TABLES IN SCHEMA {} TO {}').format(sql.Identifier(schema),sql.Identifier(role)))
+        conn.execute(sql.SQL('SET LOCAL ROLE {}').format(sql.Identifier(role)))
+        conn.execute("SELECT set_config('app.tenant_id',%s,true),set_config('app.user_id',%s,true)",(str(user.tenant_id),str(user.id)))
+
+        async def execute(statement,params=None):
+            query=re.sub(r'(?<!:):(\w+)',lambda m:'%('+m[1]+')s',str(statement))
+            cursor=conn.execute(query,params or {})
+            rows=cursor.fetchall() if cursor.description else []
+            return SimpleNamespace(mappings=lambda:SimpleNamespace(first=lambda:rows[0] if rows else None,
+                one=lambda:rows[0],all=lambda:rows),rowcount=cursor.rowcount)
+        yield conn,SimpleNamespace(execute=execute),user,other,legacy,module,role
+    finally:
+        conn.rollback();conn.close()
+
+
+async def draft(session,user,**changes):
+    return await MemoryLifecycleRepository().save_draft(session,user,MemoryCreateParam.model_validate({'content':'用户说明',**changes}))
+
+
+def worker_reader():
+    path=Path(__file__).resolve().parents[3]/'aegis_agent_worker/src/aegis_agent_worker/repository/memory_repository.py'
+    spec=importlib.util.spec_from_file_location('worker_memory_reads',path)
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    return module.MemoryRepository()
+
+
+@pytest.mark.asyncio
+async def test_legacy_mapping_draft_confirmation_and_edit_invalidation(database):
+    conn,session,user,other,legacy,_,_=database
+    reads,writes=MemoryRepository(),MemoryLifecycleRepository()
+    historical=await reads.find_memory(session,tenant_id=user.tenant_id,user_id=user.id,memory_id=legacy)
+    assert historical['status']=='confirmed' and historical['confirmed_at'] is not None and historical['source_kind']=='manual'
+    old_sensitive=conn.execute("SELECT sensitivity,is_sensitive FROM memory_items WHERE content='原有敏感偏好'").fetchone()
+    assert old_sensitive['sensitivity']=='sensitive' and old_sensitive['is_sensitive']
+    identifier=await draft(session,user)
+    values=dict(tenant_id=user.tenant_id,user_id=user.id,memory_id=identifier)
+    assert not (await reads.find_memory(session,**values))['prompt_eligible']
+    await writes.confirm(session,user,identifier,1)
+    assert (await reads.find_memory(session,**values))['prompt_eligible']
+    await writes.save_draft(session,user,MemoryUpdateParam(content='手动修改',expected_version=2,
+        memory_type='long_term_summary',sensitivity='normal',source_kind='manual',expires_at=None),memory_id=identifier)
+    changed=await reads.find_memory(session,**values)
+    assert changed['status']=='pending' and changed['version']==3 and changed['confirmed_at'] is None and not changed['prompt_eligible']
+    assert await reads.find_memory(session,tenant_id=other.tenant_id,user_id=other.id,memory_id=identifier) is None
+    assert conn.execute('SELECT count(*) AS n FROM memory_item_revisions WHERE memory_id=%s',(identifier,)).fetchone()['n']==3
+    conn.execute("SELECT set_config('app.tenant_id',%s,true),set_config('app.user_id',%s,true)",(str(other.tenant_id),str(other.id)))
+    assert conn.execute('SELECT count(*) AS n FROM memory_item_revisions').fetchone()['n']==0
+
+
+@pytest.mark.asyncio
+async def test_entity_requires_explicit_replacement_and_retains_old_row(database):
+    conn,session,user,_,_,_,_=database
+    writes=MemoryLifecycleRepository()
+    first=await draft(session,user,memory_type='entity',entity={'key':'timezone','value':'Asia/Shanghai'})
+    second=await draft(session,user,memory_type='entity',entity={'key':'timezone','value':'Europe/London'})
+    await writes.confirm(session,user,first,1)
+    # 唯一索引是数据库最后一道守卫，不仅依赖API内的锁与预检查。
+    conn.execute('SAVEPOINT unique_entity_guard')
+    try:
+        import psycopg
+        with pytest.raises(psycopg.errors.UniqueViolation):
+            conn.execute("""INSERT INTO memory_items(tenant_id,user_id,content,source,memory_type,entity_key,entity_value,status,confirmed_at)
+                VALUES(%s,%s,'不能双活','user_confirmed','entity','timezone','{"key":"timezone","value":"UTC"}','confirmed',now())""",(user.tenant_id,user.id))
+    finally: conn.execute('ROLLBACK TO SAVEPOINT unique_entity_guard')
+    with pytest.raises(MemoryWriteError) as error: await writes.confirm(session,user,second,1)
+    assert error.value.code=='MEMORY_ENTITY_CONFLICT' and error.value.metadata['conflicting_version']==2
+    with pytest.raises(MemoryWriteError): await writes.confirm(session,user,second,1,first,1)
+    await writes.confirm(session,user,second,1,first,2)
+    rows=conn.execute('SELECT id,status,version,supersedes_id FROM memory_items WHERE entity_key IS NOT NULL').fetchall()
+    assert sum(row['status']=='confirmed' for row in rows)==1
+    assert next(row for row in rows if row['id']==first)['status']=='superseded'
+    assert next(row for row in rows if row['id']==second)['supersedes_id']==first
+    with pytest.raises(MemoryWriteError): await writes.confirm(session,user,second,1)
+
+
+@pytest.mark.asyncio
+async def test_source_permission_version_and_expiry_filter_immediately(database):
+    conn,session,user,other,_,_,_=database
+    document,version=uuid4(),uuid4()
+    peer=uuid4()
+    conn.execute('INSERT INTO users VALUES(%s,%s)',(peer,user.tenant_id))
+    conn.execute("INSERT INTO knowledge_documents VALUES(%s,%s,%s,'tenant',NULL,true,false,true,%s)",(document,user.tenant_id,peer,version))
+    conn.execute("INSERT INTO knowledge_document_versions VALUES(%s,%s,%s,'ready')",(version,user.tenant_id,document))
+    identifier=await draft(session,user,source_kind='knowledge_document',source_object_id=document,source_version=str(version))
+    writes,reads=MemoryLifecycleRepository(),MemoryRepository()
+    await writes.confirm(session,user,identifier,1)
+    args=dict(tenant_id=user.tenant_id,user_id=user.id,memory_id=identifier)
+    assert (await reads.find_memory(session,**args))['prompt_eligible']
+    async def selected():
+        return {row['id'] for row in await worker_reader().list_active_non_sensitive(session,tenant_id=user.tenant_id,user_id=user.id)}
+    assert identifier in await selected()
+    conn.execute('UPDATE knowledge_documents SET deleted_at=now()')
+    assert not (await reads.find_memory(session,**args))['prompt_eligible']
+    assert identifier not in await selected()
+    conn.execute('UPDATE knowledge_documents SET deleted_at=NULL')
+    conn.execute("UPDATE knowledge_documents SET visibility='private'")
+    assert not (await reads.find_memory(session,**args))['prompt_eligible']
+    assert identifier not in await selected()
+    conn.execute("UPDATE knowledge_documents SET visibility='tenant'")
+    conn.execute('UPDATE knowledge_documents SET current_version_id=%s',(uuid4(),))
+    assert not (await reads.find_memory(session,**args))['prompt_eligible']
+    with pytest.raises(MemoryWriteError): await draft(session,user,source_kind='knowledge_document',source_object_id=document,source_version=str(version))
+    sensitive=await draft(session,user,sensitivity='sensitive')
+    await writes.confirm(session,user,sensitive,1)
+    assert not (await reads.find_memory(session,**{**args,'memory_id':sensitive}))['prompt_eligible']
+    normal=await draft(session,user,expires_at=datetime.now(timezone.utc)+timedelta(days=1))
+    await writes.confirm(session,user,normal,1)
+    conn.execute("UPDATE memory_items SET expires_at=now()-interval '1 second' WHERE id=%s",(normal,))
+    assert not (await reads.find_memory(session,**{**args,'memory_id':normal}))['prompt_eligible']
+
+
+@pytest.mark.asyncio
+async def test_real_worker_sql_excludes_pending_sensitive_expired_and_revoked_sources(database):
+    conn,session,user,_,_,_,_=database
+    writes=MemoryLifecycleRepository()
+    pending=await draft(session,user)
+    sensitive=await draft(session,user,sensitivity='sensitive');await writes.confirm(session,user,sensitive,1)
+    normal=await draft(session,user);await writes.confirm(session,user,normal,1)
+    expired=await draft(session,user);await writes.confirm(session,user,expired,1)
+    conn.execute("UPDATE memory_items SET expires_at=now()-interval '1 second' WHERE id=%s",(expired,))
+    rows=await worker_reader().list_active_non_sensitive(session,tenant_id=user.tenant_id,user_id=user.id)
+    ids={row['id'] for row in rows}
+    assert normal in ids and not ids & {pending,sensitive,expired}
+
+
+@pytest.mark.asyncio
+async def test_deleted_records_and_old_delete_token_cannot_affect_new_version(database):
+    _,session,user,_,_,_,_=database
+    reads,writes=MemoryRepository(),MemoryLifecycleRepository()
+    identifier=await draft(session,user)
+    token,_=await reads.create_deletion_request(session,tenant_id=user.tenant_id,user_id=user.id,memory_id=identifier)
+    await writes.confirm(session,user,identifier,1)
+    assert await reads.delete_memory(session,tenant_id=user.tenant_id,user_id=user.id,memory_id=identifier,deletion_token=token)=='invalid_token'
+    token,_=await reads.create_deletion_request(session,tenant_id=user.tenant_id,user_id=user.id,memory_id=identifier)
+    assert await reads.delete_memory(session,tenant_id=user.tenant_id,user_id=user.id,memory_id=identifier,deletion_token=token)=='deleted'
+    assert await reads.find_memory(session,tenant_id=user.tenant_id,user_id=user.id,memory_id=identifier) is None
+
+
+@pytest.mark.asyncio
+async def test_real_run_source_is_not_forged_and_changes_invalidate(database):
+    conn,session,user,other,_,_,_=database
+    run=uuid4()
+    conn.execute("INSERT INTO agent_runs VALUES(%s,%s,%s,'completed',now(),NULL)",(run,user.tenant_id,user.id))
+    identifier=await draft(session,user,source_run_id=run)
+    await MemoryLifecycleRepository().confirm(session,user,identifier,1)
+    args=dict(tenant_id=user.tenant_id,user_id=user.id,memory_id=identifier)
+    item=await MemoryRepository().find_memory(session,**args)
+    assert item['source_kind']=='run' and item['source_object_id']==run and item['source_version'] and item['prompt_eligible']
+    conn.execute("UPDATE agent_runs SET status='failed'")
+    assert not (await MemoryRepository().find_memory(session,**args))['prompt_eligible']
+    with pytest.raises(MemoryWriteError): await draft(session,user,source_run_id=uuid4())
+
+
+def test_downgrade_baseline_and_reject_lifecycle_data(database):
+    conn,_,_,_,_,module,_=database
+    conn.execute('RESET ROLE')
+    with patch.object(module,'op',SimpleNamespace(execute=conn.execute)):
+        module.downgrade()
+        module.upgrade()
+    conn.execute("UPDATE memory_items SET status='pending',confirmed_at=NULL")
+    conn.execute('SAVEPOINT downgrade_guard')
+    try:
+        with patch.object(module,'op',SimpleNamespace(execute=conn.execute)):
+            with pytest.raises(Exception,match='Cannot downgrade'): module.downgrade()
+    finally: conn.execute('ROLLBACK TO SAVEPOINT downgrade_guard')

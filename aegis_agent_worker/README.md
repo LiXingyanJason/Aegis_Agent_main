@@ -125,4 +125,17 @@ D:\anaconda\envs\Aegis\python.exe -m aegis_agent_worker.worker.index_worker
 
 架构说明见：[文档/01-Agent与基础设施职责边界.md](文档/01-Agent与基础设施职责边界.md) 与 [文档/02-Agent图与工作流架构.md](文档/02-Agent图与工作流架构.md)。
 
+### 会话工作缓存（7.2）
+
+`SESSION_MEMORY_ENABLED=false`默认关闭；显式设为true后重启Agent Worker，缓存有界任务状态/卡片引用，
+不存消息或业务正文。SQL继续核验归属与版本，Redis故障回退SQL。API与前端新增退出前清缓存，
+不删除持久消息或长期偏好，无新增迁移。详见[7.2部署与验证](文档/17-会话工作记忆Redis有界缓存-阶段7.2.md)。
+
+### 手动长期摘要与实体记忆（7.3）
+
+长期记忆页面支持保存待确认、版本确认/编辑与显式实体替换；聊天/专家没有记忆写工具。
+需先停旧Agent Worker与API写入、执行017_memory_manual_lifecycle，再更新API/Worker/前端，不能与旧读取逻辑混跑。
+SQL过滤确认状态、敏感、有效期与来源；普通回复模型调用前重读，邮件起草保留生成前读取。
+无向量重建、无自动提取。详见[7.3部署与契约](文档/18-用户主动维护长期摘要与实体记忆-阶段7.3.md)。
+
 

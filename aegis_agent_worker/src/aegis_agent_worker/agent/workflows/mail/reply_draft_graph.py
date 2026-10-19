@@ -80,23 +80,23 @@ class MailReplyDraftWorkflow:
         email = await self._mail_tasks.read_mail(run, source)
         if email.get("source_version") is not None and email["source_version"]!=source.get("source_version"):
             raise HarnessError("MAIL_SOURCE_CHANGED","邮件来源已变化，请重新起草")
-        memory_prompt = None
-        if self._memory_context is not None:
+        async def load_current_memory():
             selected = await self._memory_context.select_for_run(
                 run_id=run.id,
                 context=TenantContext(tenant_id=run.tenant_id, user_id=run.user_id),
                 task_text=f"邮件回复 {source.get('instruction') or ''}",
             )
-            memory_prompt = self._memory_context.format_system_context(selected)
+            return self._memory_context.format_system_context(selected)
         step_id = await self._mail_tasks.start_generation_step(run, "正在起草回复")
         extra={}
+        if self._memory_context is not None:
+            extra['memory_context_loader']=load_current_memory
         if self._collection_service is not None:
             extra["supplemental_context"]={"evidence":state.get("collected_evidence",[]),"user_answers":state.get("user_answers",[])}
         reply = await self._mail_agent.generate_reply_draft(
             email,
             key_points=source.get("key_points"),
             instruction=instruction,
-            memory_context=memory_prompt,
             **extra,
         )
         draft_id = await self._mail_tasks.save_reply_draft(run, source=source, reply=reply, step_id=step_id)

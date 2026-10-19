@@ -16,9 +16,12 @@ class MemoryRepository:
         """读取当前用户未删除、非敏感的候选记忆，绝不查询敏感正文。"""
         result = await session.execute(
             text(
-                "SELECT id, content, source, updated_at FROM memory_items "
+                "SELECT id, content, source, updated_at, memory_type,entity_value,version FROM memory_items "
                 "WHERE tenant_id=:tenant_id AND user_id=:user_id "
                 "AND deleted_at IS NULL AND is_sensitive=false "
+                "AND sensitivity='normal' AND status='confirmed' AND confirmed_at IS NOT NULL "
+                "AND (expires_at IS NULL OR expires_at>now()) "
+                "AND aegis_memory_source_accessible(tenant_id,user_id,source_kind,source_object_id,source_version) "
                 "ORDER BY updated_at DESC, id DESC LIMIT :limit"
             ),
             {"tenant_id": tenant_id, "user_id": user_id, "limit": limit},
