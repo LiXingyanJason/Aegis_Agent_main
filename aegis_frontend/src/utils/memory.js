@@ -1,10 +1,30 @@
 // 长期记忆只从用户维护页面写入；不接入任务对话或自动提取。
+const COMMON_TIMEZONES = Object.freeze([
+  ['Asia/Shanghai', '北京 / 上海'], ['Asia/Hong_Kong', '香港'],
+  ['Asia/Singapore', '新加坡'], ['Asia/Tokyo', '东京'], ['Asia/Seoul', '首尔'],
+  ['Asia/Kolkata', '印度'], ['Asia/Dubai', '迪拜'], ['Australia/Sydney', '悉尼'],
+  ['Europe/London', '伦敦'], ['Europe/Berlin', '柏林'], ['Europe/Paris', '巴黎'],
+  ['America/New_York', '纽约'], ['America/Los_Angeles', '洛杉矶'],
+  ['Pacific/Honolulu', '檀香山'], ['UTC', '协调世界时'],
+].map(([value, city]) => Object.freeze({ value, label: `${city}（${value}）` })))
+
+export function memoryTimezoneOptions(currentValue) {
+  const options = [...COMMON_TIMEZONES]
+  // 兼容旧记录中的其他合法IANA值，不因编辑表单而悄悄替换；仍由后端校验。
+  if (currentValue && !options.some(option => option.value === currentValue)) {
+    options.push({ value: currentValue, label: `${currentValue}（当前已保存时区）` })
+  }
+  return options
+}
+
 export function memoryFormFromRecord(memory) {
   return {
-    content: memory.content, isSensitive: memory.is_sensitive,
+    content: memory.memory_type === 'entity' && memory.content_is_generated ? '' : memory.content, isSensitive: memory.is_sensitive,
     memoryType: memory.memory_type, entityKey: memory.entity?.key || 'timezone',
     entityValue: memory.entity?.value || 'Asia/Shanghai',
     contactName: memory.entity?.name || '', contactEmail: memory.entity?.email || '',
+    meetingTimeOfDay: memory.entity?.preferred_time_of_day || 'any',
+    meetingAvoidWeekdays: [...(memory.entity?.avoid_weekdays || [])],
     expiresAt: memory.expires_at ? new Date(memory.expires_at) : null,
     sourceKind: memory.source_kind, sourceObjectId: memory.source_object_id || '', sourceVersion: memory.source_version || '',
   }
@@ -18,7 +38,10 @@ export function memoryPayload(form, version) {
     source_kind: form.sourceKind,
   }
   if (form.memoryType === 'entity') {
-    payload.entity = form.entityKey === 'contact'
+    payload.entity = form.entityKey === 'meeting_preferences'
+      ? { key: 'meeting_preferences', preferred_time_of_day: form.meetingTimeOfDay || 'any',
+          avoid_weekdays: [...(form.meetingAvoidWeekdays || [])], strength: 'soft' }
+      : form.entityKey === 'contact'
       ? { key: 'contact', name: form.contactName.trim(), email: form.contactEmail.trim() }
       : { key: form.entityKey, value: form.entityValue }
   }
@@ -50,7 +73,7 @@ export function memoryState(memory) {
 
 export function memoryTypeLabel(memory) {
   if (memory.memory_type !== 'entity') return '长期摘要'
-  const entity = { timezone: '默认时区', reply_style: '邮件语气', contact: '常用联系人' }
+  const entity = { timezone: '默认时区', reply_style: '邮件语气', contact: '常用联系人', meeting_preferences: '会议软偏好' }
   return `设置 · ${entity[memory.entity_key] ?? '其他'}`
 }
 

@@ -38,8 +38,8 @@ TaskGraph.load_context
 | `service/memory/session_memory_service.py` | 事实复核、重建、格式化与安全降级 |
 | `service/runtime/conversation_context_service.py` | 近期消息装配，插入辅助索引数据 |
 | `worker/agent_worker.py` | 受配置开关控制的依赖组装 |
-| `Aegis_backend/app/controller/session_memory_controller.py` | 当前用户缓存清理接口 |
-| `aegis_frontend/src/store/auth.js` | OIDC退出前清理；故障时仍退出 |
+| `../../../Aegis_backend/app/controller/session_memory_controller.py` | 当前用户缓存清理接口 |
+| `../../../aegis_frontend/src/store/auth.js` | OIDC退出前清理；故障时仍退出 |
 
 API不导入Worker包，二者仅共享Redis v1协议。跨项目测试检查失效脚本一致。
 
@@ -91,7 +91,7 @@ Redis故障503 `SESSION_CACHE_UNAVAILABLE`，不伪装成功。
 ## 6. 启用与验证
 
 API先更新，再更新Agent Worker与前端，无新增迁移，不需要重启Index Worker。
-在`aegis_agent_worker/.env`设置后重启Agent Worker：
+在`../../.env`设置后重启Agent Worker：
 
 ```dotenv
 SESSION_MEMORY_ENABLED=true

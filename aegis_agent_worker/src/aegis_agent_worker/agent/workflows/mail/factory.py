@@ -33,7 +33,7 @@ class MailWorkflowFactory:
     def register(self, registry: GraphRegistry) -> None:
         """注册邮件派生任务与确认发送子图。"""
         if self.revision_service is not None:
-            registry.register("mail_draft_revision",MailRevisionWorkflow(self.mail_agent,self.revision_service).build())
+            registry.register("mail_draft_revision",MailRevisionWorkflow(self.mail_agent,self.revision_service,self.memory_context).build())
         if self.query_service is not None and self.artifact_service is not None:
             registry.register("mail_query", MailQueryWorkflow(self.mail_agent, self.query_service,
                                                              self.artifact_service, self.planning_audit).build())

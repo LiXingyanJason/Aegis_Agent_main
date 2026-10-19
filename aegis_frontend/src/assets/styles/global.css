@@ -115,8 +115,53 @@ h1, h2, h3, p { margin-top: 0; }
 .mail-table td { padding: 14px 15px; border-top: 1px solid #dfe5ee; vertical-align: top; line-height: 1.5; }
 .mail-table .title { margin-bottom: 3px; font-weight: 750; }
 .mail-table .detail { color: #667085; font-size: 12px; overflow-wrap: anywhere; }
-.mail-actions { display: flex; flex-wrap: wrap; gap: 8px; white-space: nowrap; }
-.mail-actions .mail-detail-button { flex-basis: 100%; width: max-content; margin-top: 1px; }
+.mail-actions { white-space: nowrap; }
+.received-mail-table { table-layout: fixed; }
+.received-mail-table th:nth-child(1) { width: 30%; }
+.received-mail-table th:nth-child(2) { width: 26%; }
+.received-mail-table th:nth-child(3) { width: 26%; }
+.received-mail-table th:nth-child(4) { width: 18%; }
+.received-mail-table .title { margin: 4px 0; overflow-wrap: anywhere; }
+.mail-sender { color: #243952; font-size: 12px; font-weight: 700; }
+.mail-sender .badge { margin-left: 5px; vertical-align: middle; }
+.mail-extraction-status { display: inline-flex; padding: 3px 8px; border-radius: 5px; background: #f1f4f8; color: #526176; font-size: 12px; }
+.mail-extraction-status.ready { background: #e8f7ef; color: #17795d; }
+.received-mail-actions { display: grid; width: min(100%, 160px); gap: 7px; }
+.received-mail-actions .el-button { width: 100%; margin: 0; }
+.draft-mail-table { table-layout: fixed; }
+.draft-mail-table th:nth-child(1) { width: 30%; }
+.draft-mail-table th:nth-child(2) { width: 21%; }
+.draft-mail-table th:nth-child(3) { width: 14%; }
+.draft-mail-table th:nth-child(4) { width: 10%; }
+.draft-mail-table th:nth-child(5) { width: 25%; }
+.draft-mail-table .title, .draft-mail-recipients { overflow-wrap: anywhere; }
+.draft-version-label { display: inline-block; margin-top: 5px; color: #667085; font-size: 11px; }
+.draft-mail-source { margin-top: 5px; color: #667085; font-size: 11px; }
+.draft-mail-source summary { width: max-content; color: #266dcc; cursor: pointer; }
+.draft-mail-source div { margin-top: 5px; overflow-wrap: anywhere; }
+.draft-mail-time time { display: grid; gap: 2px; color: #344054; white-space: nowrap; }
+.draft-mail-time small { color: #667085; font-size: 11px; }
+.draft-mail-status { white-space: nowrap; }
+.draft-mail-status.failed { background: #fff0f0; color: #b42318; }
+.draft-mail-actions { display: grid; grid-template-columns: 94px minmax(114px, 1fr); align-items: center; gap: 8px; max-width: 240px; }
+.draft-mail-actions .el-button { width: 100%; margin: 0; }
+.sent-mail-table { table-layout: fixed; }
+.sent-mail-table th:nth-child(1) { width: 30%; }
+.sent-mail-table th:nth-child(2) { width: 22%; }
+.sent-mail-table th:nth-child(3) { width: 14%; }
+.sent-mail-table th:nth-child(4) { width: 11%; }
+.sent-mail-table th:nth-child(5) { width: 23%; }
+.sent-mail-table .title, .sent-mail-recipients { overflow-wrap: anywhere; }
+.sent-mail-time { color: #344054; }
+.sent-mail-time time { display: grid; gap: 2px; white-space: nowrap; }
+.sent-mail-time small { color: #667085; font-size: 11px; }
+.sent-mail-status { white-space: nowrap; }
+.sent-mail-technical { margin-top: 7px; color: #667085; font-size: 11px; }
+.sent-mail-technical summary { width: max-content; color: #266dcc; cursor: pointer; }
+.sent-mail-technical div { margin-top: 5px; overflow-wrap: anywhere; }
+.sent-mail-follow-up { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.sent-mail-follow-up .el-button { min-width: 126px; margin: 0; }
+.sent-mail-follow-up .badge { white-space: nowrap; }
 .mail-empty { color: #667085; text-align: center; }
 .mail-send-confirmation-error { margin-bottom: 16px; }
 .mail-insights, .mail-todos { min-width: 210px; }
@@ -124,6 +169,8 @@ h1, h2, h3, p { margin-top: 0; }
 .reply-compose { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
 .reply-compose .el-button { flex: none; }
 .reply-instruction { min-width: 190px; margin: 0; }
+.received-mail-table .reply-compose { flex-wrap: wrap; }
+.received-mail-table .reply-instruction { min-width: 150px; flex: 1; }
 .mail-todo-option { display: flex; align-items: flex-start; gap: 7px; margin: 0 0 8px; color: #344054; line-height: 1.45; cursor: pointer; }
 .mail-todo-option input { margin-top: 3px; }
 .mail-todo-option small { color: #667085; }

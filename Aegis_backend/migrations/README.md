@@ -153,7 +153,7 @@ D:\anaconda\envs\Aegis\python.exe -m alembic upgrade head --sql
 RLS允许所有者处理自身已删除文档的元数据以完成软删除；应用查询仍显式排除deleted_at，
 内容子表的SELECT与ALL策略、索引任务策略同时排除删除资料，不能只修改文档策略。
 无跨租户或共享者管理授权放宽，不取消FORCE RLS。降级前停新版服务，会移除版本绑定列并恢复旧策略；不删资料或云向量。
-本轮仅临时schema验证并回滚，未升级现有业务库。详见[6.6说明](../../aegis_agent_worker/文档/15-知识资料接口-SSE与来源卡片-阶段6.6.md)。
+本轮仅临时schema验证并回滚，未升级现有业务库。详见[6.6说明](../../aegis_agent_worker/文档/阶段1/15-知识资料接口-SSE与来源卡片-阶段6.6.md)。
 
 ### 013：上传、索引与启用分离
 
@@ -170,7 +170,7 @@ RLS允许所有者处理自身已删除文档的元数据以完成软删除；�
 新导入源文件保存在受控本机目录，版本表加入文件引用并兼容旧source_text。
 同时加入幂等请求、SQL租约恢复、批次进度及向量空间绑定，不实现多版本更新。
 有外置源文件时降级明确拒绝，先备份并恢复内联文本；不要stamp绕过。
-本次只在临时schema验证012，未升级现有业务库。详见[6.3说明](../../aegis_agent_worker/文档/12-知识资料导入与索引-阶段6.3.md)。
+本次只在临时schema验证012，未升级现有业务库。详见[6.3说明](../../aegis_agent_worker/文档/阶段1/12-知识资料导入与索引-阶段6.3.md)。
 
 ### 010～011：知识库及Embedding（Qdrant Cloud路线）
 
@@ -179,7 +179,7 @@ RLS允许所有者处理自身已删除文档的元数据以完成软删除；�
 当时head为011，现已追加012／013，不回滚010/011，也不使用stamp。后续SQL变更继续追加新迁移。
 生产运行角色须非超级用户且无BYPASSRLS。Qdrant配置不会自动索引或开启知识检索。
 降级会删除预算/审计及知识数据，先停相关代码并备份；SQL迁移不删除远端collection。
-配置与部署步骤见[知识库权限与Embedding治理](../../aegis_agent_worker/文档/11-知识库权限与Embedding治理-阶段6.2.md)。
+配置与部署步骤见[知识库权限与Embedding治理](../../aegis_agent_worker/文档/阶段1/11-知识库权限与Embedding治理-阶段6.2.md)。
 
 ### 009：模型用量审计
 
@@ -187,7 +187,7 @@ RLS允许所有者处理自身已删除文档的元数据以完成软删除；�
 先执行 `python -m alembic upgrade head`，再启动新版 Worker；旧 API／Worker 兼容新增可空列。
 缺失用量和历史数据保持 NULL，不回填 0。迁移不改变 RLS、字符预算或任务状态。
 降级前停止新版 Worker 并备份审计数据，降级会删除新增列。
-详见 [路由审计与模型用量可观测性](../../aegis_agent_worker/文档/08-路由审计与模型用量可观测性.md)。
+详见 [路由审计与模型用量可观测性](../../aegis_agent_worker/文档/阶段1/08-路由审计与模型用量可观测性.md)。
 
 | 现象 | 优先检查 |
 | --- | --- |
@@ -205,4 +205,21 @@ RLS允许所有者处理自身已删除文档的元数据以完成软删除；�
 运行角色需要新表写/读权限及来源事实读取权限，保持RLS，不将应用账户提升为超级用户。
 downgrade会丢弃新增字段/审计，存在无法用旧格式表达的有效数据时主动拒绝；必须先人工导出处理。
 实现测试只在随机临时schema/受限角色内回滚运行，未升级业务数据库。
+
+### 018：按模型用途的记忆审计
+
+停止Agent Worker与API写入并备份，执行 `python -m alembic upgrade 018_memory_call_usage` 后再启动新版服务。
+新增run_memory_usages的attempt/run/tenant复合外键、具体用途、记忆/来源版本及可空Token；attempt增加记忆数量及筛选结果。
+旧行保持未知，不伪造attempt或0 Token；新行不保存display_summary/正文。多条记忆的整次调用Token不能重复累计。
+不改变记忆确认状态、RLS或向量数据；保持运行角色必要权限，不提升超级用户。
+降级前停新版Worker并导出审计；downgrade018删除新增审计字段但不删除记忆正文。
+详见 [7.4实现与部署](../../aegis_agent_worker/文档/阶段1/19-按模型用途选择与注入记忆-阶段7.4.md)。业务库未自动迁移。
+
+### 019：日历结构化记忆
+
+停止Agent Worker及API写入、备份，执行 `python -m alembic upgrade 019_calendar_memory_preferences` 后更新API/Worker/前端。
+扩展memory_items的meeting_preferences实体key，以及使用审计的calendar_planning/calendar_draft_personalization/calendar_recommendation用途。
+保留原生命周期、RLS、实体唯一性和Token约束；日历用途要求entity，不自动新增或确认用户记忆。
+存在新实体（包括删除记录）或相关调用审计时拒绝降级；需人工导出处理，不自动删除。
+迁移及真实SQL已在随机临时schema/受限角色内回滚验证，未迁移业务库。详见[日历记忆](../../aegis_agent_worker/文档/阶段1/20-日历逐步骤结构化记忆接入.md)。
 

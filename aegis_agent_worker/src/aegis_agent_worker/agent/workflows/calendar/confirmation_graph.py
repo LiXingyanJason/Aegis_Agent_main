@@ -22,6 +22,7 @@ from datetime import datetime
 from aegis_agent_worker.agent.contracts.calendar import CalendarDecision
 from aegis_agent_worker.agent.workflows.calendar.planning_workflow import CalendarPlanningWorkflow
 from aegis_agent_worker.agent.contracts.decision import AgentHandoff
+from aegis_agent_worker.llm.memory_scope import memory_call_scope
 
 
 class CalendarWorkflowState(TypedDict, total=False):
@@ -48,15 +49,17 @@ class CalendarConfirmationWorkflow:
         calendar_agent: CalendarAgent,
         confirmation_service: CalendarConfirmationService | None,
         planning_audit=None,
+        memory_context=None,
     ) -> None:
         self._calendar_agent = calendar_agent
         self._confirmation_service = confirmation_service
         self._planning_audit = planning_audit
+        self._memory_context=memory_context
 
     def build(self) -> Any:
         """构建“查询候选→模型推荐→草稿确认→写入”的会议安排流程。"""
         graph = StateGraph(TaskGraphState)
-        graph.add_node("calendar_planning", CalendarPlanningWorkflow(self._calendar_agent, self._planning_audit).build())
+        graph.add_node("calendar_planning", CalendarPlanningWorkflow(self._calendar_agent, self._planning_audit,self._memory_context).build())
         graph.add_node("prepare_calendar_confirmation", self._prepare)
         graph.add_node("query_calendar_availability", self._query_availability)
         graph.add_node("generate_calendar_draft", self._generate_draft)
@@ -148,13 +151,17 @@ class CalendarConfirmationWorkflow:
             extracted_attendees = plan.get("attendees")
             if not isinstance(suggested_title, str) or not isinstance(extracted_attendees, list):
                 raise ValueError("会议草稿计划无效")
-            proposal = await self._calendar_agent.generate_meeting_draft(
-                user_content=plan.get("instruction", state.get("latest_user_message", "")),
-                candidates=candidates,
-                duration_minutes=availability.get("duration_minutes"),
-                suggested_title=suggested_title,
-                extracted_attendees=[item for item in extracted_attendees if isinstance(item, str)],
-            )
+            instruction=plan.get("instruction", state.get("latest_user_message", ""))
+            with memory_call_scope(self._memory_context,_conversation_run_from_state(state),
+                    'calendar_draft_personalization',instruction):
+                proposal = await self._calendar_agent.generate_meeting_draft(
+                    user_content=instruction,
+                    candidates=candidates,
+                    duration_minutes=availability.get("duration_minutes"),
+                    suggested_title=suggested_title,
+                    extracted_attendees=[item for item in extracted_attendees if isinstance(item, str)],
+                    timezone_name=state.get('calendar_decision',{}).get('timezone'),
+                )
         except ValueError:
             return {"confirmation_error": "会议草稿未通过内容或候选时段校验，尚未创建。请补充会议要求后重试。"}
         return {"calendar_meeting_draft": proposal.model_dump(mode="json")}

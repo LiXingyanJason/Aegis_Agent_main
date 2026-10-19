@@ -22,15 +22,21 @@ async def test_worker_sql_is_read_only_and_requires_all_lifecycle_facts():
 
 
 @pytest.mark.asyncio
-async def test_final_reply_ignores_checkpoint_memory_and_reloads_before_model():
-    client=SimpleNamespace(provider_name='mock',model_name='mock',complete=AsyncMock(return_value='回答'))
-    memory=SimpleNamespace(select_for_run=AsyncMock(return_value=[]),format_system_context=MemoryContextService.format_system_context)
+async def test_final_reply_ignores_checkpoint_memory_and_declares_call_scope():
+    from aegis_agent_worker.llm.memory_scope import current_memory_request
+    scopes=[]
+    async def complete(messages):
+        scopes.append(current_memory_request())
+        return '回答'
+    client=SimpleNamespace(provider_name='mock',model_name='mock',complete=AsyncMock(side_effect=complete))
+    memory=object()
     graph=TaskGraph(TaskGraphDependencies(context_service=None,lifecycle=SimpleNamespace(start_llm_generation=AsyncMock(return_value=UUID(int=9))),
         llm_client=client,system_prompt='系统边界',workflow_factories=(),memory_context_service=memory))
     state={key:str(UUID(int=i)) for i,key in enumerate(('run_id','tenant_id','user_id','conversation_id'),1)}
     state.update(memory_context='旧版本已删除偏好不得复用',latest_user_message='你好',history=[{'role':'user','content':'你好'}])
     await graph._generate_reply(state)
-    memory.select_for_run.assert_awaited_once()
+    assert scopes[0].service is memory and scopes[0].purpose=='conversation_reply'
+    assert current_memory_request() is None
     assert all('旧版本已删除偏好' not in message.content for message in client.complete.await_args.args[0])
 
 
@@ -51,13 +57,8 @@ def test_overlong_entity_is_not_truncated_into_partial_email():
     assert _select_relevant([record],_terms('给李莉回复邮件'))==[]
 
 
-@pytest.mark.asyncio
-async def test_mail_format_repair_reloads_memory_instead_of_reusing_revoked_excerpt():
+def test_mail_agent_no_longer_accepts_unverified_memory_strings_or_callbacks():
+    import inspect
     from aegis_agent_worker.agent.specialists.mail_agent import MailAgent
-    client=SimpleNamespace(complete=AsyncMock(side_effect=['not json','{"to":["a@example.com"],"cc":[],"subject":"回复","body":"正文"}']))
-    memory=AsyncMock(side_effect=['本次有效的偏好',None])
-    await MailAgent(client).generate_reply_draft({'sender':'a@example.com','subject':'原信'},
-        key_points=[],instruction='起草',memory_context_loader=memory)
-    assert memory.await_count==2
-    assert any('本次有效的偏好' in message.content for message in client.complete.await_args_list[0].args[0])
-    assert all('本次有效的偏好' not in message.content for message in client.complete.await_args_list[1].args[0])
+    params=inspect.signature(MailAgent.generate_reply_draft).parameters
+    assert 'memory_context' not in params and 'memory_context_loader' not in params

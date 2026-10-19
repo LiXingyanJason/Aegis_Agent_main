@@ -198,6 +198,15 @@ function formatTime(value) {
   }).format(new Date(value))
 }
 
+function mailTimeParts(value) {
+  const date = value ? new Date(value) : null
+  if (!date || Number.isNaN(date.getTime())) return { date: '—', time: '' }
+  return {
+    date: new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(date),
+    time: new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit' }).format(date),
+  }
+}
+
 function extractionStatus(status) {
   return {
     not_generated: '尚未生成',
@@ -687,12 +696,13 @@ onBeforeUnmount(() => {
                 </div>
               </div>
               <div class="mail-table-wrap">
-                <table class="mail-table">
+                <table class="mail-table received-mail-table">
                   <thead><tr><th>客户与邮件</th><th>关键信息</th><th>待办与截止时间</th><th>操作</th></tr></thead>
                   <tbody>
                     <tr v-for="message in messages" :key="message.email_id">
                       <td>
-                        <div class="title">{{ message.customer || message.from_email }} · {{ message.subject }} <span v-if="message.is_important" class="badge write">重要</span></div>
+                        <div class="mail-sender">{{ message.customer || message.from_email }} <span v-if="message.is_important" class="badge write">重要</span></div>
+                        <div class="title">{{ message.subject }}</div>
                         <div class="detail">{{ message.from_email }} · {{ formatTime(message.received_at) }}</div>
                       </td>
                       <td class="mail-insights">
@@ -700,7 +710,7 @@ onBeforeUnmount(() => {
                           <p v-for="point in extractionFor(message.email_id).key_points" :key="point" class="mail-point">{{ point }}</p>
                           <p v-if="!extractionFor(message.email_id).key_points.length" class="muted">未提取到关键信息。</p>
                         </template>
-                        <p v-else class="muted">{{ extractionStatus(message.extraction_status) }}</p>
+                        <span v-else class="mail-extraction-status" :class="{ ready: message.extraction_status === 'completed' }">{{ extractionStatus(message.extraction_status) }}</span>
                         <div class="reply-compose">
                           <el-button
                             size="small"
@@ -737,15 +747,17 @@ onBeforeUnmount(() => {
                         <p v-else class="muted">生成摘要后将在此显示待办候选。</p>
                       </td>
                       <td class="mail-actions">
-                        <el-button
-                          size="small"
-                          type="primary"
-                          :loading="operationFor(message.email_id)?.type === 'extraction' && ['submitting', 'running'].includes(operationFor(message.email_id)?.status)"
-                          :disabled="['submitting', 'running', 'waiting_input'].includes(operationFor(message.email_id)?.status)"
-                          @click="requestExtraction(message)"
-                        >{{ extractionFor(message.email_id) ? '重新生成摘要' : '生成摘要' }}</el-button>
-                        <el-button class="mail-detail-button" size="small" @click="openMailDetail(message)">邮件详情</el-button>
-                        <el-button size="small" :loading="flagBusyId === message.email_id" @click="toggleImportance(message)">{{ message.is_important ? '取消重要' : '标为重要' }}</el-button>
+                        <div class="received-mail-actions">
+                          <el-button
+                            size="small"
+                            type="primary"
+                            :loading="operationFor(message.email_id)?.type === 'extraction' && ['submitting', 'running'].includes(operationFor(message.email_id)?.status)"
+                            :disabled="['submitting', 'running', 'waiting_input'].includes(operationFor(message.email_id)?.status)"
+                            @click="requestExtraction(message)"
+                          >{{ extractionFor(message.email_id) ? '重新生成摘要' : '生成摘要' }}</el-button>
+                          <el-button class="mail-detail-button" size="small" plain @click="openMailDetail(message)">邮件详情</el-button>
+                          <el-button size="small" plain :type="message.is_important ? 'default' : 'warning'" :loading="flagBusyId === message.email_id" @click="toggleImportance(message)">{{ message.is_important ? '取消重要' : '标为重要' }}</el-button>
+                        </div>
                         <p v-if="operationFor(message.email_id)?.status === 'running'" class="mail-progress">任务已提交，正在处理…</p>
                         <p v-if="operationFor(message.email_id)?.status === 'waiting_input'" class="mail-progress">任务等待补充信息，请填写上方问题。</p>
                         <p v-if="operationFor(message.email_id)?.status === 'failed'" class="mail-error">{{ operationFor(message.email_id)?.error }}</p>
@@ -786,27 +798,38 @@ onBeforeUnmount(() => {
                 </div>
               </div>
               <div class="mail-table-wrap">
-                <table class="mail-table">
+                <table class="mail-table draft-mail-table">
                   <thead><tr><th>草稿</th><th>收件人</th><th>更新时间</th><th>状态</th><th>操作</th></tr></thead>
                   <tbody>
                     <tr v-for="draft in drafts" :key="draft.draft_id">
                       <td>
                         <div class="title">{{ draft.subject }}</div>
-                        <div class="detail">草稿 v{{ draft.version }} · 来源邮件 {{ draft.source_email_id }}</div>
+                        <span class="draft-version-label">版本 {{ draft.version }}</span>
+                        <details v-if="draft.source_email_id" class="draft-mail-source">
+                          <summary>来源邮件</summary>
+                          <div>邮件 ID：{{ draft.source_email_id }}</div>
+                        </details>
                       </td>
-                      <td>{{ (draft.to ?? []).join('、') || '—' }}</td>
-                      <td>{{ formatTime(draft.updated_at) }}</td>
-                      <td><span class="badge neutral">{{ draftStatus(draft.status) }}</span></td>
+                      <td class="draft-mail-recipients">{{ (draft.to ?? []).join('、') || '—' }}</td>
+                      <td class="draft-mail-time">
+                        <time :datetime="draft.updated_at">
+                          <span>{{ mailTimeParts(draft.updated_at).date }}</span>
+                          <small>{{ mailTimeParts(draft.updated_at).time }}</small>
+                        </time>
+                      </td>
+                      <td><span class="badge draft-mail-status" :class="draft.status === 'draft' ? 'read' : draft.status === 'pending_approval' ? 'write' : draft.status === 'sent' ? 'success' : draft.status === 'failed' ? 'failed' : 'neutral'">{{ draftStatus(draft.status) }}</span></td>
                       <td class="mail-actions">
-                        <el-button size="small" @click="openDraft(draft.draft_id)">{{ draft.status === 'draft' ? '查看 / 编辑' : '查看草稿' }}</el-button>
-                        <el-button
-                          size="small"
-                          type="primary"
-                          :loading="confirmingDraftId === draft.draft_id"
-                          :disabled="draft.status !== 'draft'"
-                          :title="draft.status === 'draft' ? '创建确认项后将在确认页逐项核对并决定是否发送' : '当前草稿正在等待确认或已不可再次提交'"
-                          @click="submitSendConfirmation(draft)"
-                        >{{ draft.status === 'draft' ? '提交发送确认' : '等待发送确认' }}</el-button>
+                        <div class="draft-mail-actions">
+                          <el-button size="small" plain @click="openDraft(draft.draft_id)">{{ draft.status === 'draft' ? '查看 / 编辑' : '查看草稿' }}</el-button>
+                          <el-button
+                            v-if="draft.status === 'draft'"
+                            size="small"
+                            type="primary"
+                            :loading="confirmingDraftId === draft.draft_id"
+                            title="创建确认项后将在确认页逐项核对并决定是否发送"
+                            @click="submitSendConfirmation(draft)"
+                          >提交发送确认</el-button>
+                        </div>
                       </td>
                     </tr>
                     <tr v-if="!loading && draftsLoaded && drafts.length === 0">
@@ -835,20 +858,31 @@ onBeforeUnmount(() => {
                 </div>
               </div>
               <div class="mail-table-wrap">
-                <table class="mail-table">
+                <table class="mail-table sent-mail-table">
                   <thead><tr><th>邮件</th><th>收件人</th><th>发送时间</th><th>状态</th><th>跟进</th></tr></thead>
                   <tbody>
                     <tr v-for="message in sentMessages" :key="message.sent_message_id">
                       <td>
                         <div class="title">{{ message.subject }}</div>
-                        <div class="detail">来源运行 {{ message.run_id || '—' }} · Provider {{ message.provider_message_id }}</div>
+                        <details class="sent-mail-technical">
+                          <summary>发送记录</summary>
+                          <div>任务 ID：{{ message.run_id || '—' }}</div>
+                          <div>服务商消息 ID：{{ message.provider_message_id || '—' }}</div>
+                        </details>
                       </td>
-                      <td>{{ recipientsText(message.recipients) }}</td>
-                      <td>{{ formatTime(message.sent_at) }}</td>
-                      <td><span class="badge" :class="message.status === 'sent' ? 'success' : 'neutral'">{{ sentStatus(message.status) }}</span></td>
+                      <td class="sent-mail-recipients">{{ recipientsText(message.recipients) }}</td>
+                      <td class="sent-mail-time">
+                        <time :datetime="message.sent_at">
+                          <span>{{ mailTimeParts(message.sent_at).date }}</span>
+                          <small>{{ mailTimeParts(message.sent_at).time }}</small>
+                        </time>
+                      </td>
+                      <td><span class="badge sent-mail-status" :class="message.status === 'sent' ? 'success' : 'neutral'">{{ sentStatus(message.status) }}</span></td>
                       <td class="mail-actions">
-                        <span v-if="message.awaiting_reply" class="badge write">等待回复</span>
-                        <el-button size="small" :disabled="message.status !== 'sent'" :loading="flagBusyId === message.sent_message_id" @click="toggleFollowUp(message)">{{ message.awaiting_reply ? '结束等待' : '标记等待回复' }}</el-button>
+                        <div class="sent-mail-follow-up">
+                          <el-button size="small" plain :type="message.awaiting_reply ? 'default' : 'primary'" :disabled="message.status !== 'sent'" :loading="flagBusyId === message.sent_message_id" @click="toggleFollowUp(message)">{{ message.awaiting_reply ? '结束等待' : '标记等待回复' }}</el-button>
+                          <span v-if="message.awaiting_reply" class="badge write">等待回复</span>
+                        </div>
                       </td>
                     </tr>
                     <tr v-if="!loading && sentLoaded && sentMessages.length === 0">

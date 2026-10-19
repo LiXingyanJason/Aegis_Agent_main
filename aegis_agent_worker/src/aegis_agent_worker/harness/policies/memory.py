@@ -1,5 +1,6 @@
-"""7.1契约边界额度；7.4接入前不改变已有运行的筛选/审计行为。"""
+"""记忆用途白名单与有界额度；未知用途默认拒绝个性化。"""
 from dataclasses import dataclass
+from aegis_agent_worker.agent.contracts.memory import CALENDAR_MEMORY_KEYS
 
 
 @dataclass(frozen=True, slots=True)
@@ -12,11 +13,36 @@ class MemoryContextPolicy:
     max_content_bytes: int = 6000
     # 没有可信Token估算时不伪装成0；若配置Token预算则未知估算拒绝使用。
     max_estimated_tokens: int | None = None
+    candidate_limit: int = 50
+    calendar_version: str = 'calendar-memory-v1'
+
+    def version_for(self,purpose):
+        return self.calendar_version if purpose in CALENDAR_MEMORY_KEYS else self.version
+
+    def types_for(self, purpose: str) -> frozenset[str]:
+        # 不允许模型/Manifest扩大此白名单。事实抽取、知识回答、审批和主路由无记忆。
+        if purpose in {'conversation_reply', 'mail_reply_draft', 'mail_draft_revision'}:
+            return frozenset({'long_term_summary', 'entity'})
+        if purpose in CALENDAR_MEMORY_KEYS:
+            return frozenset({'entity'})
+        return frozenset()
+
+    def entity_keys_for(self, purpose):
+        if purpose in CALENDAR_MEMORY_KEYS:
+            return CALENDAR_MEMORY_KEYS[purpose]
+        if purpose=='conversation_reply':
+            return frozenset({'timezone','contact','reply_style','meeting_preferences'})
+        return frozenset({'timezone','contact','reply_style'})
+
+    def item_limit_for(self,purpose):
+        return min(self.max_items,len(CALENDAR_MEMORY_KEYS[purpose])) if purpose in CALENDAR_MEMORY_KEYS else self.max_items
 
     def __post_init__(self):
         if not self.version or len(self.version) > 64:
             raise ValueError('记忆策略版本无效')
-        for name, maximum in (('max_items', 50), ('max_item_chars', 4000),
+        if not self.calendar_version or len(self.calendar_version)>64:
+            raise ValueError('日历记忆策略版本无效')
+        for name, maximum in (('candidate_limit',500),('max_items', 50), ('max_item_chars', 4000),
                               ('max_total_chars', 200000), ('max_content_bytes', 800000)):
             value = getattr(self, name)
             if type(value) is not int or not 1 <= value <= maximum:

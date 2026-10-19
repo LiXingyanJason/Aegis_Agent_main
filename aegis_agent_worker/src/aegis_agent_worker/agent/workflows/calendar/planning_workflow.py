@@ -10,15 +10,17 @@ from aegis_agent_worker.agent.graph.state import TaskGraphState
 from aegis_agent_worker.repository.run_repository import ClaimedRun
 from aegis_agent_worker.observability.telemetry import get_tracer
 from aegis_agent_worker.agent.specialists.calendar_agent import calendar_validation_issues, CalendarPlanValidationError
+from aegis_agent_worker.llm.memory_scope import memory_call_scope
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class CalendarPlanningWorkflow:
-    def __init__(self, calendar_agent, audit_service=None):
+    def __init__(self, calendar_agent, audit_service=None,memory_context=None):
         self._agent = calendar_agent
         self._audit_service = audit_service
+        self._memory_context=memory_context
 
     def build(self):
         graph = StateGraph(TaskGraphState)
@@ -37,9 +39,12 @@ class CalendarPlanningWorkflow:
             span.set_attribute("gen_ai.request.model", self._agent.model_name)
             try:
                 handoff = AgentHandoff.model_validate(state["handoff"])
-                decision = await self._agent.plan_calendar(
-                    user_content=state.get("latest_user_message", ""), handoff=handoff,
-                )
+                run=ClaimedRun(id=UUID(state['run_id']),tenant_id=UUID(state['tenant_id']),
+                    user_id=UUID(state['user_id']),conversation_id=UUID(state['conversation_id']) if state.get('conversation_id') else None)
+                with memory_call_scope(self._memory_context,run,'calendar_planning',state.get('latest_user_message','')):
+                    decision = await self._agent.plan_calendar(
+                        user_content=state.get("latest_user_message", ""), handoff=handoff,
+                    )
                 error = decision.clarification_question if decision.action == "clarify" else ""
             except (KeyError, ValueError) as exception:
                 outcome = "invalid_plan"

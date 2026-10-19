@@ -48,4 +48,32 @@ class ReplyStyleEntity(EntityModel):
     value: Literal['formal','concise','friendly']
 
 
-MemoryEntity=Annotated[TimezoneEntity|ContactEntity|ReplyStyleEntity,Field(discriminator='key')]
+class MeetingPreferencesEntity(EntityModel):
+    key: Literal['meeting_preferences']
+    preferred_time_of_day: Literal['any','morning','afternoon','evening'] = 'any'
+    avoid_weekdays: list[Annotated[int,Field(strict=True,ge=1,le=7)]] = Field(default_factory=list,max_length=7)
+    strength: Literal['soft'] = 'soft'
+
+    @field_validator('avoid_weekdays')
+    @classmethod
+    def unique_days(cls,value):
+        if len(set(value))!=len(value): raise ValueError('星期不能重复')
+        return sorted(value)
+
+
+MemoryEntity=Annotated[TimezoneEntity|ContactEntity|ReplyStyleEntity|MeetingPreferencesEntity,Field(discriminator='key')]
+
+
+def describe_memory_entity(entity):
+    """仅由已校验的结构字段生成说明；不是模型生成，也不授予业务权限。"""
+    if entity.key=='timezone':
+        return f'默认时区：{entity.value}'
+    if entity.key=='reply_style':
+        return '邮件语气：'+{'formal':'正式','concise':'简洁','friendly':'友好'}[entity.value]
+    if entity.key=='contact':
+        # 不把联系人地址自动复制到列表可展示的正文预览中。
+        return '常用联系人设置'
+    period={'any':'无偏好','morning':'上午','afternoon':'下午','evening':'晚上'}[entity.preferred_time_of_day]
+    weekdays=['周一','周二','周三','周四','周五','周六','周日']
+    avoided='、'.join(weekdays[day-1] for day in entity.avoid_weekdays) or '无'
+    return f'会议软偏好：时段{period}；尽量避开{avoided}（仅作软偏好）'

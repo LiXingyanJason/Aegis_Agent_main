@@ -2,12 +2,14 @@
 from langgraph.graph import START,END,StateGraph
 from aegis_agent_worker.agent.graph.state import TaskGraphState
 from aegis_agent_worker.agent.workflows.mail.planning_workflow import mail_run
+from aegis_agent_worker.llm.memory_scope import memory_call_scope
 
 
 class MailRevisionWorkflow:
     """邮件草稿修改工作流,已保存的草稿正文按用户指令改写一遍并写回"""
-    def __init__(self,agent,service):
+    def __init__(self,agent,service,memory_context=None):
         self._agent,self._service=agent,service
+        self._memory_context=memory_context
     def build(self):
         graph=StateGraph(TaskGraphState)
         graph.add_node("revise_saved_body",self._revise)
@@ -17,6 +19,7 @@ class MailRevisionWorkflow:
     async def _revise(self,state):
         run=mail_run(state)
         draft=await self._service.load(run)
-        body=await self._agent.revise_body(draft["body"],draft["instruction"])
+        with memory_call_scope(self._memory_context,run,'mail_draft_revision',f'邮件回复 {draft["instruction"]}'):
+            body=await self._agent.revise_body(draft["body"],draft["instruction"])
         await self._service.save(run,draft,body)
         return {"mail_workflow_completed":True}

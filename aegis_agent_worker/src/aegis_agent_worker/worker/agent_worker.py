@@ -103,6 +103,7 @@ async def run_worker() -> None:
                 confirmation_service=calendar_confirmation,
                 artifact_service=artifact_service,
                 planning_audit=CalendarPlanningService(database, runs, events),
+                memory_context=memory_context,
             )
             mail_tasks = MailTaskService(database, runs, tools, events)
             mail_send = MailSendService(database, runs, tools, events)

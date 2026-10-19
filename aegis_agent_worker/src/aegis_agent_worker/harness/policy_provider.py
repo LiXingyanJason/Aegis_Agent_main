@@ -33,9 +33,10 @@ LEGACY_POLICY = PolicyBundle(
     session_memory=SessionMemoryPolicy(version="session-work-v1",ttl_seconds=1800,max_user_sessions=32,
         max_tasks=6,max_cards=4,max_cache_bytes=12000,history_items=20,history_chars=12000,
         message_chars=4000,redis_timeout_seconds=1.0),
-    # 新契约的独立版本；尚未接入旧注入路径，不改变harness-v1执行预算。
+    # 独立记忆额度；7.4统一调用边界启用，不改变harness-v1执行预算。
     memory=MemoryContextPolicy(version="memory-contract-v1", max_items=5, max_item_chars=400,
-        max_total_chars=1500, max_content_bytes=6000, max_estimated_tokens=None),
+        max_total_chars=1500, max_content_bytes=6000, max_estimated_tokens=None,candidate_limit=50,
+        calendar_version='calendar-memory-v1'),
     execution=TaskExecutionPolicy(version="harness-v1", max_models=10, max_tools=6, active_seconds=120,
         max_input_chars=48000, max_output_chars=80000, model_timeout_seconds=60, tool_timeout_seconds=20,
         tool_scopes=(

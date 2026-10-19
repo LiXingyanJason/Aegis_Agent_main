@@ -7,7 +7,7 @@ from typing import Literal
 from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator, model_validator
-from app.param.memory_entity import MemoryEntity
+from app.param.memory_entity import MemoryEntity,describe_memory_entity
 
 
 _HIGH_RISK_SECRET_PATTERN = re.compile(
@@ -20,7 +20,7 @@ class MemoryCreateParam(BaseModel):
     """用户手动录入或明确确认的一条长期偏好。"""
 
     model_config=ConfigDict(extra='forbid')
-    content: str = Field(min_length=1, max_length=4000)
+    content: str = Field(default='', max_length=4000)
     is_sensitive: bool | None = None  # 旧字段显式兼容，不允许与新分级矛盾。
     sensitivity: Literal['normal','sensitive'] | None = None
     memory_type: Literal['long_term_summary','entity'] = 'long_term_summary'
@@ -35,10 +35,8 @@ class MemoryCreateParam(BaseModel):
     @field_validator("content")
     @classmethod
     def normalize_and_reject_secrets(cls, value: str) -> str:
-        """拒绝空白与明显的高危秘密，避免把凭据当作长期记忆保存。"""
+        """清理说明并拒绝高危秘密；是否允许空白由记忆类型共同校验。"""
         normalized = value.strip()
-        if not normalized:
-            raise ValueError("记忆内容不能为空")
         if _HIGH_RISK_SECRET_PATTERN.search(normalized):
             raise ValueError("长期记忆不允许保存密码、API Key、私钥或完整银行卡信息")
         return normalized
@@ -50,6 +48,10 @@ class MemoryCreateParam(BaseModel):
         self.sensitivity=self.sensitivity or ('sensitive' if self.is_sensitive else 'normal')
         self.is_sensitive=self.sensitivity=='sensitive'
         if (self.memory_type=='entity') != (self.entity is not None): raise ValueError('实体记忆必须且仅能携带实体字段')
+        if not self.content:
+            if self.entity is None:
+                raise ValueError('记忆内容不能为空')
+            self.content=describe_memory_entity(self.entity)
         combined=self.content+' '+(json.dumps(self.entity.model_dump(),ensure_ascii=False) if self.entity else '')
         if _HIGH_RISK_SECRET_PATTERN.search(combined) or re.search(r'-----BEGIN .*PRIVATE KEY-----|\bsk-[A-Za-z0-9_-]{20,}',combined):
             raise ValueError('长期记忆不允许保存高危秘密')

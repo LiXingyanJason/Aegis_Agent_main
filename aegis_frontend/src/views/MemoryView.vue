@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { memoryPayload, memoryConfirmPayload, memoryState, memoryFormFromRecord, memoryErrorMessage, memoryTypeLabel, memorySourceLabel, memoryStatusDisplay } from '../utils/memory'
+import { memoryPayload, memoryConfirmPayload, memoryState, memoryFormFromRecord, memoryErrorMessage, memoryTypeLabel, memorySourceLabel, memoryStatusDisplay, memoryTimezoneOptions } from '../utils/memory'
 import { useRouter } from 'vue-router'
 import {
   confirmMemory,
@@ -49,10 +49,12 @@ watch(editorVisible, (visible) => {
 })
 
 const canLoadMore = computed(() => Boolean(nextCursor.value))
+const timezoneOptions = computed(() => memoryTimezoneOptions(memoryForm.value.entityKey === 'timezone' ? memoryForm.value.entityValue : null))
 
 function emptyMemoryForm() {
   return { content: '', isSensitive: false, memoryType: 'long_term_summary', entityKey: 'timezone',
     entityValue: 'Asia/Shanghai', contactName: '', contactEmail: '', expiresAt: null,
+    meetingTimeOfDay: 'any', meetingAvoidWeekdays: [],
     sourceKind: 'manual', sourceObjectId: '', sourceVersion: '' }
 }
 
@@ -126,7 +128,7 @@ async function openEditMemory(memoryId) {
 
 async function saveMemory() {
   const content = memoryForm.value.content.trim()
-  if (!content) return
+  if (memoryForm.value.memoryType !== 'entity' && !content) return
   saving.value = true
   editorError.value = ''
   try {
@@ -325,14 +327,32 @@ onMounted(() => { void loadMemories() })
             <el-form-item label="设置项（用户范围内每项仅一个生效值）">
               <el-select v-model="memoryForm.entityKey" @change="memoryForm.entityValue = memoryForm.entityKey === 'reply_style' ? 'formal' : 'Asia/Shanghai'">
                 <el-option label="默认时区" value="timezone" /><el-option label="邮件语气" value="reply_style" /><el-option label="常用联系人" value="contact" />
+                <el-option label="会议软偏好" value="meeting_preferences" />
               </el-select>
             </el-form-item>
-            <el-form-item v-if="memoryForm.entityKey === 'timezone'" label="IANA时区"><el-input v-model="memoryForm.entityValue" placeholder="Asia/Shanghai" /></el-form-item>
+            <el-form-item v-if="memoryForm.entityKey === 'timezone'" label="时区">
+              <el-select v-model="memoryForm.entityValue" filterable placeholder="请选择时区，可搜索城市或时区名称" style="width: 100%">
+                <el-option v-for="option in timezoneOptions" :key="option.value" :label="option.label" :value="option.value" />
+              </el-select>
+            </el-form-item>
+            <p v-if="memoryForm.entityKey === 'timezone'">确认后用于今后日历任务中未注明时区的输入；本轮明确时区优先，不修改已有或已批准的会议。</p>
             <el-form-item v-if="memoryForm.entityKey === 'reply_style'" label="语气"><el-select v-model="memoryForm.entityValue"><el-option label="正式" value="formal" /><el-option label="简洁" value="concise" /><el-option label="友好" value="friendly" /></el-select></el-form-item>
             <template v-if="memoryForm.entityKey === 'contact'"><el-form-item label="联系人姓名"><el-input v-model="memoryForm.contactName" /></el-form-item><el-form-item label="邮箱"><el-input v-model="memoryForm.contactEmail" /></el-form-item></template>
+            <template v-if="memoryForm.entityKey === 'meeting_preferences'">
+              <el-form-item label="偏好时段"><el-select v-model="memoryForm.meetingTimeOfDay">
+                <el-option label="无偏好" value="any" /><el-option label="上午" value="morning" /><el-option label="下午" value="afternoon" /><el-option label="晚上" value="evening" />
+              </el-select></el-form-item>
+              <el-form-item label="尽量避开的星期"><el-select v-model="memoryForm.meetingAvoidWeekdays" multiple clearable>
+                <el-option v-for="(label,index) in ['周一','周二','周三','周四','周五','周六','周日']" :key="index" :label="label" :value="index+1" />
+              </el-select></el-form-item>
+              <p>仅作为候选推荐的软偏好；不代表空闲、不改变明确要求，也不批准创建会议。</p>
+            </template>
           </template>
-          <el-form-item label="偏好内容">
-            <el-input v-model="memoryForm.content" type="textarea" :rows="4" maxlength="4000" show-word-limit placeholder="例如：周一上午不安排会议" />
+          <el-form-item :label="memoryForm.memoryType === 'entity' ? '补充说明（可选）' : '偏好内容（必填）'">
+            <el-input v-model="memoryForm.content" type="textarea" :rows="4" maxlength="4000" show-word-limit :placeholder="memoryForm.memoryType === 'entity' ? '留空时由系统根据设置自动生成说明' : '例如：周一上午不安排会议'" />
+          </el-form-item>
+          <el-form-item v-if="memoryForm.memoryType === 'entity' && editing?.content_is_generated && !memoryForm.content.trim() && !dirty" label="已保存的系统说明">
+            <span>{{ editing.content }}</span>
           </el-form-item>
           <el-form-item label="有效期（留空表示长期有效）"><el-date-picker v-model="memoryForm.expiresAt" type="datetime" clearable /></el-form-item>
           <el-form-item label="录入来源（不会标记为模型提取）">
@@ -356,7 +376,7 @@ onMounted(() => { void loadMemories() })
         <el-button
           type="primary"
           :loading="saving"
-          :disabled="detailLoading || !memoryForm.content.trim() || (editing && !['pending','confirmed','revoked'].includes(editing.status))"
+          :disabled="detailLoading || (memoryForm.memoryType !== 'entity' && !memoryForm.content.trim()) || (editing && !['pending','confirmed','revoked'].includes(editing.status))"
           @click="saveMemory"
         >保存（待确认）</el-button>
         <el-button type="primary" :loading="saving" :disabled="!editing || editing.status !== 'pending' || dirty || !reviewed || (conflict && (!conflictRecord || !replaceReviewed))" @click="confirmSavedMemory">确认生效</el-button>

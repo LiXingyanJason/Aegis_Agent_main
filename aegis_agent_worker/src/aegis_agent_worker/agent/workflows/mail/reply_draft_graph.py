@@ -7,7 +7,6 @@ from langgraph.graph import END, START, StateGraph
 
 from aegis_agent_worker.agent.graph.state import TaskGraphState
 from aegis_agent_worker.agent.specialists.mail_agent import MailAgent
-from aegis_agent_worker.config.database import TenantContext
 from aegis_agent_worker.repository.run_repository import ClaimedRun
 from aegis_agent_worker.service.mail.mail_task_service import MailTaskService
 from aegis_agent_worker.service.memory.memory_context_service import MemoryContextService
@@ -15,6 +14,7 @@ from aegis_agent_worker.agent.workflows.mail.planning_workflow import MailPlanni
 from aegis_agent_worker.agent.contracts.mail import MailDecision
 from aegis_agent_worker.agent.workflows.mail.collection_workflow import MailCollectionWorkflow
 from aegis_agent_worker.harness.exceptions import HarnessError
+from aegis_agent_worker.llm.memory_scope import memory_call_scope
 
 
 class MailReplyDraftWorkflow:
@@ -80,25 +80,14 @@ class MailReplyDraftWorkflow:
         email = await self._mail_tasks.read_mail(run, source)
         if email.get("source_version") is not None and email["source_version"]!=source.get("source_version"):
             raise HarnessError("MAIL_SOURCE_CHANGED","邮件来源已变化，请重新起草")
-        async def load_current_memory():
-            selected = await self._memory_context.select_for_run(
-                run_id=run.id,
-                context=TenantContext(tenant_id=run.tenant_id, user_id=run.user_id),
-                task_text=f"邮件回复 {source.get('instruction') or ''}",
-            )
-            return self._memory_context.format_system_context(selected)
         step_id = await self._mail_tasks.start_generation_step(run, "正在起草回复")
         extra={}
-        if self._memory_context is not None:
-            extra['memory_context_loader']=load_current_memory
         if self._collection_service is not None:
             extra["supplemental_context"]={"evidence":state.get("collected_evidence",[]),"user_answers":state.get("user_answers",[])}
-        reply = await self._mail_agent.generate_reply_draft(
-            email,
-            key_points=source.get("key_points"),
-            instruction=instruction,
-            **extra,
-        )
+        # 格式修复也在同一语义用途内，但每个attempt重新查SQL，不复用回调返回的摘录。
+        with memory_call_scope(self._memory_context,run,'mail_reply_draft',f'邮件回复 {instruction}'):
+            reply = await self._mail_agent.generate_reply_draft(
+                email, key_points=source.get("key_points"), instruction=instruction, **extra)
         draft_id = await self._mail_tasks.save_reply_draft(run, source=source, reply=reply, step_id=step_id)
         if run.conversation_id is not None:
             return {

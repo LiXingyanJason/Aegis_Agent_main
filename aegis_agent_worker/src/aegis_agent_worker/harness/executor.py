@@ -14,6 +14,13 @@ from aegis_agent_worker.repository.execution_repository import ExecutionReposito
 from aegis_agent_worker.repository.run_repository import ClaimedRun
 
 
+class AttemptAudit(dict):
+    """调用元数据仍为字典；attempt ID不是finish_attempt的可变更新字段。"""
+    def __init__(self, attempt_id):
+        super().__init__()
+        self.attempt_id = attempt_id
+
+
 class HarnessExecutor:
     """调用 HarnessExecutor.attempt() 接入执行治理"""
     def __init__(
@@ -81,7 +88,7 @@ class HarnessExecutor:
                 session, run, kind=kind, label=label, risk_flags=risk_flags,
             )
         code, status = None, "succeeded"
-        audit = {}
+        audit = AttemptAudit(attempt_id)
         try:  # 执行 + 超时控制；等待模型/工具时不持有数据库事务。
             async with execution_timeout(min(self.policy.call_timeout(kind), max(0.01, remaining))):
                 yield audit

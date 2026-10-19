@@ -7,14 +7,22 @@ from typing import Annotated, Literal
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import re
+import json
+from types import MappingProxyType
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, TypeAdapter, field_validator, model_validator
 
 
 MemoryType = Literal['working', 'long_term_summary', 'entity']
 MemoryPurpose = Literal['conversation_reply', 'mail_reply_draft', 'mail_draft_revision',
+                        'calendar_planning', 'calendar_draft_personalization', 'calendar_recommendation',
                         'main_routing', 'mail_extraction', 'knowledge_answer', 'approval']
-PERSONALIZATION_PURPOSES = frozenset({'conversation_reply', 'mail_reply_draft', 'mail_draft_revision'})
+CALENDAR_MEMORY_KEYS = MappingProxyType({
+    'calendar_planning':frozenset({'timezone'}),
+    'calendar_draft_personalization':frozenset({'timezone','meeting_preferences'}),
+    'calendar_recommendation':frozenset({'timezone','meeting_preferences'}),
+})
+PERSONALIZATION_PURPOSES = frozenset({'conversation_reply', 'mail_reply_draft', 'mail_draft_revision'}) | frozenset(CALENDAR_MEMORY_KEYS)
 _SECRET = re.compile(r'(?:password|密码|api[_ -]?key|密钥|private[_ -]?key|私钥|银行卡|card[_ -]?number)\s*[:：=]', re.I)
 
 
@@ -67,15 +75,30 @@ class ReplyStyleEntity(MemoryModel):
     key: Literal['reply_style'] = 'reply_style'
     value: Literal['formal', 'concise', 'friendly']
 
+
+class MeetingPreferencesEntity(MemoryModel):
+    """仅用于可信候选排序的软偏好，不能声明空闲事实或批准写入。"""
+    key: Literal['meeting_preferences'] = 'meeting_preferences'
+    preferred_time_of_day: Literal['any', 'morning', 'afternoon', 'evening'] = 'any'
+    avoid_weekdays: list[Annotated[int, Field(strict=True, ge=1, le=7)]] = Field(default_factory=list, max_length=7)
+    strength: Literal['soft'] = 'soft'
+
+    @field_validator('avoid_weekdays')
+    @classmethod
+    def unique_days(cls, value):
+        if len(set(value)) != len(value):
+            raise ValueError('星期不能重复')
+        return sorted(value)
+
 # 组成一个联合类型
-MemoryEntity = Annotated[TimezoneEntity | ContactEntity | ReplyStyleEntity, Field(discriminator='key')]
+MemoryEntity = Annotated[TimezoneEntity | ContactEntity | ReplyStyleEntity | MeetingPreferencesEntity, Field(discriminator='key')]
 
 
 class MemorySourceRef(MemoryModel):
     # 不提供email_body/calendar_event/knowledge_chunk来源：原文仍在业务源中。
     kind: Literal['manual', 'conversation', 'run', 'artifact', 'knowledge_document']
     object_id: UUID
-    version: str = Field(min_length=1, max_length=64, pattern=r'^\S+$')
+    version: str = Field(min_length=1, max_length=128, pattern=r'^\S+$')
 
 
 class MemoryCandidate(MemoryModel):
@@ -159,7 +182,7 @@ class MemoryContextBundle(MemoryModel):
     tenant_id: UUID
     user_id: UUID
     run_id: UUID
-    conversation_id: UUID
+    conversation_id: UUID | None
     purpose: MemoryPurpose
     policy_version: str = Field(min_length=1, max_length=64)
     selected_at: AwareDatetime
@@ -175,6 +198,17 @@ class MemoryContextBundle(MemoryModel):
             raise ValueError('同一记忆不能重复注入')
         if any((item.tenant_id, item.user_id) != (self.tenant_id, self.user_id) for item in self.items):
             raise ValueError('记忆身份与上下文不一致')
+        if self.purpose in CALENDAR_MEMORY_KEYS:
+            seen_keys=set()
+            for item in self.items:
+                if item.memory_type!='entity':
+                    raise ValueError('日历用途不接受自由文本摘要')
+                entity=TypeAdapter(MemoryEntity).validate_python(json.loads(item.excerpt))
+                if entity.key not in CALENDAR_MEMORY_KEYS[self.purpose]:
+                    raise ValueError('日历用途不接受该实体')
+                if entity.key in seen_keys:
+                    raise ValueError('日历实体偏好不能存在多个生效值')
+                seen_keys.add(entity.key)
         return self
 
     @property

@@ -1,11 +1,30 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { memoryPayload, memoryConfirmPayload, memoryState, memoryFormFromRecord, memoryErrorMessage, memoryTypeLabel, memorySourceLabel, memoryStatusDisplay } from '../src/utils/memory.js'
+import { memoryPayload, memoryConfirmPayload, memoryState, memoryFormFromRecord, memoryErrorMessage, memoryTypeLabel, memorySourceLabel, memoryStatusDisplay, memoryTimezoneOptions } from '../src/utils/memory.js'
+
+test('timezone picker provides common IANA options and preserves existing non-listed settings', () => {
+  const options = memoryTimezoneOptions('America/Toronto')
+  assert.ok(options.some(option => option.value === 'Asia/Shanghai' && option.label.includes('北京')))
+  assert.ok(options.some(option => option.value === 'America/Toronto'))
+  assert.equal(memoryTimezoneOptions('Asia/Shanghai').filter(option => option.value === 'Asia/Shanghai').length, 1)
+  assert.equal(memoryTimezoneOptions().some(option => option.value === 'America/Toronto'), false)
+})
 
 const form = {
   content: ' 默认时区 ', memoryType: 'entity', entityKey: 'timezone', entityValue: 'Asia/Shanghai',
   isSensitive: false, expiresAt: null, sourceKind: 'manual', sourceObjectId: '', sourceVersion: '',
 }
+
+test('meeting preferences use a structured soft-only payload and round trip without aliasing', () => {
+  const original = { ...form, entityKey: 'meeting_preferences', meetingTimeOfDay: 'afternoon', meetingAvoidWeekdays: [1, 5] }
+  const payload = memoryPayload(original)
+  assert.deepEqual(payload.entity, { key: 'meeting_preferences', preferred_time_of_day: 'afternoon', avoid_weekdays: [1, 5], strength: 'soft' })
+  payload.entity.avoid_weekdays.push(7)
+  assert.deepEqual(original.meetingAvoidWeekdays, [1, 5])
+  const loaded = memoryFormFromRecord({ content: '会议偏好', memory_type: 'entity', source_kind: 'manual', entity: payload.entity })
+  assert.equal(loaded.meetingTimeOfDay, 'afternoon')
+  assert.equal(memoryTypeLabel({ memory_type: 'entity', entity_key: 'meeting_preferences' }), '设置 · 会议软偏好')
+})
 
 test('manual settings payload cannot claim model provenance or confirmation', () => {
   const payload = memoryPayload(form)
@@ -23,6 +42,19 @@ test('review uses the saved source version rather than unsaved form input', () =
   const state = memoryFormFromRecord(saved)
   assert.equal(state.sourceVersion, 'server-verified-version')
   assert.equal(state.content, '规范化内容')
+})
+
+test('structured description may be empty and generated text is not replayed as a custom note on edit', () => {
+  assert.equal(memoryPayload({ ...form, content: '' }).content, '')
+  const saved = { content: '默认时区：Asia/Shanghai', content_is_generated: true,
+    memory_type: 'entity', source_kind: 'manual', entity: { key: 'timezone', value: 'Asia/Shanghai' } }
+  const editable = memoryFormFromRecord(saved)
+  assert.equal(editable.content, '')
+  editable.entityValue = 'Asia/Tokyo'
+  const payload = memoryPayload(editable, 2)
+  assert.equal(payload.content, '')
+  assert.equal(payload.entity.value, 'Asia/Tokyo')
+  assert.equal(memoryFormFromRecord({ ...saved, content: '旅行用', content_is_generated: false }).content, '旅行用')
 })
 
 test('edits carry expected version; contact is structured and expires uses explicit offset', () => {

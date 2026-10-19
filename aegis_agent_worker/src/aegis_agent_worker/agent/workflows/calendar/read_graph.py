@@ -28,16 +28,18 @@ class CalendarReadWorkflow:
         tool_execution: CalendarToolExecutionService | None,
         artifact_service: ConversationArtifactService | None = None,
         planning_audit=None,
+        memory_context=None,
     ) -> None:
         self._calendar_agent = calendar_agent
         self._tool_execution = tool_execution
         self._artifact_service = artifact_service
         self._planning_audit = planning_audit
+        self._memory_context=memory_context
 
     def build(self) -> Any:
         """构建可嵌入根图的日历只读子图。"""
         graph = StateGraph(CalendarReadState)
-        graph.add_node("calendar_planning", CalendarPlanningWorkflow(self._calendar_agent, self._planning_audit).build())
+        graph.add_node("calendar_planning", CalendarPlanningWorkflow(self._calendar_agent, self._planning_audit,self._memory_context).build())
         graph.add_node("plan_calendar_read", self._plan_calendar_read)
         graph.add_node("execute_calendar_plan", self._execute_calendar_plan)
         graph.add_edge(START, "calendar_planning")

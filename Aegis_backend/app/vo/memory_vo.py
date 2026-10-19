@@ -3,7 +3,8 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel,computed_field,TypeAdapter,ValidationError
+from app.param.memory_entity import MemoryEntity,describe_memory_entity
 
 
 class MemoryMetadataVO(BaseModel):
@@ -34,6 +35,17 @@ class MemoryVO(MemoryMetadataVO):
     created_at: datetime
     updated_at: datetime
     entity: dict | None = None
+
+    @computed_field
+    @property
+    def content_is_generated(self) -> bool:
+        """按当前字段计算，而非新增存储标记；避免编辑时沿用旧值的自动说明。"""
+        if self.memory_type!='entity' or self.entity is None:
+            return False
+        try:
+            return self.content==describe_memory_entity(TypeAdapter(MemoryEntity).validate_python(self.entity))
+        except ValidationError:
+            return False
 
 
 class MemoryListItemVO(MemoryMetadataVO):

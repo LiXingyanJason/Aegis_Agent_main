@@ -21,6 +21,7 @@ class CalendarWorkflowFactory:
     confirmation_service: CalendarConfirmationService | None
     artifact_service: ConversationArtifactService | None = None
     planning_audit: object | None = None
+    memory_context: object | None = None
 
     def register(self, registry: GraphRegistry) -> None:
         """将日历读取和会议确认子图注册到根图可见的注册表。"""
@@ -31,12 +32,13 @@ class CalendarWorkflowFactory:
                 self.tool_execution,
                 self.artifact_service,
                 self.planning_audit,
+                self.memory_context,
             ).build(),
         )
         registry.register(
             "calendar_confirmation",
             CalendarConfirmationWorkflow(
-                self.calendar_agent, self.confirmation_service, self.planning_audit,
+                self.calendar_agent, self.confirmation_service, self.planning_audit,self.memory_context,
             ).build(),
         )
         if self.tool_execution is not None:
