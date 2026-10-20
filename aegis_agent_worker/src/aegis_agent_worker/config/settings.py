@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 from pathlib import Path
+import os
 
 from pydantic import AnyHttpUrl, SecretStr, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -38,8 +39,7 @@ class Settings(BaseSettings):
     agent_worker_poll_timeout_seconds: int = 5
     app_timezone: str = "Asia/Shanghai"
     session_memory_enabled: bool = False  # 7.2有界工作索引缓存，独立开关灰度
-    fixed_cooperation_enabled: bool = False  # 8.1固定邮件→日历草稿；不启用动态计划
-    cooperation_planning_enabled: bool = False  # 8.2受限模型计划，依赖8.1开关
+    cooperation_enabled: bool = False  # 唯一协同入口的运维总开关；启用即计划+调度
     knowledge_query_enabled: bool = False  # 6.4真实检索显式开启；不将Mock能力提供给主Agent
     knowledge_lexical_fallback_allowed: bool = False  # 显式允许Qdrant服务故障时仅全文检索；不绕过Embedding治理
     knowledge_index_queue_name: str = "aegis:knowledge-index-jobs"
@@ -91,11 +91,14 @@ class Settings(BaseSettings):
     email_mcp_api_key: SecretStr | None = None
     email_mcp_timeout_seconds: float = 20.0
 
-    @model_validator(mode='after')
-    def validate_cooperation_planning(self):
-        if self.cooperation_planning_enabled and not self.fixed_cooperation_enabled:
-            raise ValueError('COOPERATION_PLANNING_ENABLED requires FIXED_COOPERATION_ENABLED')
-        return self
+    @model_validator(mode='before')
+    @classmethod
+    def reject_retired_cooperation_options(cls,values):
+        retired={'fixed_cooperation_enabled','cooperation_planning_enabled','cooperation_scheduling_enabled'}
+        supplied={str(key).lower() for key in values} if isinstance(values,dict) else set()
+        if retired & (supplied | {key.lower() for key in os.environ}):
+            raise ValueError('旧协同递进开关已移除；删除FIXED_COOPERATION_ENABLED、COOPERATION_PLANNING_ENABLED、COOPERATION_SCHEDULING_ENABLED，改用COOPERATION_ENABLED')
+        return values
 
     @property
     def database_async_url(self) -> str:

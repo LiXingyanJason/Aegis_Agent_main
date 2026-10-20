@@ -1,5 +1,6 @@
 """任务运行查询的业务逻辑。"""
 
+import json
 from typing import Any
 from uuid import UUID
 
@@ -45,6 +46,41 @@ class RunService:
         )
         return run is not None
 
+    async def get_mail_tool_results(
+        self, session: AsyncSession, local_user: LocalUser, run_id: UUID,
+        tool_call_id: UUID, offset: int, limit: int,
+    ) -> dict[str, Any] | None:
+        """分页返回工具执行时的完整邮件元数据列表；不返回正文或原始载荷。"""
+        row = await self._runs.find_mail_tool_result_for_user(
+            session, run_id=run_id, tool_call_id=tool_call_id,
+            tenant_id=local_user.tenant_id, user_id=local_user.id,
+        )
+        if row is None:
+            return None
+        payload = _json_object(row['response_payload'])
+        summary = _json_object(row['output_summary'])
+        input_summary = _json_object(row['input_summary'])
+        messages = payload.get('messages')
+        if not isinstance(messages, list) or not all(isinstance(item, dict) for item in messages):
+            raise ValueError('邮件工具快照不可读取')
+        items = [{
+            'sender_name': item.get('sender_name'),
+            'sender_email': item.get('sender_email'),
+            'subject': item.get('subject'),
+            'received_at': item.get('received_at'),
+            'list_preview': item.get('list_preview'),
+            'attachment_count': item.get('attachment_count'),
+        } for item in messages[offset:offset + limit]]
+        return {
+            'source': payload.get('source'),
+            'query_action': input_summary.get('action'),
+            'mail_count': len(messages),
+            'matched_count': summary.get('matched_count'),
+            'offset': offset,
+            'limit': limit,
+            'items': items,
+        }
+
     async def list_run_events(
         self,
         session: AsyncSession,
@@ -59,3 +95,11 @@ class RunService:
             tenant_id=local_user.tenant_id,
             after_event_no=after_event_no,
         )
+
+
+def _json_object(value: Any) -> dict[str, Any]:
+    if isinstance(value, str):
+        value = json.loads(value)
+    if not isinstance(value, dict):
+        raise ValueError('邮件工具快照不可读取')
+    return value

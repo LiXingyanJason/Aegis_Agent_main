@@ -1,15 +1,11 @@
 <script setup>
 import { computed } from 'vue'
+import { isVersionIncompatibleRun, runFailureReason } from '../utils/runFailure'
 
 const props = defineProps({ run: { type: Object, default: null } })
 // 这是任务状态提示，不伪造assistant消息或将供应商原始错误/敏感内容复制进聊天。
-const reason = computed(() => ({
-  LLM_UNAVAILABLE: '模型服务调用失败，本次任务未能完成。',
-  MODEL_OUTPUT_INVALID: '模型结果未通过校验，本次任务未能完成。',
-  EXECUTION_BUDGET_EXCEEDED: '任务执行次数或时间预算已耗尽。',
-  EXECUTION_TIMEOUT: '任务执行超时。',
-  MEMORY_CONTEXT_CHANGED: '相关记忆或来源已变化，请重新核对。',
-}[props.run?.error_code] || '本次任务执行失败，未能完成请求。'))
+const reason = computed(() => runFailureReason(props.run))
+const versionIncompatible = computed(() => isVersionIncompatibleRun(props.run))
 </script>
 
 <template>
@@ -18,7 +14,8 @@ const reason = computed(() => ({
     <div class="run-failure-notice">
       <b>任务未完成</b>
       <p>{{ reason }}</p>
-      <p>请查看执行进度核对已执行步骤；排除问题后，可重新提交。此提示不会自动重试或执行工具。</p>
+      <p v-if="versionIncompatible">旧任务不会自动恢复、重试或沿用原批准；如需继续，请发起新任务并重新核对。</p>
+      <p v-else>请查看执行进度核对已执行步骤；排除问题后，可重新提交。此提示不会自动重试或执行工具。</p>
       <small>任务 ID：{{ run.run_id }}</small>
     </div>
   </div>

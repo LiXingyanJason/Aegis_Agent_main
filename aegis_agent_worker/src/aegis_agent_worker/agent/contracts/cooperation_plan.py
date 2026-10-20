@@ -34,4 +34,4 @@ class CooperationStep(BaseModel):
 class CooperationPlan(BaseModel):
     model_config=ConfigDict(extra='forbid',frozen=True)
     version: Literal[1]=1
-    steps: tuple[CooperationStep,...]=Field(min_length=2,max_length=6)
+    steps: tuple[CooperationStep,...]=Field(min_length=1,max_length=6)

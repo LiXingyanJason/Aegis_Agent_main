@@ -152,7 +152,7 @@ class MainDecisionWorkflow:
                     return {"context_request": decision.model_dump(mode="json"),
                             "context_round": state.get("context_round", 0)+1, **metadata,
                             "decision_duration_ms": state.get("decision_duration_ms", 0)+round((monotonic()-started)*1000)}
-                if decision.decision == "delegate" and decision.domain == "mail" and decision.intent not in {"query_mail", "arrange_meeting_from_mail"}:
+                if decision.decision == "delegate" and decision.domain == "mail" and decision.intent not in {"query_mail", "arrange_meeting_from_mail", "find_free_time_from_mail"}:
                     # 代码保证自然语言只导航卡片，不能触发摘要或起草。
                     decision = MainDecision(
                         decision="delegate", domain="mail", intent="query_mail",

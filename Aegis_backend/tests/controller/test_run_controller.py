@@ -61,6 +61,7 @@ LOCAL_USER = LocalUser(
 RUN_ID = UUID("2dde4c59-6667-4af5-b12d-0f0c5cbcc2a6")
 CONVERSATION_ID = UUID("8bfc8088-26d5-4c19-8876-7caa364b59c0")
 STEP_ID = UUID("734977f1-0a41-4b4f-b9bd-0e960de6f9d2")
+TOOL_CALL_ID = UUID("734977f1-0a41-4b4f-b9bd-0e960de6f9d3")
 
 
 def _create_test_app(fake_session: _ScriptedSession) -> FastAPI:
@@ -156,3 +157,41 @@ def test_get_run_detail_requires_bearer_token() -> None:
 
     assert response.status_code == 401
     assert response.json()["detail"] == "缺少 Bearer access token"
+
+
+def test_mail_tool_result_returns_all_safe_metadata_with_pagination() -> None:
+    messages = [{
+        "sender_name": "甲", "sender_email": "sender@example.com", "subject": f"邮件 {index}",
+        "received_at": "2026-10-19T10:00:00+08:00", "list_preview": "预览",
+        "attachment_count": 0, "provider_message_id": f"provider-{index}",
+        "body": "不得返回的原始正文",
+    } for index in range(11)]
+    session = _ScriptedSession([_Result(first_row={
+        "response_payload": {"source": "mock_mailbox", "messages": messages},
+        "output_summary": {"mail_count": 11, "matched_count": 11},
+        "input_summary": {"action": "list"},
+    })])
+    app = _create_test_app(session)
+    with TestClient(app) as client:
+        response = client.get(f"/runs/{RUN_ID}/mail-tool-results/{TOOL_CALL_ID}?offset=10&limit=10")
+
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
+    data = response.json()["data"]
+    assert data["mail_count"] == 11
+    assert data["matched_count"] == 11
+    assert len(data["items"]) == 1
+    assert data["items"][0]["subject"] == "邮件 10"
+    assert "body" not in data["items"][0]
+    assert "provider_message_id" not in data["items"][0]
+    assert session.calls[0] == {
+        "run_id": RUN_ID, "tool_call_id": TOOL_CALL_ID,
+        "tenant_id": LOCAL_USER.tenant_id, "user_id": LOCAL_USER.id,
+    }
+
+
+def test_mail_tool_result_not_found_does_not_expose_other_runs() -> None:
+    app = _create_test_app(_ScriptedSession([_Result(first_row=None)]))
+    with TestClient(app) as client:
+        response = client.get(f"/runs/{RUN_ID}/mail-tool-results/{TOOL_CALL_ID}")
+    assert response.status_code == 404

@@ -8,6 +8,8 @@ import {
 } from '../api/conversation'
 import { getRunDetail } from '../api/run'
 import { unavailableKnowledgeArtifacts } from '../utils/knowledge'
+import { isAuditOnlyRunEvent } from '../utils/runEvents'
+import { latestCooperationProgress } from '../utils/cooperationProgress'
 
 export const useConversationStore = defineStore('conversation', {
   state: () => ({
@@ -137,6 +139,7 @@ export const useConversationStore = defineStore('conversation', {
           this.runs.splice(index, 1, {
             ...this.runs[index],
             ...run,
+            cooperation: latestCooperationProgress(this.runs[index].cooperation, run.cooperation),
           })
         }
       }
@@ -181,9 +184,9 @@ export const useConversationStore = defineStore('conversation', {
       const runIndex = this.runs.findIndex((run) => run.run_id === runId)
       if (runIndex === -1) return false
 
-      if (event.event_type === 'cooperation_step_completed') {
-        // 固定协同步骤仅用于后端审计；前端只推进断线续传游标。
-        // 不从其中的 draft_id、approval_item_id 或邮件引用创建卡片、审批或外部操作。
+      if (isAuditOnlyRunEvent(event.event_type)) {
+        // 协同步骤、规划与调度事件仅用于后端审计；前端只推进断线续传游标。
+        // 部分结果、步骤成功或 run 完成均不是创建会议、批准或发送的依据。
         this.runEventNos[runId] = eventNo
         return true
       }
@@ -202,6 +205,13 @@ export const useConversationStore = defineStore('conversation', {
         run.current_stage = payload.current_stage ?? run.current_stage
         run.model_provider = payload.model_provider ?? run.model_provider
         run.model_name = payload.model_name ?? run.model_name
+      }
+
+      if (event.event_type === 'cooperation_progress') {
+        // 只更新独立展示快照，不修改run/审批状态，不生成卡片或触发工具。
+        run.cooperation = latestCooperationProgress(run.cooperation, {
+          ...payload, event_no: eventNo, occurred_at: event.created_at ?? payload.occurred_at,
+        })
       }
 
       if (event.event_type === 'progress_updated') {
@@ -333,6 +343,11 @@ export const useConversationStore = defineStore('conversation', {
         run.current_stage = '执行失败'
         run.error_code = payload.error_code ?? run.error_code
         run.error_message = payload.error_message ?? payload.message ?? run.error_message
+      }
+
+      if (event.event_type === 'run_cancelled') {
+        run.status = 'cancelled'
+        run.current_stage = '已取消'
       }
 
       this.runs.splice(runIndex, 1, run)

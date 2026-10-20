@@ -2,13 +2,17 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getRunDetail, subscribeRunEvents } from '../api/run'
+import { isAuditOnlyRunEvent } from '../utils/runEvents'
 import MailCandidateCard from '../components/MailCandidateCard.vue'
+import MailToolResultsDialog from '../components/MailToolResultsDialog.vue'
 import KnowledgeSourceCard from '../components/KnowledgeSourceCard.vue'
 import KnowledgeSourceDialog from '../components/KnowledgeSourceDialog.vue'
 import { citationParts, knowledgeRetrievalSummary, knowledgeSearchError } from '../utils/knowledge'
 import RunInputPanel from '../components/RunInputPanel.vue'
 import RunMemoryContextDialog from '../components/RunMemoryContextDialog.vue'
 import RunFailureNotice from '../components/RunFailureNotice.vue'
+import { runFailureReason } from '../utils/runFailure'
+import CooperationProgress from '../components/CooperationProgress.vue'
 import { useAuthStore } from '../store/auth'
 import { useConversationStore } from '../store/conversation'
 
@@ -28,6 +32,7 @@ const inputFollowup = ref('')
 const selectedSource = ref(null)
 const sourceRunId = ref(null)
 const memoryRunId = ref(null)
+const selectedMailTool = ref(null)
 let inputPollTimer = null
 let inputPollingRunId = null
 let pollTimer = null
@@ -39,7 +44,10 @@ let streamRetryTimer = null
 let selectionVersion = 0
 
 const activeConversation = computed(() => conversations.current)
-watch(() => activeConversation.value?.conversation_id, () => { memoryRunId.value = null })
+watch(() => activeConversation.value?.conversation_id, () => {
+  memoryRunId.value = null
+  selectedMailTool.value = null
+})
 const isSubmitting = computed(() => conversations.creating || conversations.sending)
 const hasMailCandidates = computed(() => Object.values(conversations.artifactsByRun)
   .some((artifacts) => artifacts.some((artifact) => artifact.artifact_type === 'mail_candidates')))
@@ -339,7 +347,7 @@ async function pollRun(runId, conversationId) {
   try {
     const run = await conversations.refreshRun(runId)
     error.value = ''
-    if (run.status === 'completed' || run.status === 'failed') {
+    if (['completed', 'failed', 'cancelled'].includes(run.status)) {
       await finishRunTracking(runId, conversationId)
     }
   } catch (cause) {
@@ -415,12 +423,13 @@ async function startRunStream(runId, conversationId) {
           event_type: sseEvent.event,
         })
         if (!handled) return
-        if (sseEvent.event === 'cooperation_step_completed') return
+        if (isAuditOnlyRunEvent(sseEvent.event)) return
+        if (sseEvent.event === 'cooperation_progress') return
         error.value = ''
         if (['artifacts_ready', 'assistant_message_completed'].includes(sseEvent.event)) {
           await refreshArtifactsForRun(runId, sseEvent.data?.payload?.conversation_id ?? conversationId)
         }
-        if (['run_completed', 'run_failed', 'approval_required'].includes(sseEvent.event)) {
+        if (['run_completed', 'run_failed', 'run_cancelled', 'approval_required'].includes(sseEvent.event)) {
           await finishRunTracking(runId, conversationId)
         }
       },
@@ -475,6 +484,12 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
 <template>
   <main class="workspace">
     <KnowledgeSourceDialog :source="selectedSource" @close="selectedSource = null" @unavailable="recheckSource" />
+    <MailToolResultsDialog
+      v-if="selectedMailTool"
+      :run-id="selectedMailTool.runId"
+      :tool-call-id="selectedMailTool.toolCallId"
+      @close="selectedMailTool = null"
+    />
     <aside class="sidebar">
       <div class="brand"><span class="mark">⌾</span>Aegis PA</div>
       <p class="nav-label app-nav-label">工作空间</p>
@@ -639,10 +654,11 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
                     <span class="badge neutral">{{ run.status }}</span>
                   </div>
                   <p class="run-id">任务 ID：{{ run.run_id }}</p>
+                  <CooperationProgress :run="run" />
                   <el-button class="run-memory-button" size="small" type="primary" plain @click="memoryRunId = run.run_id">查看记忆使用记录</el-button>
                   <p v-if="run.model_provider || run.model_name" class="run-id">模型：{{ [run.model_provider, run.model_name].filter(Boolean).join(' / ') }}</p>
                   <p v-if="run.result_summary" class="run-detail">{{ run.result_summary }}</p>
-                  <p v-if="run.error_message" class="run-error">{{ run.error_message }}</p>
+                  <p v-if="run.status === 'failed'" class="run-error">{{ runFailureReason(run) }}</p>
                   <ol v-if="run.steps?.length" class="run-steps">
                     <li v-for="step in run.steps" :key="step.step_id">
                       <b>{{ step.label }}</b>
@@ -653,6 +669,12 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
                     <b>工具查询结果</b>
                     <div v-for="tool in run.tool_previews" :key="tool.tool_call_id" class="tool-preview">
                       <p><b>{{ tool.tool_name }}</b> · {{ tool.status }} · {{ tool.risk_level }}</p>
+                      <el-button
+                        v-if="tool.tool_name === 'mail.messages.list' && tool.status === 'succeeded'"
+                        size="small"
+                        plain
+                        @click="selectedMailTool = { runId: run.run_id, toolCallId: tool.tool_call_id }"
+                      >查看完整查询结果</el-button>
                       <template v-if="tool.tool_name === 'knowledge.search'">
                         <template v-if="tool.output_summary">
                           <p>检索方式：{{ knowledgeRetrievalSummary(tool.output_summary).mode }}</p>

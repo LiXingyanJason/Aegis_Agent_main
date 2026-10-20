@@ -296,6 +296,9 @@ h1, h2, h3, p { margin-top: 0; }
 .memory-card { display: flex; min-height: 0; flex: 1; flex-direction: column; overflow: hidden; }
 .memory-toolbar { align-items: center; }.memory-search { display: flex; width: min(620px, 100%); gap: 12px; align-items: center; }.memory-search .el-input { flex: 1; }
 .memory-table-wrap { min-height: 0; flex: 1; overflow: auto; }.memory-table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px; }.memory-table th { padding: 12px 15px; background: #f7f9fc; color: #526176; font-size: 12px; text-align: left; }.memory-table td { padding: 14px 15px; border-top: 1px solid #dfe5ee; vertical-align: top; line-height: 1.5; }.memory-table .title { margin-bottom: 3px; font-weight: 750; }.memory-table .detail { color: #667085; font-size: 12px; }.memory-actions { white-space: nowrap; }.memory-empty { color: #667085; text-align: center; }.memory-static-note { flex: none; margin: 12px 2px 0; color: #667085; font-size: 12px; }.memory-form-help { margin: 7px 0 0; color: #667085; font-size: 12px; line-height: 1.5; }
+.memory-editor-dialog { display: flex; max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); flex-direction: column; margin: 24px auto !important; overflow: hidden; }
+.memory-editor-dialog .el-dialog__header, .memory-editor-dialog .el-dialog__footer { flex: none; }
+.memory-editor-dialog .el-dialog__body { min-height: 0; overflow-y: auto; }
 
 @media (max-width: 800px) {
   .calendar-content { min-height: 680px; }

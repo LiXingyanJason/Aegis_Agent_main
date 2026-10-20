@@ -1,4 +1,4 @@
-"""当前生产使用的执行限制集中在 LEGACY_POLICY，版本为 harness-v1，由 PolicyProvider 提供"""
+"""按能力固定预算版本；唯一协同使用v6，不解释已退役的开发期策略。"""
 from dataclasses import dataclass, field, replace
 from types import MappingProxyType
 
@@ -65,24 +65,18 @@ KNOWLEDGE_CONTRACT_POLICY = replace(LEGACY_POLICY, execution=replace(
                       for kind, tools in LEGACY_POLICY.execution.tool_scopes),
 ))
 
-# 新版本单独允许协同读取邮件正文，不改写旧任务的白名单或余额。
-COOPERATION_POLICY = replace(LEGACY_POLICY, execution=replace(
-    LEGACY_POLICY.execution, version='harness-v3-fixed-cooperation',max_tools=8,
-    tool_scopes=tuple((kind,tools | frozenset({'mail.messages.get'}) if kind=='conversation' else tools)
-        for kind,tools in LEGACY_POLICY.execution.tool_scopes),
-))
+# 唯一协同策略。v3/v4/v5开发期策略不再可执行；历史审计不回写、不迁移余额。
+COOPERATION_POLICY = replace(LEGACY_POLICY,
+    execution=replace(LEGACY_POLICY.execution,version='harness-v6-cooperation',max_tools=8,
+        tool_scopes=tuple((kind,tools | frozenset({'mail.messages.get'}) if kind=='conversation' else tools)
+            for kind,tools in LEGACY_POLICY.execution.tool_scopes)),
+    cooperation=CooperationPlanPolicy(version='cooperation-v2',max_steps=6,max_dependencies=5,
+        max_plan_bytes=8000,max_step_result_bytes=8000,max_results_bytes=24000,max_depth=6,max_parallel=1))
 COOPERATION_KNOWLEDGE_POLICY = replace(COOPERATION_POLICY,execution=replace(
-    COOPERATION_POLICY.execution,version='harness-v3-cooperation-knowledge',
+    COOPERATION_POLICY.execution,version='harness-v6-cooperation-knowledge',
     tool_scopes=tuple((kind,tools | frozenset({'knowledge.search'}) if kind=='conversation' else tools)
-        for kind,tools in COOPERATION_POLICY.execution.tool_scopes),
-))
-
-COOPERATION_PLAN_POLICY = replace(COOPERATION_POLICY,execution=replace(
-    COOPERATION_POLICY.execution,version='harness-v4-cooperation-plan'),cooperation=CooperationPlanPolicy(
-        version='cooperation-plan-v1',max_steps=6,max_dependencies=5,max_plan_bytes=8000,
-        max_step_result_bytes=8000,max_results_bytes=24000))
-COOPERATION_PLAN_KNOWLEDGE_POLICY = replace(COOPERATION_KNOWLEDGE_POLICY,execution=replace(
-    COOPERATION_KNOWLEDGE_POLICY.execution,version='harness-v4-cooperation-plan-knowledge'),cooperation=COOPERATION_PLAN_POLICY.cooperation)
+        for kind,tools in COOPERATION_POLICY.execution.tool_scopes)))
+COOPERATION_POLICY_VERSIONS=frozenset({COOPERATION_POLICY.version,COOPERATION_KNOWLEDGE_POLICY.version})
 
 
 class PolicyProvider:
@@ -111,4 +105,4 @@ class PolicyProvider:
         return profile
 
 
-DEFAULT_POLICIES = PolicyProvider()
+DEFAULT_POLICIES = PolicyProvider((LEGACY_POLICY,KNOWLEDGE_CONTRACT_POLICY,COOPERATION_POLICY,COOPERATION_KNOWLEDGE_POLICY))

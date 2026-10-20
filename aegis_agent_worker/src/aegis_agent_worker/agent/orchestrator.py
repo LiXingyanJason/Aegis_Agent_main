@@ -174,6 +174,9 @@ class AgentOrchestrator:
                 status="failed", error_code="WORKFLOW_ROUTING_FAILED", error_message=error.code,
             )
         except HarnessError as error:
+            if error.code=='EXECUTION_CANCELLED':
+                # 数据库已经取消；不能再写failed或completed覆盖取消事实。
+                return AgentExecutionResult(status='cancelled',error_code=error.code,error_message=str(error))
             if self._mail_tasks is not None:
                 await self._mail_tasks.mark_failed(run,str(error))
             await self._lifecycle.fail_run(run,step_id=step_id,error_code=error.code,error_message=str(error))

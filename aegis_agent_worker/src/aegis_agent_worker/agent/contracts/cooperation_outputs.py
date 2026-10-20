@@ -36,3 +36,5 @@ class MeetingDraftV1(TaskStepResult):
 
 
 OUTPUT_CONTRACTS=MappingProxyType({model.__name__:model for model in (MailRequirementsV1,CalendarCandidatesV1,MeetingDraftV1)})
+OUTPUT_DOMAINS=MappingProxyType({'MailRequirementsV1':'mail','CalendarCandidatesV1':'calendar','MeetingDraftV1':'calendar'})
+OUTPUT_RISKS=MappingProxyType({'MailRequirementsV1':'read','CalendarCandidatesV1':'read','MeetingDraftV1':'approval_required'})

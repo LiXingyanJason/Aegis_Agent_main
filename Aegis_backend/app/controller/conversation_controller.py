@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.response import success
+from app.vo.cooperation_progress_vo import cooperation_snapshot
 from app.param.conversation_create_param import ConversationCreateParam
 from app.param.message_send_param import MessageSendParam
 from app.security.dependencies import CurrentUser, get_current_user, get_tenant_session
@@ -170,6 +171,7 @@ async def get_conversation_detail(
         ],
         runs=[
             ConversationRunVO(
+                cooperation=cooperation_snapshot(run.get('cooperation')),
                 run_id=run["id"],
                 status=run["status"],
                 current_stage=run["current_stage"],

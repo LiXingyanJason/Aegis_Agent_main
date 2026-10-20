@@ -407,7 +407,7 @@ onMounted(() => { void loadMemories() })
       </article>
     </section>
 
-    <el-dialog v-model="editorVisible" :close-on-click-modal="!saving && !detailLoading" :close-on-press-escape="!saving && !detailLoading" :show-close="!saving && !detailLoading" :title="editing ? '查看 / 编辑偏好' : '新增偏好'" width="min(560px, calc(100vw - 32px))">
+    <el-dialog v-model="editorVisible" class="memory-editor-dialog" :close-on-click-modal="!saving && !detailLoading" :close-on-press-escape="!saving && !detailLoading" :show-close="!saving && !detailLoading" :title="editing ? '查看 / 编辑偏好' : '新增偏好'" width="min(560px, calc(100vw - 32px))">
       <div v-loading="detailLoading">
         <el-alert v-if="editorError" :title="editorError" type="error" :closable="false" show-icon />
         <el-alert v-if="editing?.status === 'revoked'" title="此记忆已撤销。核对后先保存为待确认，再到列表点击“确认生效”；保存本身不会立即生效。" type="info" :closable="false" show-icon />

@@ -1,19 +1,14 @@
 """协同入口自己的规划子图；主路由不感知步骤、规划结果或失败细节。"""
 from time import monotonic
-from uuid import UUID
 from langgraph.graph import StateGraph, START, END
 from aegis_agent_worker.agent.contracts.decision import AgentHandoff
 from aegis_agent_worker.agent.graph.state import TaskGraphState
 from aegis_agent_worker.agent.routing.cooperation_registry import CooperationPlanError
 from aegis_agent_worker.agent.specialists.cooperation_planner import CooperationPlanOutputError
-from aegis_agent_worker.agent.workflows.cooperation.plan_state import verify_plan_state
-from aegis_agent_worker.repository.run_repository import ClaimedRun
+from .runtime.plan_state import verify_plan_state,require_engine
 from aegis_agent_worker.harness.policy_provider import DEFAULT_POLICIES
-
-
-def run_from(state):
-    return ClaimedRun(id=UUID(state['run_id']), tenant_id=UUID(state['tenant_id']),
-        user_id=UUID(state['user_id']), conversation_id=UUID(state['conversation_id']))
+from .runtime.progress import publish_progress
+from .runtime.run_context import run_from
 
 
 class CooperationPlanningWorkflow:
@@ -34,13 +29,15 @@ class CooperationPlanningWorkflow:
         return graph.compile()
 
     def _entry(self, state):
+        require_engine(state)
         if state.get('cooperation_plan') or state.get('cooperation_plan_binding'):
-            # 兼容迁移前已在主决策生成的计划；校验后复用，绝不重置预算或进度。
-            verify_plan_state(state, self._registry, required=True)
+            # 最终引擎内部重入仍须复核；不兼容开发期目录或引擎。
+            verify_plan_state(state, self._registry)
             return 'reuse'
         return 'plan'
 
     async def _plan(self, state):
+        await publish_progress(self._audit_service,state,'planning')
         started = monotonic()
         registry = self._registry()
         policy = self._policies.current(state).cooperation
@@ -49,9 +46,15 @@ class CooperationPlanningWorkflow:
         repair_count = 0
         try:
             handoff = AgentHandoff.model_validate(state['handoff'])
-            plan, repair_count = await self._planner.plan(message=state.get('latest_user_message', ''),
-                handoff=handoff, catalog=registry.catalog())
-            plan, binding = registry.validate(plan, has_verified_target=handoff.target is not None, policy=policy)
+            profile = registry.profile(handoff.domain,handoff.intent)
+            plan=registry.unique_plan(domain=handoff.domain,intent=handoff.intent,
+                has_verified_target=handoff.target is not None,policy=policy)
+            audit['planning_strategy']='deterministic' if plan is not None else 'agent'
+            if plan is None:
+                plan, repair_count = await self._planner.plan(message=state.get('latest_user_message', ''),
+                    handoff=handoff, catalog=registry.catalog(profile), task_profile=profile.describe())
+            plan, binding = registry.validate(plan, has_verified_target=handoff.target is not None, policy=policy,
+                domain=handoff.domain,intent=handoff.intent)
         except (CooperationPlanError, CooperationPlanOutputError, ValueError) as error:
             code = error.code if isinstance(error, CooperationPlanError) else 'invalid_plan_schema'
             question = '协同计划未通过步骤、依赖或来源校验，请明确邮件对象和会议目标后重试。'
@@ -65,6 +68,7 @@ class CooperationPlanningWorkflow:
             # 网络/预算错误仍按原异常分类失败，不变成格式修复或默认工具执行。
             await self._audit_service.record_plan(run_from(state), {**audit, 'outcome': 'model_failed',
                 'duration_ms': round((monotonic()-started)*1000)})
+            await publish_progress(self._audit_service,state,'failed','failed')
             raise
         return {'cooperation_plan': plan.model_dump(mode='json'), 'cooperation_plan_binding': binding,
             'cooperation_progress': {key: {'status': 'pending', 'result_ref': None} for key in binding['step_order']},
@@ -76,4 +80,6 @@ class CooperationPlanningWorkflow:
 
     async def _audit(self, state):
         await self._audit_service.record_plan(run_from(state), state['cooperation_plan_audit'])
+        if state.get('cooperation_error'):
+            await publish_progress(self._audit_service,state,'finished','unavailable')
         return {}

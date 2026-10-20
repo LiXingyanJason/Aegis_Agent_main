@@ -7,6 +7,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import text
+from app.repository.cooperation_progress_sql import LATEST_COOPERATION_PROGRESS
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.observability.structured_logging import get_current_trace_id
@@ -150,7 +151,8 @@ class ConversationRepository:
         result = await session.execute(
             text(
                 "SELECT id, status, current_stage, result_summary, error_code, error_message, "
-                "       started_at, finished_at, created_at "
+                "       started_at, finished_at, created_at, "
+                + LATEST_COOPERATION_PROGRESS +
                 "FROM agent_runs "
                 "WHERE conversation_id = :conversation_id "
                 "  AND tenant_id = :tenant_id "

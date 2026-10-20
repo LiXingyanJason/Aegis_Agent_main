@@ -4,6 +4,7 @@ from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel
+from app.vo.cooperation_progress_vo import CooperationProgressVO
 
 
 class RunStepDetailVO(BaseModel):
@@ -35,3 +36,4 @@ class RunDetailVO(BaseModel):
     finished_at: datetime | None
     created_at: datetime
     steps: list[RunStepDetailVO]
+    cooperation: CooperationProgressVO|None=None

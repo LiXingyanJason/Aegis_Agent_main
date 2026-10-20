@@ -268,3 +268,15 @@ async def test_mail_output_failure_preserves_specific_error_code():
     result = await orchestrator.execute(run.id)
     assert result.status == "failed" and result.error_code == "MODEL_OUTPUT_INVALID"
     assert repository.failed["error_code"] == "MODEL_OUTPUT_INVALID"
+
+
+@pytest.mark.asyncio
+async def test_cancelled_cooperation_is_not_overwritten_as_failed_or_completed():
+    from aegis_agent_worker.harness.exceptions import HarnessError
+    run=ClaimedRun(id=UUID(int=1),tenant_id=UUID(int=2),user_id=UUID(int=3),conversation_id=UUID(int=4))
+    repository=_FakeRunRepository(run)
+    class Runner:
+        async def invoke(self,run): raise HarnessError('EXECUTION_CANCELLED','cancelled')
+    orchestrator=AgentOrchestrator(_FakeDatabase(),_FakeLLMClient(),repository,graph_runner=Runner())
+    result=await orchestrator.execute(run.id)
+    assert result.status=='cancelled' and repository.failed is None and repository.completed is None

@@ -8,6 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.event.run_event import RunEvent
+from app.repository.cooperation_progress_sql import LATEST_COOPERATION_PROGRESS
 
 
 class AgentRunRepository:
@@ -29,7 +30,8 @@ class AgentRunRepository:
         result = await session.execute(
             text(
                 "SELECT id, conversation_id, status, current_stage, model_provider, model_name, "
-                "       result_summary, error_code, error_message, started_at, finished_at, created_at "
+                "       result_summary, error_code, error_message, started_at, finished_at, created_at, "
+                + LATEST_COOPERATION_PROGRESS +
                 "FROM agent_runs "
                 "WHERE id = :run_id AND tenant_id = :tenant_id AND user_id = :user_id"
             ),
@@ -52,6 +54,25 @@ class AgentRunRepository:
             {"run_id": run_id, "tenant_id": tenant_id},
         )
         return [dict(row) for row in result.mappings().all()]
+
+    async def find_mail_tool_result_for_user(
+        self, session: AsyncSession, *, run_id: UUID, tool_call_id: UUID,
+        tenant_id: UUID, user_id: UUID,
+    ) -> dict[str, Any] | None:
+        """只读取本人任务中成功的邮件列表工具快照，不开放通用原始工具载荷。"""
+        result = await session.execute(
+            text(
+                "SELECT tc.response_payload, tc.output_summary, tc.input_summary "
+                "FROM tool_calls AS tc "
+                "JOIN agent_runs AS ar ON ar.id = tc.run_id AND ar.tenant_id = tc.tenant_id "
+                "WHERE tc.id = :tool_call_id AND tc.run_id = :run_id "
+                "  AND tc.tenant_id = :tenant_id AND ar.user_id = :user_id "
+                "  AND tc.tool_name = 'mail.messages.list' AND tc.status = 'succeeded'"
+            ),
+            dict(run_id=run_id, tool_call_id=tool_call_id, tenant_id=tenant_id, user_id=user_id),
+        )
+        row = result.mappings().first()
+        return dict(row) if row is not None else None
 
     async def list_events_for_run(
         self,

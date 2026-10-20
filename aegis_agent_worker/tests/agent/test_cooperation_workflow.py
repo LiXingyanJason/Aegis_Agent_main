@@ -1,4 +1,4 @@
-"""8.1固定链路、真实专家结构化调用、根图中断与恢复；无外部服务。"""
+"""唯一协同链路的业务、安全与同run恢复；无外部服务。"""
 import json
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
@@ -18,7 +18,7 @@ from aegis_agent_worker.agent.workflows.cooperation.factory import CooperationWo
 from aegis_agent_worker.agent.graph.task_graph import TaskGraph,TaskGraphDependencies
 from aegis_agent_worker.agent.graph.graph_registry import GraphRegistry
 from aegis_agent_worker.harness.policy_provider import LEGACY_POLICY,COOPERATION_POLICY,COOPERATION_KNOWLEDGE_POLICY
-from aegis_agent_worker.service.cooperation.fixed_meeting_service import FixedMeetingService
+from aegis_agent_worker.service.cooperation.cooperation_service import CooperationService
 from aegis_agent_worker.repository.cooperation_repository import CooperationRepository
 from aegis_agent_worker.tool.contracts import ToolError
 
@@ -39,22 +39,44 @@ class Client:
         self.complete_json=self.complete
 
 
-def setup(*,plan_enabled=False,plan_response=None):
+def plan():
+    return {'version':1,'steps':[
+        {'step_id':'lookup','workflow':'cooperation_mail_requirements','depends_on':[],
+            'inputs':[{'kind':'task','name':'user_request'}],'expected_output':'MailRequirementsV1'},
+        {'step_id':'slots','workflow':'cooperation_calendar_candidates','depends_on':['lookup'],
+            'inputs':[{'kind':'step','step_id':'lookup','output_contract':'MailRequirementsV1'}],'expected_output':'CalendarCandidatesV1'},
+        {'step_id':'draft','workflow':'cooperation_meeting_draft','depends_on':['lookup','slots'],
+            'inputs':[{'kind':'step','step_id':'lookup','output_contract':'MailRequirementsV1'},
+                      {'kind':'step','step_id':'slots','output_contract':'CalendarCandidatesV1'}],'expected_output':'MeetingDraftV1'},
+    ]}
+
+
+
+class ModelPlanningFactory(CooperationWorkflowFactory):
+    """历史模型规划用例显式覆盖模型分支；生产不提供强制LLM的配置开关。"""
+    def build_registry(self,steps):
+        registry=super().build_registry(steps)
+        registry.unique_plan=lambda **kwargs:None
+        return registry
+
+
+def setup(*,plan_response=None):
     mail_client=Client(json.dumps(dict(action='query',query={'action':'filter','keywords':['续约']})),json.dumps({'excerpt':EXCERPT},ensure_ascii=False))
     calendar_client=Client(json.dumps(PLAN),json.dumps(dict(title='续约沟通',attendees=[],selected_slot_id=SLOT['slot_id'],reason='可信候选可容纳50分钟')))
     mail,calendar=MailAgent(mail_client),CalendarAgent(llm_client=calendar_client)
     query=SimpleNamespace(query=AsyncMock(return_value=([dict(id=SOURCE.id,source_version='v1')],'mock')))
-    source=SimpleNamespace(read_source=AsyncMock(return_value=dict(EMAIL)),verify_source=AsyncMock(),record=AsyncMock(),record_plan=AsyncMock())
+    source=SimpleNamespace(read_source=AsyncMock(return_value=dict(EMAIL)),verify_source=AsyncMock(),record_waiting=AsyncMock(),record_plan=AsyncMock(),
+        check_execution=AsyncMock(),verify_draft=AsyncMock(),record_summary=AsyncMock(),record_progress=AsyncMock(),
+        record_scheduled_step=AsyncMock(side_effect=lambda run,metadata,result:metadata))
     confirmation=SimpleNamespace(
         query_available_slots=AsyncMock(return_value={'availability':{'duration_minutes':50,'candidates':[SLOT]}}),
         create_recommended_draft=AsyncMock(return_value={'draft_id':str(UUID(int=7)),'approval_item_id':str(UUID(int=8)),
             'awaiting_confirmation':True,'assistant_content':'请核对会议草稿'}),
         create_approved_event=AsyncMock(return_value='external-1'))
     responses=[json.dumps(dict(decision='delegate',domain='mail',intent='arrange_meeting_from_mail',instruction=REQUEST))]
-    if plan_enabled: responses.append(plan_response or '{}')
+    responses.append(json.dumps(plan()) if plan_response is None else plan_response)
     main_client=Client(*responses)
-    factory=CooperationWorkflowFactory(mail,query,calendar,confirmation,source,plan_enabled=plan_enabled,
-        planner=CooperationPlanner(main_client) if plan_enabled else None)
+    factory=ModelPlanningFactory(mail,query,calendar,confirmation,source,CooperationPlanner(main_client))
     main=MainAgent(main_client)
     context=SimpleNamespace(load_history=AsyncMock(return_value=[{'role':'user','content':REQUEST}]))
     dependencies=TaskGraphDependencies(context_service=context,lifecycle=object(),llm_client=Client(),system_prompt='test',
@@ -63,6 +85,7 @@ def setup(*,plan_enabled=False,plan_response=None):
     graph=TaskGraph(dependencies).build(checkpointer=checkpointer)
     state={key:str(UUID(int=index)) for index,key in enumerate(('run_id','tenant_id','user_id','conversation_id'),1)}
     state['run_type']='conversation'
+    state['execution_policy_version']=COOPERATION_POLICY.version
     return SimpleNamespace(graph=graph,state=state,config={'configurable':{'thread_id':state['run_id']}},
         source=source,query=query,confirmation=confirmation,mail_client=mail_client,calendar_client=calendar_client,factory=factory,
         main_client=main_client,dependencies=dependencies,checkpointer=checkpointer)
@@ -70,7 +93,7 @@ def setup(*,plan_enabled=False,plan_response=None):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('decision',['approved','rejected'])
-async def test_root_fixed_chain_pauses_then_resumes_same_run_without_replanning(decision):
+async def test_root_cooperation_chain_pauses_then_resumes_same_run_without_replanning(decision):
     env=setup()
     paused=await env.graph.ainvoke(env.state,env.config)
     assert '__interrupt__' in paused, paused
@@ -80,14 +103,14 @@ async def test_root_fixed_chain_pauses_then_resumes_same_run_without_replanning(
     while snapshot.tasks and getattr(snapshot.tasks[0].state,'values',None) is not None:
         snapshot=snapshot.tasks[0].state
     current=snapshot.values
-    assert set(current['cooperation_results'])=={'mail_requirements','calendar_candidates','meeting_draft'}
-    assert current['cooperation_results']['meeting_draft']['status']=='waiting_confirmation'
+    assert set(current['cooperation_results'])=={'mail_requirements','calendar_candidates'}
+    assert current['cooperation_pending_result']['status']=='waiting_confirmation'
     assert current['cooperation_results']['calendar_candidates']['candidate_version']==snapshot_digest(current['availability'])
     env.confirmation.create_approved_event.assert_not_awaited()
     # State/Checkpoint/步骤审计不得保存原邮件或提取摘录。
     assert EMAIL['body_text'] not in str(env.graph.get_state(env.config))
     assert EXCERPT not in str(current['cooperation_results'])
-    assert EXCERPT not in str(env.source.record.await_args_list)
+    assert EXCERPT not in str(env.source.record_waiting.await_args_list)
     counts=(env.mail_client.complete.await_count,env.calendar_client.complete.await_count)
     finished=await env.graph.ainvoke(Command(resume=decision),env.config)
     assert finished['cooperation_results']['meeting_draft']['status']==('completed' if decision=='approved' else 'rejected')
@@ -96,8 +119,8 @@ async def test_root_fixed_chain_pauses_then_resumes_same_run_without_replanning(
     assert env.confirmation.create_recommended_draft.await_count==1
     assert env.confirmation.create_approved_event.await_count==(1 if decision=='approved' else 0)
     if decision=='approved':
-        assert env.source.verify_source.await_args.kwargs=={'fresh':True}
-    assert all(call.args[0].id==UUID(env.state['run_id']) for call in env.source.record.await_args_list)
+        assert any(call.kwargs=={'fresh':True} for call in env.source.verify_source.await_args_list)
+    assert all(call.args[0].id==UUID(env.state['run_id']) for call in env.source.record_waiting.await_args_list)
 
 
 @pytest.mark.asyncio
@@ -124,7 +147,8 @@ async def test_revocation_before_approval_resume_blocks_write():
     env=setup()
     await env.graph.ainvoke(env.state,env.config)
     env.source.verify_source.side_effect=ToolError('COOP_SOURCE_CHANGED','revoked')
-    with pytest.raises(ToolError): await env.graph.ainvoke(Command(resume='approved'),env.config)
+    done=await env.graph.ainvoke(Command(resume='approved'),env.config)
+    assert done['cooperation_summary']['status']=='unavailable'
     env.confirmation.create_approved_event.assert_not_awaited()
     assert env.confirmation.create_recommended_draft.await_count==1
 
@@ -205,7 +229,7 @@ async def test_source_service_gateway_ownership_connection_and_no_body_audit(own
     registry=ToolRegistry()
     registry.register(ToolDefinition(name='mail.messages.get',version='1',risk_level='read',mcp_server='email',description='read',
         connection_providers=('mock_mail',),required_connection_scope='mail.read'),handler)
-    service=FixedMeetingService(Database(),Runs(),ToolGateway(registry,connections=connections),repository=repository)
+    service=CooperationService(Database(),Runs(),ToolGateway(registry,connections=connections),repository=repository)
     calls=SimpleNamespace(create_running=AsyncMock(return_value=UUID(int=9)),succeed=AsyncMock(),fail=AsyncMock())
     service._calls=calls
     if not owned or not connected:

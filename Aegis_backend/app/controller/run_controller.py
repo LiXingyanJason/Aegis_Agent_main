@@ -16,6 +16,7 @@ from app.event.run_event import RunEvent, run_event_channel
 from app.security.dependencies import CurrentUser, get_current_user, get_tenant_session
 from app.service.run_service import RunService
 from app.vo.run_vo import RunDetailVO, RunStepDetailVO
+from app.vo.cooperation_progress_vo import cooperation_snapshot
 from app.service.memory_context_summary_service import MemoryContextSummaryService
 from app.vo.run_context_vo import RunContextSummaryVO
 
@@ -36,6 +37,26 @@ async def get_context_summary(run_id:UUID,response:Response,limit:int=Query(defa
     return success(result)
 
 
+@router.get('/{run_id}/mail-tool-results/{tool_call_id}')
+async def get_mail_tool_results(
+    run_id: UUID, tool_call_id: UUID, response: Response,
+    offset: int = Query(default=0, ge=0), limit: int = Query(default=100, ge=1, le=100),
+    current_user: CurrentUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_tenant_session),
+) -> dict[str, object]:
+    """按任务和工具调用读取完整邮件元数据快照，支持分页，不暴露邮件正文。"""
+    response.headers['Cache-Control'] = 'no-store'
+    try:
+        result = await _run_service.get_mail_tool_results(
+            session, current_user.user, run_id, tool_call_id, offset, limit,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=409, detail='历史邮件工具结果不可完整读取') from error
+    if result is None:
+        raise HTTPException(status_code=404, detail='任务或工具结果不存在或无权访问')
+    return success(result)
+
+
 @router.get("/{run_id}")
 async def get_run_detail(
     run_id: UUID,
@@ -48,6 +69,7 @@ async def get_run_detail(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="任务不存在或无权访问")
 
     response = RunDetailVO(
+        cooperation=cooperation_snapshot(run.get('cooperation')),
         run_id=run["id"],
         conversation_id=run["conversation_id"],
         status=run["status"],

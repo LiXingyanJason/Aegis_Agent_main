@@ -5,6 +5,7 @@ from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel
+from app.vo.cooperation_progress_vo import CooperationProgressVO
 
 
 class ConversationVO(BaseModel):
@@ -101,6 +102,7 @@ class ConversationRunVO(BaseModel):
     """会话内一次 Agent 运行及其可视化执行信息。"""
 
     run_id: UUID
+    cooperation: CooperationProgressVO|None=None
     status: str
     current_stage: str | None
     result_summary: str | None

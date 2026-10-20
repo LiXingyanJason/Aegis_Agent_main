@@ -6,17 +6,22 @@ from aegis_agent_worker.harness.policy_provider import DEFAULT_POLICIES
 from aegis_agent_worker.agent.contracts.cooperation_outputs import OUTPUT_CONTRACTS
 
 
-def verify_plan_state(state,registry_provider,*,required=False):
+ENGINE_VERSION='cooperation-scheduler-v4'
+
+
+def require_engine(state):
+    if state.get('cooperation_scheduler_version')!=ENGINE_VERSION:
+        raise CooperationPlanError('scheduler_version_mismatch')
+
+
+def verify_plan_state(state,registry_provider):
+    require_engine(state)
     if not state.get('cooperation_plan') and not state.get('cooperation_plan_binding'):
-        if required: raise CooperationPlanError('missing_validated_plan')
-        return None
-    if registry_provider is None: raise CooperationPlanError('plan_registry_unavailable')
+        raise CooperationPlanError('missing_validated_plan')
     registry=registry_provider()
     handoff=AgentHandoff.model_validate(state['handoff'])
-    if handoff.domain!='mail' or handoff.intent!='arrange_meeting_from_mail':
-        raise CooperationPlanError('plan_entry_mismatch')
     plan,binding=registry.validate(state.get('cooperation_plan'),has_verified_target=handoff.target is not None,
-        policy=DEFAULT_POLICIES.current(state).cooperation)
+        policy=DEFAULT_POLICIES.current(state).cooperation,domain=handoff.domain,intent=handoff.intent)
     if binding!=state.get('cooperation_plan_binding'):
         raise CooperationPlanError('plan_binding_changed')
     return plan,binding
@@ -24,7 +29,6 @@ def verify_plan_state(state,registry_provider,*,required=False):
 
 def update_plan_progress(state,result,registry_provider):
     validated=verify_plan_state(state,registry_provider)
-    if validated is None: return {}
     plan,binding=validated
     limits=DEFAULT_POLICIES.current(state).cooperation
     key=binding['phase_steps'][result.step_id]
@@ -52,7 +56,6 @@ def update_plan_progress(state,result,registry_provider):
 def verify_step_inputs(state,registry_provider,phase):
     """消费交接前核验已完成依赖；不是choose_next，也不把模型状态当授权。"""
     validated=verify_plan_state(state,registry_provider)
-    if validated is None: return
     plan,binding=validated
     key=binding['phase_steps'][phase]
     step=next(item for item in plan.steps if item.step_id==key)

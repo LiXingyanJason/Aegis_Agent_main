@@ -18,7 +18,6 @@ class GraphRegistry:
     def __init__(self, graphs: Mapping[str, Any] | None = None) -> None:
         self._graphs = dict(graphs or {})
         self._capabilities: list[ConversationCapability] = []
-        self._cooperation_capabilities = []
 
     def register(self, name: str, graph: Any) -> None:
         """注册一个供根图调用的子图。"""
@@ -48,15 +47,3 @@ class GraphRegistry:
 
     def capabilities(self) -> tuple[ConversationCapability, ...]:
         return tuple(self._capabilities)
-
-    def register_cooperation_capability(self, capability):
-        """独立步骤目录不暴露为普通对话入口，必须先绑定真实预构建节点。"""
-        from aegis_agent_worker.agent.routing.cooperation_registry import CooperationCapability
-        if not isinstance(capability,CooperationCapability) or capability.workflow not in self._graphs:
-            raise ValueError('协同步骤尚未注册为图节点')
-        if any(item.workflow==capability.workflow for item in self._cooperation_capabilities):
-            raise ValueError('重复协同步骤能力')
-        self._cooperation_capabilities.append(capability)
-
-    def cooperation_capabilities(self):
-        return tuple(self._cooperation_capabilities)

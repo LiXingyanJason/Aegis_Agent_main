@@ -12,6 +12,7 @@ from aegis_agent_worker.harness.policies.execution import TaskExecutionPolicy
 from aegis_agent_worker.harness.policy_provider import PolicyProvider, PolicyBundle, DEFAULT_POLICIES
 from aegis_agent_worker.repository.execution_repository import ExecutionRepository
 from aegis_agent_worker.repository.run_repository import ClaimedRun
+from aegis_agent_worker.harness.cooperation_scope import current_step_tags
 
 
 class AttemptAudit(dict):
@@ -70,6 +71,9 @@ class HarnessExecutor:
     ) -> AsyncIterator[dict]:
         """白名单 + 次数 + 时长 + 超时四重约束，并逐次审计入库。"""
         runtime = get_execution()  # 校验上下文
+        tags=current_step_tags()
+        if tags:
+            risk_flags=list(dict.fromkeys([*(risk_flags or []),*tags]))
         run = runtime.run
         if kind == "tool" and label not in self.policy.tools(run.run_type):
             raise HarnessError("TOOL_SCOPE_BLOCKED", "当前任务不允许调用该工具")

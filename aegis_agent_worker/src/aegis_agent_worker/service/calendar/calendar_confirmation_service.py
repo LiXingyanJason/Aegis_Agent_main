@@ -411,13 +411,16 @@ async def _load_approved_draft(session, *, run: ClaimedRun, draft_id: UUID, appr
         text(
             "SELECT d.title, d.description, d.start_at, d.end_at, d.timezone "
             "FROM calendar_event_drafts d JOIN approval_items ai ON ai.resource_id = d.id "
+            "JOIN agent_runs ar ON ar.id=d.run_id AND ar.tenant_id=d.tenant_id AND ar.user_id=d.user_id "
             "JOIN approval_decisions ad ON ad.approval_item_id = ai.id "
             "WHERE d.id = :draft_id AND d.run_id = :run_id AND d.tenant_id = :tenant_id "
             "AND ai.id = :approval_item_id AND ai.run_id = :run_id "
             "AND ai.status = 'approved_executing' AND ad.decision = 'approved' "
+            "AND ar.status='running' AND d.user_id=:user_id AND ai.tenant_id=d.tenant_id AND ai.user_id=d.user_id "
+            "AND ai.draft_version=d.version AND ai.expires_at>now() "
             "FOR UPDATE OF d, ai"
         ),
-        {"draft_id": draft_id, "approval_item_id": approval_item_id, "run_id": run.id, "tenant_id": run.tenant_id},
+        {"draft_id": draft_id, "approval_item_id": approval_item_id, "run_id": run.id, "tenant_id": run.tenant_id,"user_id":run.user_id},
     )
     return result.mappings().first()
 

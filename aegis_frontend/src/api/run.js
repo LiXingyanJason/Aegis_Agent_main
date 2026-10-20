@@ -11,6 +11,14 @@ export async function getRunContextSummary(runId, { signal } = {}) {
   return response.data.data
 }
 
+export async function getRunMailToolResults(runId, toolCallId, { offset = 0, limit = 100, signal } = {}) {
+  const response = await http.get(
+    '/runs/' + encodeURIComponent(runId) + '/mail-tool-results/' + encodeURIComponent(toolCallId),
+    { params: { offset, limit }, signal },
+  )
+  return response.data.data
+}
+
 function runEventsUrl(runId) {
   const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
   return apiBaseUrl + '/runs/' + encodeURIComponent(runId) + '/events'

@@ -40,10 +40,10 @@ from aegis_agent_worker.service.runtime.card_context_service import CardContextS
 from aegis_agent_worker.service.runtime.main_context_tool_service import MainContextToolService
 from aegis_agent_worker.harness.policy_provider import PolicyProvider
 from aegis_agent_worker.harness.policy_provider import (LEGACY_POLICY, KNOWLEDGE_CONTRACT_POLICY,
-    COOPERATION_POLICY, COOPERATION_KNOWLEDGE_POLICY,COOPERATION_PLAN_POLICY,COOPERATION_PLAN_KNOWLEDGE_POLICY)
+    COOPERATION_POLICY, COOPERATION_KNOWLEDGE_POLICY)
 from aegis_agent_worker.agent.workflows.cooperation.factory import CooperationWorkflowFactory
 from aegis_agent_worker.agent.specialists.cooperation_planner import CooperationPlanner
-from aegis_agent_worker.service.cooperation.fixed_meeting_service import FixedMeetingService
+from aegis_agent_worker.service.cooperation.cooperation_service import CooperationService
 from aegis_agent_worker.agent.specialists.knowledge_agent import KnowledgeAgent
 from aegis_agent_worker.agent.workflows.knowledge.factory import KnowledgeWorkflowFactory
 from aegis_agent_worker.service.knowledge.evidence_service import EvidenceService
@@ -77,12 +77,9 @@ async def run_worker() -> None:
         # SQLAlchemy 使用 asyncpg URL；LangGraph 的 AsyncPostgresSaver 使用 psycopg URL。
         async with AsyncPostgresSaver.from_conn_string(settings.database_psycopg_url) as checkpointer:
             await checkpointer.setup() # 建立checkpointer数据库表，我们通过run_id关联每一个checkpointer
-            default_policy=(COOPERATION_KNOWLEDGE_POLICY if settings.knowledge_query_enabled else COOPERATION_POLICY) if settings.fixed_cooperation_enabled else (
+            default_policy=(COOPERATION_KNOWLEDGE_POLICY if settings.knowledge_query_enabled else COOPERATION_POLICY) if settings.cooperation_enabled else (
                 KNOWLEDGE_CONTRACT_POLICY if settings.knowledge_query_enabled else LEGACY_POLICY)
-            if settings.cooperation_planning_enabled:
-                default_policy=COOPERATION_PLAN_KNOWLEDGE_POLICY if settings.knowledge_query_enabled else COOPERATION_PLAN_POLICY
-            policies = PolicyProvider((LEGACY_POLICY, KNOWLEDGE_CONTRACT_POLICY,COOPERATION_POLICY,COOPERATION_KNOWLEDGE_POLICY,
-                COOPERATION_PLAN_POLICY,COOPERATION_PLAN_KNOWLEDGE_POLICY),
+            policies = PolicyProvider((LEGACY_POLICY, KNOWLEDGE_CONTRACT_POLICY,COOPERATION_POLICY,COOPERATION_KNOWLEDGE_POLICY),
                 default_version=default_policy.version)
             harness = HarnessExecutor(database, policy_provider=policies)
             llm_client = GuardedLLMClient(OpenAICompatibleClient(settings), harness)
@@ -136,12 +133,11 @@ async def run_worker() -> None:
                 progress_service=KnowledgeWorkflowProgress(database,runs,events),
             )
             workflow_factories=(calendar_workflows,mail_workflows,knowledge_workflows)
-            if settings.fixed_cooperation_enabled:
+            if settings.cooperation_enabled:
                 workflow_factories=(*workflow_factories,CooperationWorkflowFactory(
                     mail_workflows.mail_agent,mail_workflows.query_service,calendar_workflows.calendar_agent,
-                    calendar_confirmation,FixedMeetingService(database,runs,tools,events),memory_context,
-                    plan_enabled=settings.cooperation_planning_enabled,
-                    planner=CooperationPlanner(llm_client,policy_provider=policies) if settings.cooperation_planning_enabled else None))
+                    calendar_confirmation,CooperationService(database,runs,tools,events),
+                    CooperationPlanner(llm_client,policy_provider=policies),memory_context))
             orchestrator = AgentOrchestrator(
                 database,
                 llm_client,
