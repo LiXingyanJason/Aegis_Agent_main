@@ -63,6 +63,7 @@ KNOWLEDGE_CONTRACT_POLICY = replace(LEGACY_POLICY, execution=replace(
 ))
 
 
+
 class PolicyProvider:
     def __init__(self, profiles=None, default_version="harness-v1"):
         profiles = tuple(profiles) if profiles is not None else (LEGACY_POLICY,)
