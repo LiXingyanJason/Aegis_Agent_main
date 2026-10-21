@@ -177,3 +177,24 @@ async def test_prepared_prompt_over_budget_drops_memory_before_audit_and_rebuild
     assert not memories.usages and client.complete.await_args.args[0][0].content=='无记忆'
     assert execution.finished[0][1]['memory_count']==0
     assert execution.finished[0][1]['memory_selection_reason']=='memory_budget_exhausted'
+
+
+@pytest.mark.asyncio
+async def test_team_calendar_planning_uses_only_timezone_and_respects_verified_timezone():
+    run,service,harness,client,memories,execution=setup()
+    memories.rows=calendar_rows()
+    client.complete.return_value='{"action":"finish_unavailable"}'
+    agent=CalendarAgent(llm_client=GuardedLLMClient(client,harness))
+    async with harness.scope(run):
+        with memory_call_scope(service,run,'calendar_planning','安排50分钟会议'):
+            await agent.plan_team_meeting(task='安排50分钟会议',requirements=None,observations={},answers=[],remaining_rounds=2)
+        messages=client.complete.await_args.args[0]
+        assert '默认时区：Asia/Tokyo' in str(messages)
+        assert 'private@example.com' not in str(messages) and '会议永远有空' not in str(messages)
+        assert 'meeting_preferences' not in str(messages)
+        with memory_call_scope(service,run,'calendar_planning','已核验时区 Asia/Shanghai'):
+            await agent.plan_team_meeting(task='保留已核验日期',requirements={'timezone':'Asia/Shanghai'},
+                observations={},answers=[],remaining_rounds=1)
+        assert '默认时区：Asia/Shanghai' in str(client.complete.await_args.args[0])
+    assert len(memories.usages)==1
+    assert execution.finished[-1][1]['memory_selection_reason']=='explicit_timezone_override'

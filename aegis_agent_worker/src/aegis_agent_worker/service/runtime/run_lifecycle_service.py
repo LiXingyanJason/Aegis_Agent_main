@@ -139,7 +139,7 @@ class RunLifecycleService:
         context = TenantContext(tenant_id=run.tenant_id, user_id=run.user_id)
         async with self._database.session() as session:
             async with tenant_transaction(session, context):
-                await self._runs.fail_run(
+                changed = await self._runs.fail_run(
                     session,
                     run_id=run.id,
                     tenant_id=run.tenant_id,
@@ -147,7 +147,7 @@ class RunLifecycleService:
                     error_code=error_code,
                     error_message=error_message,
                 )
-                if self._events is not None:
+                if changed is not False and self._events is not None:
                     event = await self._runs.append_event(
                         session,
                         run_id=run.id,

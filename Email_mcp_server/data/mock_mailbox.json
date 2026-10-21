@@ -41,5 +41,57 @@
     "list_preview": "本月新增了权限模板和审计报表能力。",
     "body_text": "您好：\n\n十月产品更新已发布，包含权限模板、审计报表和连接器稳定性改进。此邮件仅供了解，无需回复。\n\nAegis 云服务团队",
     "attachments": []
+  },
+  {
+    "provider_message_id": "mock-mail-renewal-meeting-004",
+    "provider_thread_id": "mock-thread-renewal-meeting-004",
+    "sender_name": "林悦（星河服务）",
+    "sender_email": "linyue@xinghe.example.com",
+    "recipients": ["jason@example.com"],
+    "subject": "协同测试A｜星河服务续约会议",
+    "received_at": "2026-10-20T08:00:00+00:00",
+    "source_version": "mock-v1",
+    "list_preview": "希望安排一次续约会议，会议时间范围及参会要求见正文。",
+    "body_text": "Jason，您好：\n\n我们希望安排一次星河服务续约会议，会议主题为“星河服务续约方案确认”。请在北京时间（Asia/Shanghai）2026-10-26 09:00 至 12:00 之间选择连续50分钟。请邀请林悦（linyue@xinghe.example.com）及我方同事周晨（zhouchen@xinghe.example.com）。\n\n请先提供会议草稿供核对，不要直接创建日历事件。\n\n林悦\n（虚构测试邮件）",
+    "attachments": []
+  },
+  {
+    "provider_message_id": "mock-mail-renewal-meeting-005",
+    "provider_thread_id": "mock-thread-renewal-meeting-005",
+    "sender_name": "陈航（云杉平台）",
+    "sender_email": "chenhang@yunshan.example.com",
+    "recipients": ["jason@example.com"],
+    "subject": "协同测试B｜云杉平台续约会议",
+    "received_at": "2026-10-20T08:10:00+00:00",
+    "source_version": "mock-v1",
+    "list_preview": "续约会议时间与星河客户不同，请读取本邮件的具体要求。",
+    "body_text": "Jason，您好：\n\n关于云杉平台续约，请安排主题为“云杉平台续约范围讨论”的会议。允许的时间范围是北京时间（Asia/Shanghai）2026-10-27 14:00 至 17:00，会议时长30分钟。参会人请明确添加 chenhang@yunshan.example.com。\n\n这是云杉客户独立的安排，不要混用其他客户邮件中的日期、时长或参会人。请先起草，等待核对。\n\n陈航\n（虚构测试邮件）",
+    "attachments": []
+  },
+  {
+    "provider_message_id": "mock-mail-renewal-meeting-006",
+    "provider_thread_id": "mock-thread-renewal-meeting-006",
+    "sender_name": "苏宁（青禾系统）",
+    "sender_email": "suning@qinghe.example.com",
+    "recipients": ["jason@example.com"],
+    "subject": "协同测试C｜青禾系统续约会议",
+    "received_at": "2026-10-20T08:20:00+00:00",
+    "source_version": "mock-v1",
+    "list_preview": "已提供续约会议可选日期，会议时长尚待确定。",
+    "body_text": "Jason，您好：\n\n请为青禾系统续约安排一次会议，主题为“青禾系统续约需求核对”。可选时间是北京时间（Asia/Shanghai）2026-10-28 09:00 至 12:00。请邀请 suning@qinghe.example.com。\n\n会议需要多长时间尚未确定，请先向用户确认时长，不要从其他客户邮件沿用时长，也不要自行默认50分钟。\n\n苏宁\n（虚构测试邮件）",
+    "attachments": []
+  },
+  {
+    "provider_message_id": "mock-mail-renewal-meeting-007",
+    "provider_thread_id": "mock-thread-renewal-meeting-007",
+    "sender_name": "许安（远山项目）",
+    "sender_email": "xuan@yuanshan.example.com",
+    "recipients": ["jason@example.com"],
+    "subject": "协同测试D｜远山项目续约会议",
+    "received_at": "2026-10-20T08:30:00+00:00",
+    "source_version": "mock-v1",
+    "list_preview": "续约会议预计45分钟，日期和可用时间范围尚待确认。",
+    "body_text": "Jason，您好：\n\n我们计划讨论远山项目续约，主题为“远山项目续约评估”，会议时长45分钟，参会人为 xuan@yuanshan.example.com。\n\n会议日期以及可用时间范围还没有确定，需要向用户补充询问。合同到期日为2026-11-30，此日期仅是合同期限，不是会议日期。请勿使用合同到期日自动安排会议。\n\n许安\n（虚构测试邮件）",
+    "attachments": []
   }
 ]

@@ -2,7 +2,6 @@
 
 import json
 from datetime import datetime, timedelta
-from hashlib import sha256
 from time import monotonic
 from zoneinfo import ZoneInfo
 from typing import Any
@@ -20,13 +19,18 @@ from aegis_agent_worker.config.database import Database, TenantContext, tenant_t
 from aegis_agent_worker.event.run_event import RunEventPublisher
 from aegis_agent_worker.repository.run_repository import AgentRunRepository, ClaimedRun
 from aegis_agent_worker.repository.tool_repository import ToolCallRepository
+from aegis_agent_worker.repository.calendar_draft_repository import (
+    CalendarDraftRepository, create_calendar_draft as _create_draft, create_calendar_approval as _create_approval_item,
+)
 from aegis_agent_worker.service.calendar.calendar_tool_execution_service import CalendarToolExecutionService
 from aegis_agent_worker.tool.contracts import ToolError, ToolInvocation
 from aegis_agent_worker.tool.gateway import ToolGateway
 
 
-class CalendarWriteError(RuntimeError):
+class CalendarWriteError(ToolError):
     """已批准日历写入未完成时抛出的受控错误。"""
+    def __init__(self, message, code="CALENDAR_WRITE_FAILED"):
+        super().__init__(code, message)
 
 
 class CalendarConfirmationService:
@@ -202,11 +206,17 @@ class CalendarConfirmationService:
         started_at = monotonic()
         async with self._database.session() as session:
             async with tenant_transaction(session, context):
+                records=CalendarDraftRepository()
+                completed=await records.completed_execution(session,run,draft_id,approval_item_id)
+                if completed:
+                    return completed
                 draft = await _load_approved_draft(
                     session, run=run, draft_id=draft_id, approval_item_id=approval_item_id
                 )
                 if draft is None:
-                    raise CalendarWriteError("会议草稿未获批准、已失效或不属于当前任务")
+                    raise CalendarWriteError("会议草稿未获批准、已失效或不属于当前任务", "CALENDAR_APPROVAL_INVALID")
+                if await records.has_execution(session,run,approval_item_id):
+                    raise CalendarWriteError("已有外部执行记录，请先核对结果，不自动重复写入", "CALENDAR_EXECUTION_UNCERTAIN")
                 attendees = await _load_attendees(session, run.tenant_id, draft_id)
                 request_payload = {
                     "title": draft["title"], "description": draft["description"],
@@ -223,6 +233,7 @@ class CalendarConfirmationService:
                     session, tenant_id=run.tenant_id, user_id=run.user_id, run_id=run.id,
                     invocation=ToolInvocation("calendar.create_event", request_payload),
                     allow_confirmed_write=True,
+                    required_connection_id=draft["connection_id"],
                 )
                 execution_id = await _create_execution(
                     session, run=run, approval_item_id=approval_item_id,
@@ -249,7 +260,7 @@ class CalendarConfirmationService:
             await self._mark_write_failed(
                 run, context, approval_item_id, execution_id, step_id, tool_call_id, error
             )
-            raise CalendarWriteError(error.message) from error
+            raise CalendarWriteError(error.message, error.code) from error
 
         duration_ms = int((monotonic() - started_at) * 1000)
         external_event_id = str(result.response_payload.get("external_event_id", ""))
@@ -258,7 +269,7 @@ class CalendarConfirmationService:
                 run, context, approval_item_id, execution_id, step_id, tool_call_id,
                 ToolError("TOOL_INVALID_RESPONSE", "日历服务未返回外部事件标识"),
             )
-            raise CalendarWriteError("日历服务未返回外部事件标识")
+            raise CalendarWriteError("日历服务未返回外部事件标识", "TOOL_INVALID_RESPONSE")
         async with self._database.session() as session:
             async with tenant_transaction(session, context):
                 await self._tool_calls.succeed(
@@ -330,43 +341,6 @@ def _meeting_interval(
     return start_at, end_at
 
 
-async def _create_draft(session, *, run: ClaimedRun, connection_id: UUID, title: str, start_at: datetime, end_at: datetime, attendees: list[str], description: str, timezone: str = "Asia/Shanghai") -> UUID:
-    result = await session.execute(
-        text(
-            "INSERT INTO calendar_event_drafts "
-            "(tenant_id, user_id, run_id, connection_id, calendar_external_id, calendar_name, title, description, start_at, end_at, timezone, status) "
-            "VALUES (:tenant_id, :user_id, :run_id, :connection_id, 'primary', '主日历', :title, "
-            ":description, :start_at, :end_at, :timezone, 'pending_approval') RETURNING id"
-        ),
-        {"tenant_id": run.tenant_id, "user_id": run.user_id, "run_id": run.id, "connection_id": connection_id, "title": title[:500], "description": description[:4000], "start_at": start_at, "end_at": end_at, "timezone": timezone},
-    )
-    draft_id = result.mappings().one()["id"]
-    for email in sorted(set(attendees)):
-        await session.execute(
-            text(
-                "INSERT INTO calendar_draft_attendees (tenant_id, draft_id, email) "
-                "VALUES (:tenant_id, :draft_id, :email) ON CONFLICT (draft_id, email) DO NOTHING"
-            ),
-            {"tenant_id": run.tenant_id, "draft_id": draft_id, "email": email},
-        )
-    return draft_id
-
-
-async def _create_approval_item(session, *, run: ClaimedRun, draft_id: UUID, title: str, start_at: datetime, end_at: datetime, attendees: list[str], recommendation_preview: dict[str, Any], timezone: str = "Asia/Shanghai") -> UUID:
-    preview = {"title": title, "start_at": start_at.isoformat(), "end_at": end_at.isoformat(), "attendees": attendees, "timezone": timezone, "recommendation": recommendation_preview}
-    parameters_hash = sha256(json.dumps(preview, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
-    result = await session.execute(
-        text(
-            "INSERT INTO approval_items "
-            "(tenant_id, user_id, run_id, action, risk_level, resource_type, resource_id, title, preview_snapshot, parameters_hash, draft_version, expires_at) "
-            "VALUES (:tenant_id, :user_id, :run_id, 'calendar.create_event', 'write', "
-            "'calendar_event_draft', :draft_id, :title, CAST(:preview AS jsonb), :parameters_hash, 1, now() + interval '24 hours') RETURNING id"
-        ),
-        {"tenant_id": run.tenant_id, "user_id": run.user_id, "run_id": run.id, "draft_id": draft_id, "title": f"创建日历事件：{title}"[:256], "preview": json.dumps(preview, ensure_ascii=False), "parameters_hash": parameters_hash},
-    )
-    return result.mappings().one()["id"]
-
-
 def explicit_interval_availability(decision: CalendarDecision, summary) -> dict:
     """对已查询的指定范围做确定性冲突检查，不受自动推荐工作时段限制。"""
     if not isinstance(summary, dict) or not isinstance(summary.get("events"), list):
@@ -409,15 +383,20 @@ async def _load_approved_draft(session, *, run: ClaimedRun, draft_id: UUID, appr
     """锁定草稿与确认项，并确认批准决定与当前任务、租户完全一致。"""
     result = await session.execute(
         text(
-            "SELECT d.title, d.description, d.start_at, d.end_at, d.timezone "
+            "SELECT d.title, d.description, d.start_at, d.end_at, d.timezone, d.connection_id "
             "FROM calendar_event_drafts d JOIN approval_items ai ON ai.resource_id = d.id "
             "JOIN approval_decisions ad ON ad.approval_item_id = ai.id "
             "WHERE d.id = :draft_id AND d.run_id = :run_id AND d.tenant_id = :tenant_id "
+            "AND d.user_id=:user_id AND d.status='pending_approval' "
             "AND ai.id = :approval_item_id AND ai.run_id = :run_id "
+            "AND ai.tenant_id=d.tenant_id AND ai.user_id=d.user_id AND ai.draft_version=d.version "
+            "AND ai.resource_type='calendar_event_draft' AND ai.action='calendar.create_event' "
+            "AND ai.expires_at>now() AND ad.tenant_id=d.tenant_id AND ad.actor_user_id=d.user_id AND ad.checked=true "
             "AND ai.status = 'approved_executing' AND ad.decision = 'approved' "
             "FOR UPDATE OF d, ai"
         ),
-        {"draft_id": draft_id, "approval_item_id": approval_item_id, "run_id": run.id, "tenant_id": run.tenant_id},
+        {"draft_id": draft_id, "approval_item_id": approval_item_id, "run_id": run.id,
+         "tenant_id": run.tenant_id, "user_id": run.user_id},
     )
     return result.mappings().first()
 

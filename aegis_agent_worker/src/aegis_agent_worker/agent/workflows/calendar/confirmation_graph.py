@@ -23,6 +23,7 @@ from aegis_agent_worker.agent.contracts.calendar import CalendarDecision
 from aegis_agent_worker.agent.workflows.calendar.planning_workflow import CalendarPlanningWorkflow
 from aegis_agent_worker.agent.contracts.decision import AgentHandoff
 from aegis_agent_worker.llm.memory_scope import memory_call_scope
+from aegis_agent_worker.agent.workflows.calendar.approval_workflow import CalendarApprovalWorkflow
 
 
 class CalendarWorkflowState(TypedDict, total=False):
@@ -229,39 +230,11 @@ class CalendarConfirmationWorkflow:
     @staticmethod
     def _wait(state: TaskGraphState) -> dict[str, str]:
         """在确认项已经生成时暂停；无草稿错误则正常结束为不可用提示。"""
-        if not state.get("awaiting_confirmation"):
-            return {"approval_decision": "unavailable"}
-        decision = interrupt(
-            {
-                "run_id": state["run_id"],
-                "draft_id": state.get("draft_id"),
-                "approval_item_id": state.get("approval_item_id"),
-                "status": "waiting_confirmation",
-            }
-        )
-        return {"approval_decision": str(decision)}
+        return CalendarApprovalWorkflow.wait(state)
 
     async def _finish(self, state: TaskGraphState) -> dict[str, str]:
         """批准后调用唯一允许的写入服务；拒绝时不触发任何外部副作用。"""
-        confirmation_error = state.get("confirmation_error")
-        if isinstance(confirmation_error, str) and confirmation_error:
-            return {"assistant_content": confirmation_error}
-        if state.get("approval_decision") == "approved":
-            if self._confirmation_service is None:
-                raise RuntimeError("会议确认服务尚未配置")
-            draft_id = state.get("draft_id")
-            approval_item_id = state.get("approval_item_id")
-            if not isinstance(draft_id, str) or not isinstance(approval_item_id, str):
-                raise RuntimeError("恢复的会议确认图缺少草稿或确认项标识")
-            external_event_id = await self._confirmation_service.create_approved_event(
-                _conversation_run_from_state(state),
-                draft_id=UUID(draft_id),
-                approval_item_id=UUID(approval_item_id),
-            )
-            return {"assistant_content": f"会议已创建到日历，事件标识：{external_event_id}。"}
-        if state.get("approval_decision") == "rejected":
-            return {"assistant_content": "已记录你拒绝创建该会议，日历不会发生任何变更。"}
-        return {"assistant_content": "未生成可确认的会议草稿，日历不会发生任何变更。"}
+        return await CalendarApprovalWorkflow(self._confirmation_service).finish(state)
 
 
 def _conversation_run_from_state(state: TaskGraphState) -> ClaimedRun:

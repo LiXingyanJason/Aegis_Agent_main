@@ -22,7 +22,7 @@ async function signIn() {
   <main class="auth-page">
     <div class="auth-layout">
       <section class="auth-intro">
-        <router-link class="brand auth-brand" to="/login"><span class="mark">⌾</span>Aegis PA</router-link>
+        <router-link class="brand auth-brand" to="/login">Aegis PA</router-link>
         <span class="eyebrow">安全协作工作台</span>
         <h1>让 Agent 在你的授权范围内工作</h1>
         <p>登录后，你可以管理个人对话、邮件草稿、日程确认和长期记忆。外部写入操作仍需逐项确认。</p>

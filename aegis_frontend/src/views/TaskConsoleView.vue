@@ -1,11 +1,16 @@
 <script setup>
+import AppNavigation from '../components/AppNavigation.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getRunDetail, subscribeRunEvents } from '../api/run'
+import { subscribeRunEvents } from '../api/run'
 import MailCandidateCard from '../components/MailCandidateCard.vue'
 import KnowledgeSourceCard from '../components/KnowledgeSourceCard.vue'
 import KnowledgeSourceDialog from '../components/KnowledgeSourceDialog.vue'
 import { citationParts, knowledgeRetrievalSummary, knowledgeSearchError } from '../utils/knowledge'
+import { cooperationActorLabel, cooperationResultLabel, cooperationStageLabel, groupToolPreviews } from '../utils/cooperation'
+import { pendingInputRunsAfterMessage, unanchoredPendingInputRuns } from '../utils/inputRequest'
+import { newestRunsFirst } from '../utils/runOrder'
+import { runProgressText } from '../utils/runProgress'
 import RunInputPanel from '../components/RunInputPanel.vue'
 import RunMemoryContextDialog from '../components/RunMemoryContextDialog.vue'
 import { useAuthStore } from '../store/auth'
@@ -23,12 +28,9 @@ const isPolling = ref(false)
 const isRunActive = ref(false)
 const messagesElement = ref(null)
 const inputPanelKey = ref(0)
-const inputFollowup = ref('')
 const selectedSource = ref(null)
 const sourceRunId = ref(null)
 const memoryRunId = ref(null)
-let inputPollTimer = null
-let inputPollingRunId = null
 let pollTimer = null
 let pollingRunId = null
 let pollingInFlight = false
@@ -36,51 +38,70 @@ let streamAbortController = null
 let streamingRunId = null
 let streamRetryTimer = null
 let selectionVersion = 0
+const replayControllers = new Set()
 
 const activeConversation = computed(() => conversations.current)
 watch(() => activeConversation.value?.conversation_id, () => { memoryRunId.value = null })
 const isSubmitting = computed(() => conversations.creating || conversations.sending)
-const hasMailCandidates = computed(() => Object.values(conversations.artifactsByRun)
-  .some((artifacts) => artifacts.some((artifact) => artifact.artifact_type === 'mail_candidates')))
+const conversationRunIds = computed(() => conversations.runs.map((run) => run.run_id))
+const pendingInputRunCount = computed(() => conversations.runs.filter((run) => run.status === 'waiting_input').length)
+const recentRuns = computed(() => newestRunsFirst(conversations.runs))
+const currentProgressRun = computed(() => {
+  const newest = recentRuns.value[0]
+  return newest && !['completed', 'failed', 'cancelled'].includes(newest.status) ? newest : null
+})
+const currentProgressText = computed(() => runProgressText(
+  currentProgressRun.value,
+  currentProgressRun.value ? cooperationTimeline(currentProgressRun.value.run_id) : [],
+))
+const progressAnimating = computed(() => ['queued', 'running'].includes(currentProgressRun.value?.status))
 
-function stopInputPolling() {
-  if (inputPollTimer !== null) window.clearInterval(inputPollTimer)
-  inputPollTimer = null
-  inputPollingRunId = null
+watch(() => [conversations.messages.length, currentProgressText.value], async () => {
+  const element = messagesElement.value
+  if (!element || element.scrollHeight - element.scrollTop - element.clientHeight > 80) return
+  await nextTick()
+  if (messagesElement.value === element) element.scrollTop = element.scrollHeight
+})
+
+function scrollToPendingInput() {
+  const run = conversations.runs.find((item) => item.status === 'waiting_input')
+  const card = run && messagesElement.value?.querySelector(`#run-input-${run.run_id}`)
+  card?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
-async function pollInputRun(runId) {
-  if (inputPollingRunId !== runId) return
-  try {
-    const run = await getRunDetail(runId)
-    if (inputPollingRunId !== runId) return
-    if (run.status === 'completed') {
-      inputFollowup.value = '起草任务已完成，请在邮件管理的“保存草稿”中核对，邮件不会自动发送。'
-      stopInputPolling()
-    } else if (['failed', 'cancelled'].includes(run.status)) {
-      inputFollowup.value = run.error_message || '起草任务未完成，请重新发起。'
-      stopInputPolling()
-    } else if (run.status === 'waiting_input') {
-      inputFollowup.value = '任务仍需补充信息，请回答下方的新问题。'
-      inputPanelKey.value += 1
-      stopInputPolling()
-    }
-  } catch {
-    // 临时网络错误不改变后端任务状态，下次轮询继续。
+function cooperationTimeline(runId) {
+  return conversations.cooperationByRun[runId] ?? []
+}
+
+function currentCooperation(runId) {
+  return cooperationTimeline(runId).at(-1)
+}
+
+function cooperationHandler(run) {
+  if (['completed', 'failed', 'cancelled'].includes(run.status)) {
+    return cooperationActorLabel(currentCooperation(run.run_id)?.cooperation?.actor)
   }
+  if (run.status === 'waiting_input') return '等待用户补充'
+  if (run.status === 'waiting_confirmation') return '等待用户确认'
+  if (currentCooperation(run.run_id)?.phase === 'finished') return '等待后续确认'
+  return cooperationActorLabel(currentCooperation(run.run_id)?.cooperation?.actor)
 }
 
 function resumeInputRun(runId) {
-  stopInputPolling()
-  inputFollowup.value = '补充信息已提交，正在继续起草…'
-  inputPollingRunId = runId
-  inputPollTimer = window.setInterval(() => { void pollInputRun(runId) }, 1500)
-  void pollInputRun(runId)
+  if (activeConversation.value && conversationRunIds.value.includes(runId)) {
+    startRunTracking(runId, activeConversation.value.conversation_id)
+    void conversations.refreshRun(runId).catch(() => {
+      // SSE 或后续轮询仍会同步权威状态。
+    })
+  }
 }
 
-function cancelInputRun() {
-  stopInputPolling()
-  inputFollowup.value = '起草任务已取消或补充问题已过期。'
+function cancelInputRun(runId) {
+  if (activeConversation.value && conversationRunIds.value.includes(runId)) {
+    void conversations.refreshRun(runId).catch(() => {
+      // SSE 或下次进入会话时会恢复权威状态。
+    })
+  }
 }
 
 function formatTime(value) {
@@ -258,11 +279,9 @@ async function loadHistory() {
 async function restoreConversation(conversationId, syncUrl = true) {
   const selection = ++selectionVersion
   stopRunTracking()
-  stopInputPolling()
   isTemporaryConversation.value = false
   draftMessage.value = ''
   pendingClientMessageId.value = null
-  inputFollowup.value = ''
   error.value = ''
   try {
     const detail = await conversations.loadConversation(conversationId)
@@ -272,10 +291,12 @@ async function restoreConversation(conversationId, syncUrl = true) {
     draftMessage.value = ''
     pendingClientMessageId.value = null
     const activeRun = detail.runs?.find(isTrackableRun)
-    if (activeRun) {
-      isRunActive.value = true
-      startRunPolling(activeRun.run_id, conversationId)
-    }
+      ?? detail.runs?.find((run) => run.status === 'waiting_confirmation')
+    if (activeRun) startRunTracking(activeRun.run_id, conversationId, {
+      locksComposer: activeRun.status !== 'waiting_confirmation',
+    })
+    void replayOtherRuns((detail.runs ?? []).filter((run) =>
+      run.run_id !== activeRun?.run_id), selection)
     if (syncUrl) {
       await router.replace({ query: { conversation_id: conversationId } })
     }
@@ -291,9 +312,7 @@ async function startNewConversation() {
   if (isSubmitting.value) return
   ++selectionVersion
   stopRunTracking()
-  stopInputPolling()
   error.value = ''
-  inputFollowup.value = ''
   conversations.clearCurrent()
   isTemporaryConversation.value = true
   draftMessage.value = ''
@@ -338,7 +357,7 @@ async function pollRun(runId, conversationId) {
   try {
     const run = await conversations.refreshRun(runId)
     error.value = ''
-    if (run.status === 'completed' || run.status === 'failed') {
+    if (['completed', 'failed', 'cancelled'].includes(run.status)) {
       await finishRunTracking(runId, conversationId)
     }
   } catch (cause) {
@@ -368,10 +387,52 @@ function stopRunStream(runId = streamingRunId) {
   streamingRunId = null
 }
 
-function stopRunTracking() {
+function stopRunTracking({ stopReplays = true } = {}) {
   stopRunStream()
   stopRunPolling()
+  if (stopReplays) {
+    for (const controller of replayControllers) controller.abort()
+    replayControllers.clear()
+  }
   isRunActive.value = false
+}
+
+async function replayOtherRuns(runs, selection) {
+  let next = 0
+  async function worker() {
+    while (next < runs.length && selection === selectionVersion) {
+      const run = runs[next++]
+      const controller = new AbortController()
+      replayControllers.add(controller)
+      // 终态任务由服务端结束流；缺少终态事件或仍在等待的任务在回放空闲后释放连接。
+      let idleTimer = window.setTimeout(() => controller.abort(), 10000)
+      const maxTimer = ['completed', 'failed', 'cancelled'].includes(run.status)
+        ? null : window.setTimeout(() => controller.abort(), 30000)
+      try {
+        await subscribeRunEvents(run.run_id, {
+          lastEventId: 0,
+          signal: controller.signal,
+          onEvent: (frame) => {
+            if (selection !== selectionVersion || frame.data?.run_id !== run.run_id) return
+            conversations.applyRunEvent({
+              ...frame.data,
+              event_no: frame.data.event_no ?? frame.id,
+              event_type: frame.event,
+            }, { historyOnly: true })
+            window.clearTimeout(idleTimer)
+            idleTimer = window.setTimeout(() => controller.abort(), 3000)
+          },
+        })
+      } catch {
+        // 历史时间线为可选展示；任务状态仍以会话详情为准。
+      } finally {
+        window.clearTimeout(idleTimer)
+        if (maxTimer !== null) window.clearTimeout(maxTimer)
+        replayControllers.delete(controller)
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(3, runs.length) }, worker))
 }
 
 async function finishRunTracking(runId, conversationId) {
@@ -380,7 +441,7 @@ async function finishRunTracking(runId, conversationId) {
   stopRunPolling(runId)
   isRunActive.value = false
   if (activeConversation.value?.conversation_id === conversationId) {
-    const detail = await conversations.loadConversation(conversationId)
+    const detail = await conversations.loadConversation(conversationId, { preserveCooperation: true })
     await loadArtifactsForConversation(detail)
   }
   await conversations.loadHistory()
@@ -407,7 +468,7 @@ async function startRunStream(runId, conversationId) {
         if (streamingRunId === runId) stopRunPolling(runId)
       },
       onEvent: async (sseEvent) => {
-        if (streamingRunId !== runId) return
+        if (streamingRunId !== runId || sseEvent.data?.run_id !== runId) return
         const handled = conversations.applyRunEvent({
           ...sseEvent.data,
           event_no: sseEvent.data.event_no ?? sseEvent.id,
@@ -415,10 +476,14 @@ async function startRunStream(runId, conversationId) {
         })
         if (!handled) return
         error.value = ''
+        if (sseEvent.event === 'input_required') {
+          inputPanelKey.value += 1
+        }
         if (['artifacts_ready', 'assistant_message_completed'].includes(sseEvent.event)) {
           await refreshArtifactsForRun(runId, sseEvent.data?.payload?.conversation_id ?? conversationId)
         }
-        if (['run_completed', 'run_failed', 'approval_required'].includes(sseEvent.event)) {
+        if (sseEvent.event === 'approval_required') isRunActive.value = false
+        if (['run_completed', 'run_failed', 'run_cancelled'].includes(sseEvent.event)) {
           await finishRunTracking(runId, conversationId)
         }
       },
@@ -435,9 +500,9 @@ async function startRunStream(runId, conversationId) {
   }
 }
 
-function startRunTracking(runId, conversationId) {
-  stopRunTracking()
-  isRunActive.value = true
+function startRunTracking(runId, conversationId, { locksComposer = true } = {}) {
+  stopRunTracking({ stopReplays: false })
+  isRunActive.value = locksComposer
   streamingRunId = runId
   void startRunStream(runId, conversationId)
 }
@@ -467,24 +532,15 @@ watch(() => route.query.conversation_id, (conversationId) => {
   }
 })
 
-onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
+onBeforeUnmount(() => { stopRunTracking() })
 </script>
 
 <template>
   <main class="workspace">
     <KnowledgeSourceDialog :source="selectedSource" @close="selectedSource = null" @unavailable="recheckSource" />
     <aside class="sidebar">
-      <div class="brand"><span class="mark">⌾</span>Aegis PA</div>
-      <p class="nav-label app-nav-label">工作空间</p>
-      <router-link class="nav" :to="{ name: 'today' }">▦ 今日工作台</router-link>
-      <a class="nav active" href="#task-console">◌ 任务对话</a>
-      <router-link class="nav" :to="{ name: 'calendar' }">▦ 日历</router-link>
-      <router-link class="nav" :to="{ name: 'mail-management' }">✉ 邮件管理</router-link>
-      <router-link class="nav" :to="{ name: 'todo-plans' }">☷ 待办计划</router-link>
-      <router-link class="nav" :to="{ name: 'confirmations' }">✓ 操作确认</router-link>
-      <router-link class="nav" :to="{ name: 'knowledge' }">▤ 知识资料</router-link>
-      <router-link class="nav" :to="{ name: 'memories' }">◇ 长期记忆</router-link>
-      <span class="nav disabled">◫ 连接与审计（待接入）</span>
+      <div class="brand">Aegis PA</div>
+      <AppNavigation active="tasks" />
 
       <div class="identity">
         <b>{{ auth.profile?.name }}</b>
@@ -533,13 +589,12 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
                 <h2>{{ isTemporaryConversation ? '新对话' : activeConversation ? '已恢复的历史对话' : '开始新的任务' }}</h2>
                 <p class="muted">{{ isTemporaryConversation ? '输入并发送第一条消息后，这条对话才会保存到历史记录。' : activeConversation ? '已恢复该会话的完整可见消息。' : '选择一条历史会话，或点击左侧加号开始新对话。' }}</p>
               </div>
+              <el-button v-if="pendingInputRunCount" size="small" @click="scrollToPendingInput">待回答问题 {{ pendingInputRunCount }}</el-button>
             </div>
 
             <el-alert v-if="error" class="conversation-error" :title="error" type="error" :closable="false" show-icon />
-            <RunInputPanel v-if="hasMailCandidates" :key="inputPanelKey" @answered="resumeInputRun" @cancelled="cancelInputRun" />
-            <p v-if="inputFollowup" class="mail-input-followup">{{ inputFollowup }} <router-link v-if="!inputPollingRunId" :to="{ name: 'mail-management' }">打开邮件管理</router-link></p>
             <div v-if="activeConversation || isTemporaryConversation" ref="messagesElement" class="messages">
-              <template v-for="item in conversations.messages" :key="item.message_id">
+              <template v-for="(item, messageIndex) in conversations.messages" :key="item.message_id">
                 <div class="message" :class="item.role">
                   <div class="avatar">{{ item.role === 'user' ? '你' : 'A' }}</div>
                   <div>
@@ -598,12 +653,33 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
                     </div>
                   </div>
                 </template>
+                <RunInputPanel
+                  v-for="run in pendingInputRunsAfterMessage(conversations.messages, conversations.runs, messageIndex)"
+                  :key="`input-${run.run_id}-${inputPanelKey}`"
+                  :run-id="run.run_id"
+                  scope="conversation"
+                  :conversation-id="activeConversation?.conversation_id"
+                  inline
+                  @answered="resumeInputRun"
+                  @cancelled="cancelInputRun"
+                />
               </template>
+              <RunInputPanel
+                v-for="run in unanchoredPendingInputRuns(conversations.messages, conversations.runs)"
+                :key="`unanchored-input-${run.run_id}-${inputPanelKey}`"
+                :run-id="run.run_id"
+                scope="conversation"
+                :conversation-id="activeConversation?.conversation_id"
+                inline
+                @answered="resumeInputRun"
+                @cancelled="cancelInputRun"
+              />
               <div v-if="isTemporaryConversation" class="empty-messages">新对话尚未创建。发送第一条消息后才会保存。</div>
-              <div v-else-if="conversations.messages.length === 0 && !conversations.runs.some(meetingPreview)" class="empty-messages">此会话暂无可见消息。</div>
-              <div v-if="conversations.latestSubmission" class="queued-notice">
-                <b>{{ isRunActive ? '任务已提交，正在处理' : '任务状态：' + conversations.latestSubmission.status }}</b>
-                <span>任务 ID：{{ conversations.latestSubmission.run_id }}</span>
+              <div v-else-if="conversations.messages.length === 0 && !conversations.runs.some(meetingPreview) && !pendingInputRunCount" class="empty-messages">此会话暂无可见消息。</div>
+              <div v-if="currentProgressText" class="conversation-progress" :class="{ active: progressAnimating }" role="status" aria-live="polite">
+                <span class="progress-indicator" aria-hidden="true"></span>
+                <span>{{ currentProgressText }}</span>
+                <span v-if="progressAnimating" class="progress-activity" aria-hidden="true"><i></i><i></i><i></i></span>
               </div>
             </div>
             <div v-else class="empty-state">
@@ -622,16 +698,45 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
             <article class="card side-card execution-card">
               <div class="card-head"><h2>执行进度</h2><span class="badge read">{{ conversations.runs.length }} 条运行</span></div>
               <div v-if="conversations.runs.length" class="card-body run-list">
-                <section v-for="run in conversations.runs" :key="run.run_id" class="run-item">
+                <section v-for="run in recentRuns" :key="run.run_id" class="run-item">
                   <div class="run-heading">
                     <b>{{ run.current_stage || '等待处理' }}</b>
                     <span class="badge neutral">{{ run.status }}</span>
                   </div>
                   <p class="run-id">任务 ID：{{ run.run_id }}</p>
+                  <div v-if="run.created_at || run.started_at || run.finished_at" class="run-times">
+                    <span v-if="run.created_at">提交 <time :datetime="run.created_at">{{ formatDateTime(run.created_at) }}</time></span>
+                    <span v-if="run.started_at">开始 <time :datetime="run.started_at">{{ formatDateTime(run.started_at) }}</time></span>
+                    <span v-if="run.finished_at">结束 <time :datetime="run.finished_at">{{ formatDateTime(run.finished_at) }}</time></span>
+                  </div>
                   <el-button size="small" text @click="memoryRunId = run.run_id">查看记忆使用情况</el-button>
                   <p v-if="run.model_provider || run.model_name" class="run-id">模型：{{ [run.model_provider, run.model_name].filter(Boolean).join(' / ') }}</p>
                   <p v-if="run.result_summary" class="run-detail">{{ run.result_summary }}</p>
                   <p v-if="run.error_message" class="run-error">{{ run.error_message }}</p>
+                  <div v-if="cooperationTimeline(run.run_id).length" class="run-section cooperation-section">
+                    <div class="cooperation-header">
+                      <b>协作进度</b>
+                      <span v-if="currentCooperation(run.run_id)">
+                        {{ ['completed', 'failed', 'cancelled'].includes(run.status) ? '最近处理者' : '当前处理者' }}：{{ cooperationHandler(run) }}
+                      </span>
+                    </div>
+                    <ol class="cooperation-timeline">
+                      <li v-for="item in cooperationTimeline(run.run_id)" :key="item.logical_id">
+                        <span class="cooperation-dot" aria-hidden="true"></span>
+                        <div>
+                          <b>{{ cooperationStageLabel(item) }}</b>
+                          <small v-if="item.cooperation?.round != null || item.cooperation?.sequence">
+                            <template v-if="item.cooperation?.round != null">第 {{ item.cooperation.round }} 轮</template>
+                            <template v-if="item.cooperation?.sequence"> · 委派 {{ item.cooperation.sequence }}</template>
+                          </small>
+                          <small v-if="item.created_at">{{ formatDateTime(item.created_at) }}</small>
+                          <p v-if="item.result_status">专家结果：{{ cooperationResultLabel(item.result_status) }}</p>
+                          <p v-if="item.error_code" class="run-error">错误码：{{ item.error_code }}</p>
+                        </div>
+                      </li>
+                    </ol>
+                    <p v-if="['draft_ready', 'finished'].includes(currentCooperation(run.run_id)?.phase) && !['completed', 'failed', 'cancelled'].includes(run.status)" class="cooperation-caution">仅代表站内草稿或生成阶段完成；会议尚未确认或写入日历。</p>
+                  </div>
                   <ol v-if="run.steps?.length" class="run-steps">
                     <li v-for="step in run.steps" :key="step.step_id">
                       <b>{{ step.label }}</b>
@@ -640,7 +745,9 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
                   </ol>
                   <div v-if="run.tool_previews?.length" class="run-section">
                     <b>工具查询结果</b>
-                    <div v-for="tool in run.tool_previews" :key="tool.tool_call_id" class="tool-preview">
+                    <div v-for="group in groupToolPreviews(run.tool_previews)" :key="group.key" class="tool-group">
+                      <p class="tool-group-title">{{ group.label }}</p>
+                      <div v-for="tool in group.tools" :key="tool.tool_call_id" class="tool-preview">
                       <p><b>{{ tool.tool_name }}</b> · {{ tool.status }} · {{ tool.risk_level }}</p>
                       <template v-if="tool.tool_name === 'knowledge.search'">
                         <template v-if="tool.output_summary">
@@ -655,6 +762,7 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
                         <p v-if="tool.output_summary">查询结果：{{ formatCalendarData(tool.output_summary) }}</p>
                         <p v-if="tool.error_message" class="run-error">{{ tool.error_message }}</p>
                       </template>
+                      </div>
                     </div>
                   </div>
                   <el-alert
@@ -716,7 +824,31 @@ onBeforeUnmount(() => { stopRunTracking(); stopInputPolling() })
 
 <style scoped>
 .knowledge-citation { color:#1c5bd6;background:transparent;border:0;font:inherit;cursor:pointer;padding:0 2px; }
-.conversation-card > .run-input-panel { flex: none; margin: 10px 20px; max-height: 35%; overflow-y: auto; }
-.mail-input-followup { flex: none; margin: 8px 20px; color: #345d8d; font-size: 12px; }
-.mail-input-followup a { color: #266dcc; }
+.conversation-progress { display: flex; align-items: center; gap: 8px; align-self: flex-start; max-width: 100%; margin: 2px 0 0 41px; color: #667085; font-size: 12px; line-height: 1.5; }
+.progress-indicator { position: relative; width: 7px; height: 7px; flex: none; border-radius: 50%; background: #5b92d0; box-shadow: 0 0 0 3px #e9f2ff; }
+.conversation-progress.active .progress-indicator::after { position: absolute; inset: -4px; border: 1px solid #5b92d0; border-radius: 50%; content: ''; animation: progress-pulse 1.8s ease-out infinite; }
+.progress-activity { display: inline-flex; align-items: center; gap: 3px; margin-left: -4px; }
+.progress-activity i { width: 3px; height: 3px; border-radius: 50%; background: currentColor; animation: progress-dots 1.2s ease-in-out infinite; }
+.progress-activity i:nth-child(2) { animation-delay: .15s; }
+.progress-activity i:nth-child(3) { animation-delay: .3s; }
+@keyframes progress-pulse { 0% { transform: scale(.55); opacity: .65; } 100% { transform: scale(1.7); opacity: 0; } }
+@keyframes progress-dots { 0%, 70%, 100% { transform: translateY(0); opacity: .35; } 35% { transform: translateY(-3px); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .conversation-progress.active .progress-indicator::after, .progress-activity i { animation: none; }
+  .progress-activity i { opacity: .65; }
+}
+.cooperation-section { background: #f5f8fd; }
+.cooperation-header { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.cooperation-header span { color: #52637d; font-size: 11px; }
+.cooperation-timeline { list-style: none; margin: 10px 0 0; padding: 0; }
+.cooperation-timeline li { display: flex; gap: 8px; padding-bottom: 9px; color: #344054; }
+.cooperation-timeline li:last-child { padding-bottom: 0; }
+.cooperation-dot { flex: none; width: 8px; height: 8px; margin-top: 5px; border-radius: 50%; background: #4988d8; }
+.cooperation-timeline li > div { min-width: 0; }
+.cooperation-timeline b { font-size: 12px; }
+.cooperation-timeline small { display: block; color: #667085; font-size: 11px; }
+.cooperation-timeline p { margin: 2px 0 0; }
+.cooperation-caution { color: #805b19 !important; }
+.tool-group { margin-top: 8px; padding-left: 8px; border-left: 2px solid #c9d9f0; }
+.tool-group-title { margin: 0 !important; color: #52637d !important; font-weight: 700; }
 </style>

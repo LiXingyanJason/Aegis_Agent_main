@@ -119,6 +119,42 @@ async def test_read_failure_clarifies_without_default_mail_query():
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("read_first", [False, True])
+async def test_registered_cooperation_is_not_subject_to_single_mail_card_target_requirement(read_first):
+    """卡片读取不锁定mail领域；协同自己查找来源，不转交未核验卡片目标。"""
+    cooperation = ConversationCapability(domain="cooperation", intent="mail_calendar_meeting",
+        workflow="cooperation_meeting", description="按邮件要求查日历并生成草稿")
+    decision = dict(decision="delegate", domain="cooperation", intent="mail_calendar_meeting",
+        instruction="请按续约邮件中的时间要求查询日历并安排会议草稿")
+    client, audit, tools = Client(([READ] if read_first else [])+[decision]), Audit(), Tools()
+    graph = MainDecisionWorkflow(MainAgent(client), audit, (*CAPS, cooperation), context_tools=tools).build()
+    result = await graph.ainvoke(state(decision["instruction"]))
+    assert result["workflow"] == "cooperation_meeting" and result["handoff"]["target"] is None
+    assert result["handoff"]["domain"] == "cooperation"
+    assert len(tools.calls) == int(read_first)
+    prompt = client.calls[0][0].content
+    assert "仅对单领域邮件任务适用卡片导航" in prompt
+    assert "即使已读卡片，仍可交接协同能力" in prompt
+
+
+@pytest.mark.asyncio
+async def test_unregistered_cooperation_after_card_read_remains_blocked():
+    decision = dict(decision="delegate", domain="cooperation", intent="mail_calendar_meeting",
+                    instruction="按续约邮件要求安排会议草稿")
+    result, _, audit, _ = await invoke([READ, decision], message=decision["instruction"])
+    assert result["workflow"] == "clarify" and not result["handoff"]
+    assert audit.events[0]["outcome"] == "unregistered_capability"
+
+
+@pytest.mark.asyncio
+async def test_mail_without_target_after_read_still_requires_valid_card_reference():
+    decision = dict(decision="delegate", domain="mail", intent="query_mail", instruction="展示那封邮件")
+    result, _, audit, _ = await invoke([READ, decision])
+    assert result["workflow"] == "clarify" and not result["handoff"]
+    assert audit.events[0]["outcome"] == "invalid_card_reference"
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("outputs", [[final()], [READ, final(2)]])
 async def test_unread_or_missing_position_does_not_delegate(outputs):
     """模型不能引用未读卡片或不存在位置，即使输出Schema合法也必须澄清。"""

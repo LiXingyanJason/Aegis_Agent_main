@@ -5,7 +5,7 @@ import logging
 from dataclasses import dataclass
 from time import monotonic
 from typing import Any, Literal
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from aegis_agent_worker.config.database import Database, TenantContext, tenant_transaction
 from aegis_agent_worker.event.run_event import RunEventPublisher
@@ -27,6 +27,8 @@ class ReadToolExecutionResult:
     status: Literal["succeeded", "failed"]
     tool_context: str
     output_summary: dict[str, Any] | None = None
+    connection_id: UUID | None = None
+    error_code: str | None = None
 
 
 class CalendarToolExecutionService:
@@ -47,7 +49,8 @@ class CalendarToolExecutionService:
         self._events = events
 
     async def execute_read_tool(
-        self, run: ClaimedRun, context: TenantContext, invocation: ToolInvocation
+        self, run: ClaimedRun, context: TenantContext, invocation: ToolInvocation,
+        *, required_connection_id: UUID | None = None,
     ) -> ReadToolExecutionResult:
         """
         持久化只读工具调用、发出 SSE 预览事件，并返回可供 LLM 使用的可信上下文。
@@ -57,7 +60,7 @@ class CalendarToolExecutionService:
             raise ToolError("TOOL_NOT_ALLOWED", "日历读取服务只接受日历只读工具")
         definition = self._tools.get_definition(invocation.tool_name) # 读取该工具权威定义(写入数据库),工具白名单检查
         label = "正在查询可用时间" if invocation.tool_name.endswith("find_free_time") else "正在查询日程"
-        step_key = invocation.tool_name.replace(".", "_")
+        step_key = invocation.tool_name.replace(".", "_") + "_" + uuid4().hex
         step_id: UUID | None = None
         tool_call_id: UUID | None = None
         prepared = None
@@ -81,6 +84,7 @@ class CalendarToolExecutionService:
                             user_id=run.user_id,
                             run_id=run.id,
                             invocation=invocation,
+                            required_connection_id=required_connection_id,
                         )
 
                     # ToolGateway校验阶段失败，记录“用户曾尝试调用哪个工具、传了什么安全参数、为什么失败”，用于追溯
@@ -125,6 +129,7 @@ class CalendarToolExecutionService:
                         return ReadToolExecutionResult(
                             tool_name=invocation.tool_name,
                             status="failed",
+                            error_code=error.code,
                             tool_context=(
                                 f"日历工具暂不可用：{error.message}。"
                                 "请明确告知用户，不要编造日程或空闲时间。"
@@ -172,6 +177,7 @@ class CalendarToolExecutionService:
             return ReadToolExecutionResult(
                 tool_name=invocation.tool_name,
                 status="failed",
+                error_code=error.code,
                 tool_context=(
                     f"日历工具调用失败：{error.message}。"
                     "请说明无法取得日历结果，不要编造信息。"
@@ -250,6 +256,7 @@ class CalendarToolExecutionService:
         return ReadToolExecutionResult(
             tool_name=definition.name,
             status="succeeded",
+            connection_id=prepared.context.connection_id,
             tool_context=tool_context,
             output_summary=result.output_summary,
         )

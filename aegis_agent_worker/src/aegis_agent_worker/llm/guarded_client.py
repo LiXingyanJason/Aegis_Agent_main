@@ -32,9 +32,17 @@ class GuardedLLMClient:
         """格式修复和首次JSON请求都经过相同预算，不绕过Harness。"""
         return await self._complete(messages, json_mode=True)
 
+    async def check_delegation_capacity(self):
+        """复用Harness的只读预检，不新增预算账户或模型请求。"""
+        await self._harness.check_remaining()
+
     async def complete_prepared(self, messages, prepare_messages):
         """纯消息工厂可使用本次已核验Bundle；复用通信、预算与审计而非预读SQL。"""
         return await self._complete(messages,json_mode=False,prepare_messages=prepare_messages)
+
+    async def complete_json_prepared(self, messages, prepare_messages):
+        """结构化决策复用同一记忆复核、通信、预算及审计边界。"""
+        return await self._complete(messages,json_mode=True,prepare_messages=prepare_messages)
 
     async def _complete(self, messages: list[LLMMessage], *, json_mode: bool,prepare_messages=None) -> str:
         original_messages=messages

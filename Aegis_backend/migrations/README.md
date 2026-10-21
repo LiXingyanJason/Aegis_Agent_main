@@ -223,7 +223,7 @@ downgrade会丢弃新增字段/审计，存在无法用旧格式表达的有效�
 存在新实体（包括删除记录）或相关调用审计时拒绝降级；需人工导出处理，不自动删除。
 迁移及真实SQL已在随机临时schema/受限角色内回滚验证，未迁移业务库。详见[日历记忆](../../aegis_agent_worker/文档/阶段1/20-日历逐步骤结构化记忆接入.md)。
 
-### 020：记忆选择诊断、撤销与旧审计正文清理（当前版本）
+### 020：记忆选择诊断、撤销与旧审计正文清理
 
 先停止API写入及Agent Worker、备份数据库，再执行`python -m alembic upgrade 020_memory_selection_revoke`，然后统一更新API/Worker/前端。
 父revision为019_calendar_memory_preferences；不要只迁移到旧文档的017/018/019后启动当前Worker。
@@ -235,4 +235,12 @@ downgrade会丢弃新增字段/审计，存在无法用旧格式表达的有效�
 取消确认复用既有revoked状态，不新增自动确认、统一过期时间或时间衰减。
 降级前停新版服务并备份；downgrade不恢复已清理的旧正文，恢复须用事前备份。未自动迁移业务库。
 详见[7.5部署、选择与撤销](../../aegis_agent_worker/文档/阶段1/21-记忆优先级用户管理与撤销-阶段7.5.md)。
+
+### 021：补充问题结构化单选（当前版本）
+
+先停旧API写入与Agent Worker、备份，执行`python -m alembic upgrade 021_structured_input_choices`，再统一更新API/Worker和支持单选的前端。
+新增run_input_requests.input_type/options/selected_option_id；原问题默认text，旧回答/Checkpoint仍兼容；新邮件单选只能提交选项ID，不能使用旧文本表单代替。
+options是带来源版本的私有快照，公开接口只投影id/label；不赋予任何邮件/日历权限，保留既有RLS。
+downgrade拒绝仍有活跃单选任务的情况；删除新列会丢失单选快照，应先完成/终止任务并保留备份。未自动迁移业务库。
+前端请求/渲染与分步部署要求见根接口文档篇末第25章。
 

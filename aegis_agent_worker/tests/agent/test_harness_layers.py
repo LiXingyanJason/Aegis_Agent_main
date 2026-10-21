@@ -33,6 +33,10 @@ class Database:
 
 
 class Repository:
+    async def snapshot(self, session, run):
+        from aegis_agent_worker.harness.context import get_execution
+        return dict(run_status="running",policy_version=get_execution().policy_bundle.version,
+                    model_calls=0,tool_calls=0,active_ms=0)
     def __init__(self):
         self.finished = []
         self.elapsed = []

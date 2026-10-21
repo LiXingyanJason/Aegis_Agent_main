@@ -25,9 +25,12 @@ def safe_evidence(value,depth=0):
 
 
 class MailCollectionService:
-    def __init__(self,database,runs,tools,events=None):
+    def __init__(self,database,runs,tools,events=None,*,purpose="reply_collect"):
         self._database,self._runs,self._tools,self._events=database,runs,tools,events
         self._calls=ToolCallRepository()
+        if purpose not in {"reply_collect", "meeting_requirements"}:
+            raise ValueError("不支持的信息读取用途")
+        self._purpose = purpose
 
     async def invoke(self,run,decision,mail_connection_id):
         context=TenantContext(tenant_id=run.tenant_id,user_id=run.user_id)
@@ -40,7 +43,8 @@ class MailCollectionService:
                 definition=prepared.registered.definition
                 step=await self._runs.create_running_tool_step(session,run_id=run.id,tenant_id=run.tenant_id,
                     # 每次读取（包括用户回答后的事实核验）都是独立审计步骤，不能复用固定键。
-                    step_key=f"reply_collect_{uuid4().hex}",label="收集起草所需信息")
+                    step_key=f"{self._purpose}_{uuid4().hex}",
+                    label="读取会议来源邮件" if self._purpose == "meeting_requirements" else "收集起草所需信息")
                 call=await self._calls.create_running(session,tenant_id=run.tenant_id,run_id=run.id,
                     step_id=step,connection_id=prepared.context.connection_id,tool_name=definition.name,
                     risk_level=definition.risk_level,tool_version=definition.version,mcp_server=definition.mcp_server,

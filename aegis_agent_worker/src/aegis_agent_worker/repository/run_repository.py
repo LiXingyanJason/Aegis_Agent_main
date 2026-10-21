@@ -215,6 +215,15 @@ class AgentRunRepository:
         )
         if lock_result.mappings().first() is None:
             raise RuntimeError("任务关联会话不存在或无权访问")
+        from aegis_agent_worker.harness.exceptions import HarnessError
+        run_result = await session.execute(text(
+            "SELECT status FROM agent_runs WHERE id=:run_id AND tenant_id=:tenant_id "
+            "AND user_id=:user_id FOR UPDATE"),
+            dict(run_id=run_id,tenant_id=tenant_id,user_id=user_id))
+        current = run_result.mappings().first()
+        if current is None or current["status"] != "running":
+            code = "RUN_CANCELLED" if current and current["status"] == "cancelled" else "EXECUTION_STATE_CHANGED"
+            raise HarnessError(code, "任务已取消或结束，停止保存后续回复")
         sequence_result = await session.execute(
             text(
                 "SELECT COALESCE(MAX(sequence_no), 0) + 1 AS next_sequence_no "
@@ -290,27 +299,14 @@ class AgentRunRepository:
         step_id: UUID | None,
         error_code: str,
         error_message: str,
-    ) -> None:
+    ) -> bool:
         """记录模型或执行失败，并结束正在运行的步骤。"""
-        if step_id is not None:
-            await session.execute(
-                text(
-                    "UPDATE run_steps SET status = 'failed', detail = :detail, finished_at = now() "
-                    "WHERE id = :step_id AND run_id = :run_id AND tenant_id = :tenant_id"
-                ),
-                {
-                    "step_id": step_id,
-                    "run_id": run_id,
-                    "tenant_id": tenant_id,
-                    "detail": error_message[:1000],
-                },
-            )
-        await session.execute(
+        changed = await session.execute(
             text(
                 "UPDATE agent_runs "
                 "SET status = 'failed', current_stage = '执行失败', error_code = :error_code, "
                 "    error_message = :error_message, finished_at = now(), updated_at = now() "
-                "WHERE id = :run_id AND tenant_id = :tenant_id"
+                "WHERE id = :run_id AND tenant_id = :tenant_id AND status = 'running' RETURNING id"
             ),
             {
                 "run_id": run_id,
@@ -319,6 +315,14 @@ class AgentRunRepository:
                 "error_message": error_message[:1000],
             },
         )
+        if changed.mappings().first() is None:
+            return False
+        if step_id is not None:
+            await session.execute(text(
+                "UPDATE run_steps SET status='failed',detail=:detail,finished_at=now() "
+                "WHERE id=:step_id AND run_id=:run_id AND tenant_id=:tenant_id AND status='running'"),
+                dict(step_id=step_id,run_id=run_id,tenant_id=tenant_id,detail=error_message[:1000]))
+        return True
 
     async def find_run_detail_for_user(
         self,
@@ -366,6 +370,13 @@ class AgentRunRepository:
         payload: dict[str, Any],
     ) -> RunEvent:
         """为任务追加一条持久事件；调用方在提交后负责实时发布。"""
+        from aegis_agent_worker.event.cooperation_context import current_association
+        correlation=current_association(run_id,tenant_id)
+        if correlation is not None:
+            payload={**payload,"cooperation":correlation}
+        # 与API写事件采用同一个run行锁，避免并发MAX(event_no)+1冲突。
+        await session.execute(text("SELECT id FROM agent_runs WHERE id=:run_id AND tenant_id=:tenant_id FOR UPDATE"),
+                              dict(run_id=run_id,tenant_id=tenant_id))
         result = await session.execute(
             text(
                 "INSERT INTO run_events (tenant_id, run_id, event_no, event_type, payload) "

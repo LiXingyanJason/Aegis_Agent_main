@@ -22,6 +22,7 @@ from aegis_agent_worker.service.runtime.conversation_context_service import Conv
 from aegis_agent_worker.service.runtime.run_lifecycle_service import RunLifecycleService
 from aegis_agent_worker.service.runtime.decision_context_service import DecisionContextService
 from aegis_agent_worker.agent.specialists.main_agent import MainAgent
+from aegis_agent_worker.tool.contracts import ToolError
 
 logger = logging.getLogger(__name__)
 
@@ -62,12 +63,14 @@ class AgentOrchestrator:
         harness=None,
         input_requests=None,
         main_context_tools=None,
+        approval_readiness=None,
     ) -> None:
         """组装根图及其依赖；允许测试注入服务或预构建运行器。"""
         run_repository = runs or AgentRunRepository()
         self._llm_client = llm_client
         self._mail_tasks = mail_tasks
         self._harness,self._input_requests=harness,input_requests
+        self._approval_readiness = approval_readiness
         self._lifecycle = lifecycle or RunLifecycleService(database, run_repository, events)
         self._context_service = context_service or ConversationContextService(database, run_repository)
         self._graph_runner = graph_runner or GraphRunner(
@@ -143,8 +146,15 @@ class AgentOrchestrator:
                                if isinstance(item.value,dict) and item.value.get("question_id")),None)
                 # 嵌套子图尚未完成，内部 State 更新不会立即回写父图；使用中断载荷判断类型。
                 if question is not None:
-                    await self._input_requests.mark_ready(run,UUID(question["question_id"]))
+                    options={"cooperation":question["cooperation"]} if question.get("cooperation") else {}
+                    await self._input_requests.mark_ready(run,UUID(question["question_id"]),**options)
                     return AgentExecutionResult(status="waiting_input")
+                approval = next((item.value for item in state["__interrupt__"]
+                    if isinstance(item.value,dict) and item.value.get("approval_ready_required")),None)
+                if approval is not None:
+                    if self._approval_readiness is None:
+                        raise HarnessError("APPROVAL_READINESS_UNAVAILABLE","未配置确认就绪服务")
+                    await self._approval_readiness.mark_ready(run,approval)
                 return AgentExecutionResult(status="waiting_confirmation")
             # 邮件后台子图会自行保存领域结果及 run_completed 事件，不写入对话消息。
             if state.get("mail_workflow_completed"):
@@ -173,7 +183,10 @@ class AgentOrchestrator:
             return AgentExecutionResult(
                 status="failed", error_code="WORKFLOW_ROUTING_FAILED", error_message=error.code,
             )
-        except HarnessError as error:
+        except (HarnessError,ToolError) as error:
+            if error.code == "RUN_CANCELLED":
+                # API已持久化取消；不能再覆盖为failed或触发后续工具。
+                return AgentExecutionResult(status="cancelled", error_code=error.code, error_message=str(error))
             if self._mail_tasks is not None:
                 await self._mail_tasks.mark_failed(run,str(error))
             await self._lifecycle.fail_run(run,step_id=step_id,error_code=error.code,error_message=str(error))

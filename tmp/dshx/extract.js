@@ -1,0 +1,43 @@
+const fs = require("fs");
+const path = require("path");
+
+const asarPath = process.argv[2];
+const outDir = process.argv[3];
+const wanted = process.argv.slice(4);
+
+fs.mkdirSync(outDir, { recursive: true });
+
+const fd = fs.openSync(asarPath, "r");
+const sizeBuf = Buffer.alloc(8);
+fs.readSync(fd, sizeBuf, 0, 8, 0);
+const headerSize = sizeBuf.readUInt32LE(4);
+const hbuf = Buffer.alloc(headerSize);
+fs.readSync(fd, hbuf, 0, headerSize, 8);
+const jsonLen = hbuf.readUInt32LE(4);
+const header = JSON.parse(hbuf.toString("utf8", 8, 8 + jsonLen));
+const baseOffset = 8 + headerSize;
+
+const index = new Map();
+function walk(node, prefix) {
+  for (const name of Object.keys(node.files || {})) {
+    const ent = node.files[name];
+    const p = prefix ? prefix + "/" + name : name;
+    if (ent.files) walk(ent, p);
+    else index.set(p, ent);
+  }
+}
+walk(header, "");
+
+for (const w of wanted) {
+  const ent = index.get(w);
+  if (!ent) { console.error("MISSING " + w); continue; }
+  const target = path.join(outDir, w.replace(/[\\/]/g, "__"));
+  if (ent.unpacked) {
+    fs.copyFileSync(path.join(path.dirname(asarPath) + ".unpacked", w), target);
+  } else {
+    const buf = Buffer.alloc(ent.size);
+    fs.readSync(fd, buf, 0, ent.size, baseOffset + Number(ent.offset));
+    fs.writeFileSync(target, buf);
+  }
+  console.log("OK " + w + " -> " + target + " (" + ent.size + " bytes)");
+}

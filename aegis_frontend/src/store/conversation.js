@@ -19,6 +19,7 @@ export const useConversationStore = defineStore('conversation', {
     artifactErrors: {},
     artifactRequests: {},
     runEventNos: {},
+    cooperationByRun: {},
     latestSubmission: null,
     loadingHistory: false,
     loadingDetail: false,
@@ -36,6 +37,8 @@ export const useConversationStore = defineStore('conversation', {
       this.artifactErrors = {}
       this.artifactRequests = {}
       this.latestSubmission = null
+      this.runEventNos = {}
+      this.cooperationByRun = {}
       this.loadingDetail = false
     },
     async loadHistory() {
@@ -47,7 +50,7 @@ export const useConversationStore = defineStore('conversation', {
         this.loadingHistory = false
       }
     },
-    async loadConversation(conversationId) {
+    async loadConversation(conversationId, { preserveCooperation = false } = {}) {
       const requestKey = ++this.currentRequestKey
       this.loadingDetail = true
       try {
@@ -55,7 +58,26 @@ export const useConversationStore = defineStore('conversation', {
         if (requestKey !== this.currentRequestKey) return null
         this.current = detail
         this.messages = detail.messages ?? []
-        this.runs = detail.runs ?? []
+        const previousRuns = preserveCooperation ? this.runs : []
+        this.runs = (detail.runs ?? []).map((run) => {
+          const previous = previousRuns.find((item) => item.run_id === run.run_id)
+          if (!previous) return run
+          return {
+            ...run,
+            steps: (run.steps ?? []).map((step) => ({
+              ...step,
+              cooperation: previous.steps?.find((item) => item.step_id === step.step_id)?.cooperation,
+            })),
+            tool_previews: (run.tool_previews ?? []).map((tool) => ({
+              ...tool,
+              cooperation: previous.tool_previews?.find((item) => item.tool_call_id === tool.tool_call_id)?.cooperation,
+            })),
+          }
+        })
+        if (!preserveCooperation) {
+          this.runEventNos = {}
+          this.cooperationByRun = {}
+        }
         this.artifactsByRun = {}
         this.latestSubmission = null
         return detail
@@ -69,6 +91,8 @@ export const useConversationStore = defineStore('conversation', {
         this.current = await createConversation(title)
         this.messages = []
         this.runs = []
+        this.runEventNos = {}
+        this.cooperationByRun = {}
         this.artifactsByRun = {}
         this.latestSubmission = null
         this.history.unshift({
@@ -103,6 +127,7 @@ export const useConversationStore = defineStore('conversation', {
         if (!this.runs.some((run) => run.run_id === result.run_id)) {
           this.runs.unshift({
             run_id: result.run_id,
+            created_at: new Date().toISOString(),
             status: result.status,
             current_stage: '等待处理',
             steps: [],
@@ -137,6 +162,10 @@ export const useConversationStore = defineStore('conversation', {
           this.runs.splice(index, 1, {
             ...this.runs[index],
             ...run,
+            steps: (run.steps ?? []).map((step) => ({
+              ...step,
+              cooperation: this.runs[index].steps?.find((old) => old.step_id === step.step_id)?.cooperation,
+            })),
           })
         }
       }
@@ -172,7 +201,7 @@ export const useConversationStore = defineStore('conversation', {
         throw cause
       }
     },
-    applyRunEvent(event) {
+    applyRunEvent(event, { historyOnly = false } = {}) {
       const runId = event.run_id
       const eventNo = Number(event.event_no)
       if (!runId || !Number.isSafeInteger(eventNo)) return false
@@ -182,12 +211,43 @@ export const useConversationStore = defineStore('conversation', {
       if (runIndex === -1) return false
 
       const payload = event.payload ?? {}
+      if (event.event_type === 'cooperation_progress' && payload.phase) {
+        const entries = this.cooperationByRun[runId] ?? []
+        const logicalId = payload.cooperation_event_id ?? `event-${eventNo}`
+        if (!entries.some((item) => item.logical_id === logicalId)) {
+          this.cooperationByRun = {
+            ...this.cooperationByRun,
+            [runId]: [...entries, {
+              ...payload,
+              logical_id: logicalId,
+              event_no: eventNo,
+              created_at: event.created_at,
+            }].sort((a, b) => a.event_no - b.event_no),
+          }
+        }
+      }
       const run = {
         ...this.runs[runIndex],
         steps: [...(this.runs[runIndex].steps ?? [])],
         tool_previews: [...(this.runs[runIndex].tool_previews ?? [])],
         approval_items: [...(this.runs[runIndex].approval_items ?? [])],
         plan_previews: [...(this.runs[runIndex].plan_previews ?? [])],
+      }
+
+      if (payload.cooperation && ['progress_updated', 'tool_preview'].includes(event.event_type)) {
+        const collection = event.event_type === 'progress_updated' ? run.steps : run.tool_previews
+        const idField = event.event_type === 'progress_updated' ? 'step_id' : 'tool_call_id'
+        const index = collection.findIndex((entry) => entry[idField] === payload[idField])
+        if (index !== -1) collection.splice(index, 1, {
+          ...collection[index],
+          cooperation: payload.cooperation,
+        })
+      }
+
+      if (historyOnly) {
+        this.runs.splice(runIndex, 1, run)
+        this.runEventNos[runId] = eventNo
+        return true
       }
 
       if (event.event_type === 'run_started') {
@@ -207,6 +267,7 @@ export const useConversationStore = defineStore('conversation', {
           status: payload.status,
           detail: payload.detail ?? null,
           started_at: payload.occurred_at ?? null,
+          cooperation: payload.cooperation ?? run.steps[stepIndex]?.cooperation,
         }
         if (stepIndex === -1) run.steps.push(step)
         else run.steps.splice(stepIndex, 1, step)
@@ -226,6 +287,7 @@ export const useConversationStore = defineStore('conversation', {
           status: payload.status,
           error_code: payload.error_code ?? null,
           error_message: payload.error_message ?? null,
+          cooperation: payload.cooperation ?? run.tool_previews[previewIndex]?.cooperation,
         }
         if (previewIndex === -1) run.tool_previews.push(preview)
         else run.tool_previews.splice(previewIndex, 1, preview)
@@ -238,6 +300,17 @@ export const useConversationStore = defineStore('conversation', {
           required_scopes: payload.required_scopes ?? [],
           message: payload.message,
         }
+      }
+
+      if (event.event_type === 'input_required') {
+        run.status = 'waiting_input'
+        run.current_stage = '等待补充信息'
+      }
+
+      if (event.event_type === 'cooperation_progress' && payload.phase === 'resumed'
+        && run.status === 'waiting_input') {
+        run.status = 'running'
+        run.current_stage = '继续处理原任务'
       }
 
       if (event.event_type === 'plan_preview' && payload.preview) {
@@ -326,6 +399,11 @@ export const useConversationStore = defineStore('conversation', {
         run.current_stage = '执行失败'
         run.error_code = payload.error_code ?? run.error_code
         run.error_message = payload.error_message ?? payload.message ?? run.error_message
+      }
+
+      if (event.event_type === 'run_cancelled') {
+        run.status = payload.status ?? 'cancelled'
+        run.current_stage = '已取消'
       }
 
       this.runs.splice(runIndex, 1, run)

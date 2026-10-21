@@ -31,7 +31,7 @@ class Result:
 
 
 class Database:
-    def __init__(self): self.budgets={}; self.attempts=[]
+    def __init__(self): self.budgets={}; self.attempts=[]; self.run_statuses={}
     @asynccontextmanager
     async def session(self): yield Session(self)
 
@@ -42,12 +42,16 @@ class Session:
     async def begin(self): yield
     async def execute(self,sql,args):
         sql=str(sql)
+        if "SELECT b.model_calls" in sql:
+            row=self.db.budgets.get(args["id"])
+            return Result({**row,"run_status":self.db.run_statuses.get(args["id"],"running")} if row else None)
         if "INSERT INTO run_execution_budgets" in sql:
             row = self.db.budgets.setdefault(args["id"],dict(model_calls=0,tool_calls=0,active_ms=0,policy_version=args["policy"]))
             return Result({"policy_version": row["policy_version"]})
         elif "UPDATE run_execution_budgets" in sql:
             row=self.db.budgets[args["id"]]
             if "maximum" in args:
+                if self.db.run_statuses.get(args["id"],"running")!="running": return Result()
                 field="model_calls" if "SET model_calls" in sql else "tool_calls"
                 if row[field]>=args["maximum"] or row["active_ms"]+args["elapsed"]>=args["time_limit"]:
                     return Result()

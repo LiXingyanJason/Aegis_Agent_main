@@ -7,8 +7,8 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from aegis_agent_worker.agent.contracts.context import CardReference
 
-Domain = Literal["calendar", "mail", "knowledge"]
-Intent = Literal["list_events", "find_free_time", "arrange_meeting", "query_mail", "extract_mail", "draft_mail_reply", "query_knowledge"]
+Domain = Literal["calendar", "mail", "knowledge", "cooperation"]
+Intent = Literal["list_events", "find_free_time", "arrange_meeting", "query_mail", "extract_mail", "draft_mail_reply", "query_knowledge", "mail_calendar_meeting"]
 
 
 class ResourceReference(BaseModel):
@@ -51,7 +51,8 @@ class MainDecision(BaseModel):
         if self.decision == "delegate":
             if not self.domain or not self.intent or not self.instruction.strip() or self.clarification_question:
                 raise ValueError("交接决定缺少领域、意图或任务要求")
-            expected = ("knowledge" if self.intent == "query_knowledge" else
+            expected = ("cooperation" if self.intent == "mail_calendar_meeting" else
+                        "knowledge" if self.intent == "query_knowledge" else
                         "mail" if self.intent in {"query_mail", "extract_mail", "draft_mail_reply"} else "calendar")
             if self.domain != expected:
                 raise ValueError("领域与意图不匹配")
@@ -67,6 +68,8 @@ class MainDecision(BaseModel):
                 raise ValueError("当前日历能力不支持修改已有对象")
             if expected == "knowledge" and self.target is not None:
                 raise ValueError("知识查询不能使用邮件或日历对象引用")
+            if expected == "cooperation" and self.target is not None:
+                raise ValueError("首版团队入口不接受模型直传对象，专家自行核验对象")
         else:
             if self.domain or self.intent or self.target or self.instruction or self.card_reference:
                 raise ValueError("澄清和普通回复不能携带执行计划")

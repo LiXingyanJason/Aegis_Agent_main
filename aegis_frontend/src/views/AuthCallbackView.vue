@@ -21,7 +21,7 @@ onMounted(async () => {
 <template>
   <main class="callback-page">
     <section class="callback-shell">
-      <router-link class="brand auth-brand" to="/login"><span class="mark">⌾</span>Aegis PA</router-link>
+      <router-link class="brand auth-brand" to="/login">Aegis PA</router-link>
       <article class="callback-card card">
         <div v-if="!error" class="spinner" aria-hidden="true"></div>
         <span class="eyebrow">OIDC 登录回调</span>

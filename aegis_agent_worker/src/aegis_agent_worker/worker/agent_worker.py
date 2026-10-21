@@ -38,8 +38,8 @@ from aegis_agent_worker.service.mail.mail_collection_service import MailCollecti
 from aegis_agent_worker.service.mail.mail_revision_service import MailRevisionService
 from aegis_agent_worker.service.runtime.card_context_service import CardContextService
 from aegis_agent_worker.service.runtime.main_context_tool_service import MainContextToolService
-from aegis_agent_worker.harness.policy_provider import PolicyProvider
-from aegis_agent_worker.harness.policy_provider import LEGACY_POLICY, KNOWLEDGE_CONTRACT_POLICY
+from aegis_agent_worker.harness.bootstrap import create_worker_policy_provider
+from aegis_agent_worker.agent.workflows.cooperation.bootstrap import create_cooperation_runtime
 from aegis_agent_worker.agent.specialists.knowledge_agent import KnowledgeAgent
 from aegis_agent_worker.agent.workflows.knowledge.factory import KnowledgeWorkflowFactory
 from aegis_agent_worker.service.knowledge.evidence_service import EvidenceService
@@ -73,8 +73,8 @@ async def run_worker() -> None:
         # SQLAlchemy 使用 asyncpg URL；LangGraph 的 AsyncPostgresSaver 使用 psycopg URL。
         async with AsyncPostgresSaver.from_conn_string(settings.database_psycopg_url) as checkpointer:
             await checkpointer.setup() # 建立checkpointer数据库表，我们通过run_id关联每一个checkpointer
-            policies = PolicyProvider((LEGACY_POLICY, KNOWLEDGE_CONTRACT_POLICY),
-                default_version=KNOWLEDGE_CONTRACT_POLICY.version if settings.knowledge_query_enabled else LEGACY_POLICY.version)
+            policies = create_worker_policy_provider(knowledge_enabled=settings.knowledge_query_enabled,
+                cooperation_enabled=settings.cooperation_enabled)
             harness = HarnessExecutor(database, policy_provider=policies)
             llm_client = GuardedLLMClient(OpenAICompatibleClient(settings), harness)
             events = RunEventPublisher(redis)
@@ -97,8 +97,12 @@ async def run_worker() -> None:
             calendar_confirmation = CalendarConfirmationService(
                 database, runs, tool_execution, events, tools, tool_calls
             )
+            calendar_agent = CalendarAgent(settings.app_timezone, llm_client, policy_provider=policies)
+            mail_agent = MailAgent(llm_client, settings.app_timezone, policy_provider=policies)
+            mail_queries = MailQueryService(database, runs, tools, events)
+            mail_reader = MailCollectionService(database, runs, tools, events)
             calendar_workflows = CalendarWorkflowFactory(
-                calendar_agent=CalendarAgent(settings.app_timezone, llm_client, policy_provider=policies),
+                calendar_agent=calendar_agent,
                 tool_execution=tool_execution,
                 confirmation_service=calendar_confirmation,
                 artifact_service=artifact_service,
@@ -110,12 +114,12 @@ async def run_worker() -> None:
             mail_workflows = MailWorkflowFactory(
                 mail_tasks=mail_tasks,
                 mail_send=mail_send,
-                mail_agent=MailAgent(llm_client, settings.app_timezone, policy_provider=policies),
+                mail_agent=mail_agent,
                 memory_context=memory_context,
-                query_service=MailQueryService(database, runs, tools, events),
+                query_service=mail_queries,
                 artifact_service=artifact_service,
                 planning_audit=MailPlanningService(database, runs, events),
-                collection_service=MailCollectionService(database,runs,tools,events),
+                collection_service=mail_reader,
                 input_requests=input_requests,
                 revision_service=MailRevisionService(database,runs,events),
             )
@@ -126,13 +130,21 @@ async def run_worker() -> None:
                 enabled=settings.knowledge_query_enabled,
                 progress_service=KnowledgeWorkflowProgress(database,runs,events),
             )
+            cooperation = create_cooperation_runtime(database=database, runs=runs, events=events,
+                llm_client=llm_client, mail_agent=mail_agent, calendar_agent=calendar_agent,
+                mail_queries=mail_queries,
+                mail_reader=MailCollectionService(database, runs, tools, events, purpose="meeting_requirements"),
+                calendar_queries=tool_execution,
+                calendar_confirmation=calendar_confirmation, input_requests=input_requests,
+                memory_context=memory_context, policy_provider=policies) if settings.cooperation_enabled else None
             orchestrator = AgentOrchestrator(
                 database,
                 llm_client,
                 runs=runs,
                 context_service=context_service,
                 events=events,
-                workflow_factories=(calendar_workflows, mail_workflows, knowledge_workflows),
+                workflow_factories=(calendar_workflows, mail_workflows, knowledge_workflows) +
+                    ((cooperation.factory,) if cooperation else ()),
                 checkpointer=checkpointer,
                 mail_tasks=mail_tasks,
                 memory_context=memory_context,
@@ -141,6 +153,7 @@ async def run_worker() -> None:
                 harness=harness,
                 input_requests=input_requests,
                 main_context_tools=MainContextToolService(database, runs, tools, cards, events),
+                approval_readiness=cooperation.approval_readiness if cooperation else None,
             )
             log_event(logger, logging.INFO, "agent_worker_started", queue_name=settings.agent_queue_name)
             while True:

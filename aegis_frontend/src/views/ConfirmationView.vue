@@ -1,4 +1,5 @@
 <script setup>
+import AppNavigation from '../components/AppNavigation.vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getApprovalItem, listApprovalItems, submitApprovalDecision } from '../api/approval'
@@ -257,17 +258,8 @@ onBeforeUnmount(stopAllRunStreams)
 <template>
   <main class="workspace">
     <aside class="sidebar">
-      <div class="brand"><span class="mark">⌾</span>Aegis PA</div>
-      <p class="nav-label app-nav-label">工作空间</p>
-      <router-link class="nav" :to="{ name: 'today' }">▦ 今日工作台</router-link>
-      <router-link class="nav" :to="{ name: 'tasks' }">◌ 任务对话</router-link>
-      <router-link class="nav" :to="{ name: 'calendar' }">▦ 日历</router-link>
-      <router-link class="nav" :to="{ name: 'mail-management' }">✉ 邮件管理</router-link>
-      <router-link class="nav" :to="{ name: 'todo-plans' }">☷ 待办计划</router-link>
-      <router-link class="nav active" :to="{ name: 'confirmations' }">✓ 操作确认</router-link>
-      <router-link class="nav" :to="{ name: 'knowledge' }">▤ 知识资料</router-link>
-      <router-link class="nav" :to="{ name: 'memories' }">◇ 长期记忆</router-link>
-      <span class="nav disabled">◫ 连接与审计（待接入）</span>
+      <div class="brand">Aegis PA</div>
+      <AppNavigation active="confirmations" />
 
       <div class="identity">
         <b>{{ auth.profile?.name }}</b>

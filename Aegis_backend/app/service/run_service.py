@@ -58,4 +58,5 @@ class RunService:
             run_id=run_id,
             tenant_id=local_user.tenant_id,
             after_event_no=after_event_no,
+            user_id=local_user.id,
         )

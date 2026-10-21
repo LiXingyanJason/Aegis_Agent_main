@@ -26,11 +26,33 @@ def test_email_service_lists_metadata_and_returns_detail_body() -> None:
         service = EmailService(MockEmailProvider(Path("data/mock_mailbox.json")))
         messages = await service.list_messages(_context())
         detail = await service.get_message(_context(), "mock-mail-renewal-001")
-        assert len(messages.messages) == 3
+        assert len(messages.messages) == 7
         assert "body_text" not in messages.messages[0].model_dump()
         assert "2026-10-09" in detail.body_text
         assert detail.attachments[0].file_name == "renewal-proposal.pdf"
 
+    asyncio.run(verify())
+
+
+def test_cooperation_fixtures_offer_distinct_choices_and_missing_information() -> None:
+    """同类续约会议有多个真实候选；完整/缺信息样例不串用客户条件。"""
+    async def verify() -> None:
+        service = EmailService(MockEmailProvider(Path("data/mock_mailbox.json")))
+        listed = (await service.list_messages(_context())).messages
+        ids = [item.provider_message_id for item in listed]
+        assert len(ids) == len(set(ids))
+        assert [item.received_at for item in listed] == sorted((item.received_at for item in listed), reverse=True)
+        choices = [item for item in listed if "续约会议" in item.subject]
+        assert len(choices) == 4
+        assert all("body_text" not in item.model_dump() for item in choices)
+        a = await service.get_message(_context(), "mock-mail-renewal-meeting-004")
+        b = await service.get_message(_context(), "mock-mail-renewal-meeting-005")
+        c = await service.get_message(_context(), "mock-mail-renewal-meeting-006")
+        d = await service.get_message(_context(), "mock-mail-renewal-meeting-007")
+        assert "2026-10-26" in a.body_text and "50分钟" in a.body_text
+        assert "2026-10-27" in b.body_text and "30分钟" in b.body_text
+        assert "2026-10-28" in c.body_text and "时长尚待确定" in c.list_preview
+        assert "45分钟" in d.body_text and "不是会议日期" in d.body_text
     asyncio.run(verify())
 
 

@@ -1,4 +1,5 @@
 <script setup>
+import AppNavigation from '../components/AppNavigation.vue'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { memoryPayload, memoryConfirmPayload, memoryFormFromRecord, memoryErrorMessage, memoryTypeLabel, memorySourceLabel, memoryStatusDisplay, memoryTimezoneOptions } from '../utils/memory'
 import { useRouter } from 'vue-router'
@@ -321,17 +322,8 @@ onMounted(() => { void loadMemories() })
 <template>
   <main class="workspace">
     <aside class="sidebar">
-      <div class="brand"><span class="mark">⌾</span>Aegis PA</div>
-      <p class="nav-label app-nav-label">工作空间</p>
-      <router-link class="nav" :to="{ name: 'today' }">▦ 今日工作台</router-link>
-      <router-link class="nav" :to="{ name: 'tasks' }">◌ 任务对话</router-link>
-      <router-link class="nav" :to="{ name: 'calendar' }">▦ 日历</router-link>
-      <router-link class="nav" :to="{ name: 'mail-management' }">✉ 邮件管理</router-link>
-      <router-link class="nav" :to="{ name: 'todo-plans' }">☷ 待办计划</router-link>
-      <router-link class="nav" :to="{ name: 'confirmations' }">✓ 操作确认</router-link>
-      <router-link class="nav" :to="{ name: 'knowledge' }">▤ 知识资料</router-link>
-      <router-link class="nav active" :to="{ name: 'memories' }">◇ 长期记忆</router-link>
-      <span class="nav disabled">◫ 连接与审计（待接入）</span>
+      <div class="brand">Aegis PA</div>
+      <AppNavigation active="memories" />
       <div class="identity">
         <b>{{ auth.profile?.name }}</b>
         <span>{{ auth.profile?.email || '已通过 Keycloak 登录' }}</span>
@@ -345,7 +337,6 @@ onMounted(() => { void loadMemories() })
           <h1>长期记忆</h1>
           <p class="muted">仅由你主动维护。保存或编辑后待确认，核对确认后生效；取消确认后不再用于后续模型调用。敏感、过期或来源失效的记录不进入模型。相关的结构化设置优先于同主题摘要，用户当前明确要求始终优先于偏好；设置不修改连接权限或服务器时区。</p>
         </div>
-        <el-button type="primary" @click="openNewMemory">新增偏好</el-button>
       </header>
 
       <article v-loading="loading" class="card memory-card">
@@ -355,7 +346,10 @@ onMounted(() => { void loadMemories() })
             <el-button @click="searchMemories">搜索</el-button>
             <span class="badge neutral">已加载 {{ memories.length }} 条</span>
           </div>
-          <el-button size="small" :loading="loading" @click="loadMemories">刷新</el-button>
+          <div class="memory-toolbar-actions">
+            <el-button size="small" :loading="loading" @click="loadMemories">刷新</el-button>
+            <el-button size="small" type="primary" @click="openNewMemory">新增偏好</el-button>
+          </div>
         </div>
 
         <div class="memory-table-wrap">

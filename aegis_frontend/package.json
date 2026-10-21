@@ -8,7 +8,7 @@
     "node": ">=18.19.0"
   },
   "scripts": {
-    "test": "node --test --test-concurrency=1 tests/knowledge.test.mjs tests/session-memory.test.mjs tests/memory.test.mjs",
+    "test": "node --test --test-concurrency=1 tests/knowledge.test.mjs tests/session-memory.test.mjs tests/memory.test.mjs tests/cooperation.test.mjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"

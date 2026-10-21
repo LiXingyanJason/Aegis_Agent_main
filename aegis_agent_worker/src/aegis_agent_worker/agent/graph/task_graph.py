@@ -131,6 +131,8 @@ class TaskGraph:
             graph.add_edge("mail_reply_draft", END)
         if "mail_send_confirmation" in registered_workflows:
             graph.add_edge("mail_send_confirmation", END)
+        if "cooperation_meeting" in registered_workflows:
+            graph.add_edge("cooperation_meeting", END)
         graph.add_edge("generate_reply", END)
         graph.add_edge("clarify", END)
         return graph.compile(checkpointer=checkpointer)

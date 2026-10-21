@@ -60,6 +60,7 @@ class AgentRunRepository:
         run_id: UUID,
         tenant_id: UUID,
         after_event_no: int,
+        user_id: UUID,
     ) -> list[RunEvent]:
         """读取断线恢复所需的事件历史，不返回其他租户的事件。"""
         result = await session.execute(
@@ -68,9 +69,11 @@ class AgentRunRepository:
                 "FROM run_events "
                 "WHERE run_id = :run_id AND tenant_id = :tenant_id "
                 "  AND event_no > :after_event_no "
+                "  AND EXISTS(SELECT 1 FROM agent_runs ar WHERE ar.id=run_events.run_id "
+                "AND ar.tenant_id=:tenant_id AND ar.user_id=:user_id) "
                 "ORDER BY event_no"
             ),
-            {"run_id": run_id, "tenant_id": tenant_id, "after_event_no": after_event_no},
+            {"run_id": run_id, "tenant_id": tenant_id, "user_id":user_id,"after_event_no": after_event_no},
         )
         return [
             RunEvent(

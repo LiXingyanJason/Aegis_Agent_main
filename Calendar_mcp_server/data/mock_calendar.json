@@ -78,5 +78,44 @@
     "attendees": [],
     "description": "拟安排于2026-10-21下午，时长2小时；具体开始时间和参会人尚待确认。",
     "location": null
+  },
+  {
+    "external_event_id": "mock-event-523caf28-6c68-51e2-b6d6-4678d9704935",
+    "idempotency_key": "calendar:4be25c78-f04f-46d4-a43a-a07b360d2b0d:1",
+    "title": "星河服务续约方案确认",
+    "start_at": "2026-10-26T01:00:00+00:00",
+    "end_at": "2026-10-26T01:50:00+00:00",
+    "attendees": [
+      "linyue@xinghe.example.com",
+      "zhouchen@xinghe.example.com"
+    ],
+    "description": "根据续约邮件中的时间要求生成的站内日程草稿，会议时长 50 分钟，时区为 Asia/Shanghai。最终写入日历需人工确认。",
+    "location": null
+  },
+  {
+    "external_event_id": "mock-event-145a612f-3964-5983-99fa-3589c57d4524",
+    "idempotency_key": "calendar:a6aef86a-3d47-4837-a8c7-cc7ed912a1d5:1",
+    "title": "星河服务续约方案确认",
+    "start_at": "2026-10-26T01:50:00+00:00",
+    "end_at": "2026-10-26T02:40:00+00:00",
+    "attendees": [
+      "linyue@xinghe.example.com",
+      "zhouchen@xinghe.example.com"
+    ],
+    "description": "根据已核验的续约邮件（邮件ID c4682b25-7c82-4336-b764-1a35dd9b6522）整理。会议时区为 Asia/Shanghai，期望时间窗为 2026-10-26 09:00–12:00（北京时间），时长 50 分钟。参会人来自用户补充及邮件整理。当前仅为站内会议草稿，待人工确认；不批准写入日历，也不发送邮件。",
+    "location": null
+  },
+  {
+    "external_event_id": "mock-event-9e091dc4-f532-557e-9004-b0102e7ab7d0",
+    "idempotency_key": "calendar:931964a9-8eeb-41b2-97c7-d95c088be47a:1",
+    "title": "星河服务续约方案确认",
+    "start_at": "2026-10-26T02:40:00+00:00",
+    "end_at": "2026-10-26T03:30:00+00:00",
+    "attendees": [
+      "linyue@xinghe.example.com",
+      "zhouchen@xinghe.example.com"
+    ],
+    "description": "根据续约邮件的时间要求安排本次会议，会议时长50分钟，时区为北京时间（Asia/Shanghai）。请参会人确认所提议时段是否合适。",
+    "location": null
   }
 ]

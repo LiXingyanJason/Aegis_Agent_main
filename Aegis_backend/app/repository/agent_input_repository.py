@@ -39,30 +39,62 @@ class AgentInputRepository:
                 events.append(await self.notice(session,user,row["run_id"],"run_failed",
                                                {"status":"failed","error_code":"INPUT_EXPIRED","error_message":"补充问题已过期，请重新起草"}))
         result = await session.execute(text("""
-          SELECT id AS question_id, run_id, question, version, status, ready, expires_at,
-                 expires_at<=now() AS expired
-          FROM run_input_requests WHERE (CAST(:run AS uuid) IS NULL OR run_id=CAST(:run AS uuid)) AND tenant_id=:tenant AND user_id=:user
-          ORDER BY version
+          SELECT q.id AS question_id,q.run_id,q.question,q.version,q.status,q.ready,q.expires_at,
+                 q.expires_at<=now() AS expired,association.cooperation,q.input_type,
+                 (SELECT COALESCE(jsonb_agg(jsonb_build_object('id',item->>'id','label',item->>'label') ORDER BY ord),'[]'::jsonb)
+                  FROM jsonb_array_elements(q.options) WITH ORDINALITY AS opt(item,ord)) AS options
+          FROM run_input_requests q LEFT JOIN LATERAL (
+            SELECT e.payload->'cooperation' AS cooperation FROM run_events e
+            WHERE e.run_id=q.run_id AND e.tenant_id=q.tenant_id AND e.event_type='input_required'
+              AND e.payload->>'question_id'=q.id::text ORDER BY e.event_no DESC LIMIT 1
+          ) association ON true
+          WHERE (CAST(:run AS uuid) IS NULL OR q.run_id=CAST(:run AS uuid)) AND q.tenant_id=:tenant AND q.user_id=:user
+          ORDER BY q.version
         """),dict(run=run_id,tenant=user.tenant_id,user=user.id))
-        return [dict(row) for row in result.mappings().all()],events
+        items=[]
+        for row in result.mappings().all():
+            item=dict(row)
+            if isinstance(item.get("options"),str): item["options"]=json.loads(item["options"])
+            items.append(item)
+        return items,events
 
     async def answer(self, session, user, question_id, param):
         result = await session.execute(text("""
           SELECT q.*, ar.status AS run_status, q.expires_at<=now() AS expired
-          FROM run_input_requests q JOIN agent_runs ar ON ar.id=q.run_id
+          FROM run_input_requests q JOIN agent_runs ar ON ar.id=q.run_id AND ar.tenant_id=q.tenant_id AND ar.user_id=q.user_id
           WHERE q.id=:id AND q.tenant_id=:tenant AND q.user_id=:user FOR UPDATE OF q,ar
         """),dict(id=question_id,tenant=user.tenant_id,user=user.id))
         q = result.mappings().first()
         if q is None:
             return None
-        if q["status"] in ("answered","consumed") and q["client_response_id"] == param.client_response_id and q["response"] == param.response and q["version"] == param.expected_version:
+        kind=q.get("input_type","text")
+        if kind=="single_choice":
+            if param.selected_option_id is None or param.response is not None: return "conflict"
+            options=q.get("options",[])
+            if isinstance(options,str): options=json.loads(options)
+            matches=[item for item in options if item.get("id")==param.selected_option_id]
+            if len(matches)!=1: return "conflict"
+            ref=matches[0].get("reference",{})
+            if ref.get("resource_type")!="email" or not ref.get("source_version"): return "conflict"
+            valid=await session.execute(text("""
+              SELECT em.id FROM email_messages em JOIN provider_connections pc ON pc.id=em.connection_id
+                AND pc.tenant_id=em.tenant_id AND pc.user_id=em.user_id
+              WHERE em.id=CAST(:email AS uuid) AND em.tenant_id=:tenant AND em.user_id=:user
+                AND em.source_version=:version AND pc.status='active'
+                AND (pc.expires_at IS NULL OR pc.expires_at>now()) AND pc.provider IN ('gmail','outlook_mail')
+                AND pc.scopes @> '["mail.read"]'::jsonb
+            """),dict(email=ref["id"],version=ref["source_version"],tenant=user.tenant_id,user=user.id))
+            if valid.mappings().first() is None: return "conflict"
+        elif kind!="text" or param.response is None or param.selected_option_id is not None:
+            return "conflict"
+        if q["status"] in ("answered","consumed") and q["client_response_id"] == param.client_response_id and q["response"] == param.response and q.get("selected_option_id") == param.selected_option_id and q["version"] == param.expected_version:
             return {"run_id":q["run_id"],"question_id":question_id,
                     "execution_scheduled":q["status"]=="answered" and q["run_status"]=="waiting_input" and not q["expired"],
                     "idempotent_replay":True}
         if q["expired"] or q["version"] != param.expected_version or not q["ready"] or q["status"] != "pending" or q["run_status"] != "waiting_input":
             return "conflict"
-        await session.execute(text("UPDATE run_input_requests SET status='answered',response=:response,client_response_id=:client WHERE id=:id"),
-                              dict(id=question_id,response=param.response,client=param.client_response_id))
+        await session.execute(text("UPDATE run_input_requests SET status='answered',response=:response,selected_option_id=:selected,client_response_id=:client WHERE id=:id"),
+                              dict(id=question_id,response=param.response,selected=param.selected_option_id,client=param.client_response_id))
         return {"run_id":q["run_id"],"question_id":question_id,"execution_scheduled":True,"idempotent_replay":False}
 
     async def cancel(self, session, user, question_id):

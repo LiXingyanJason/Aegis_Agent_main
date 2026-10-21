@@ -1,4 +1,5 @@
 <script setup>
+import AppNavigation from '../components/AppNavigation.vue'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
@@ -31,6 +32,8 @@ const sentMessages = ref([])
 const snapshotAt = ref(null)
 const loading = ref(false)
 const mailState = ref('loading')
+const showExternalNotice = ref(true)
+const externalNoticeKey = computed(() => `aegis:mail-external-notice:${auth.profile?.email || 'current'}`)
 const error = ref('')
 const draftsLoaded = ref(false)
 const sentLoaded = ref(false)
@@ -587,7 +590,17 @@ async function signOut() {
   await router.replace({ name: 'login' })
 }
 
+function acknowledgeExternalNotice() {
+  showExternalNotice.value = false
+  try {
+    window.sessionStorage.setItem(externalNoticeKey.value, 'acknowledged')
+  } catch { /* 存储不可用时，当前页面内仍可收起提示。 */ }
+}
+
 onMounted(async () => {
+  try {
+    showExternalNotice.value = window.sessionStorage.getItem(externalNoticeKey.value) !== 'acknowledged'
+  } catch { /* 存储不可用时照常显示提示。 */ }
   // 标签上的数量应当反映真实服务端数据，而不是等用户第一次切换分区后才更新。
   await Promise.all([loadMessages(), loadDrafts(), loadSentMessages()])
   if (typeof route.query.draft_id === 'string' && route.query.draft_id) {
@@ -613,17 +626,8 @@ onBeforeUnmount(() => {
 <template>
   <main class="workspace">
     <aside class="sidebar">
-      <div class="brand"><span class="mark">⌾</span>Aegis PA</div>
-      <p class="nav-label app-nav-label">工作空间</p>
-      <router-link class="nav" :to="{ name: 'today' }">▦ 今日工作台</router-link>
-      <router-link class="nav" :to="{ name: 'tasks' }">◌ 任务对话</router-link>
-      <router-link class="nav" :to="{ name: 'calendar' }">▦ 日历</router-link>
-      <router-link class="nav active" :to="{ name: 'mail-management' }">✉ 邮件管理</router-link>
-      <router-link class="nav" :to="{ name: 'todo-plans' }">☷ 待办计划</router-link>
-      <router-link class="nav" :to="{ name: 'confirmations' }">✓ 操作确认</router-link>
-      <router-link class="nav" :to="{ name: 'knowledge' }">▤ 知识资料</router-link>
-      <router-link class="nav" :to="{ name: 'memories' }">◇ 长期记忆</router-link>
-      <span class="nav disabled">◫ 连接与审计（待接入）</span>
+      <div class="brand">Aegis PA</div>
+      <AppNavigation active="mail-management" />
 
       <div class="identity">
         <b>{{ auth.profile?.name }}</b>
@@ -653,7 +657,7 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="mail-card-body">
-          <RunInputPanel @answered="resumeBackground" @cancelled="cancelBackground" />
+          <RunInputPanel scope="mail" @answered="resumeBackground" @cancelled="cancelBackground" />
           <el-alert v-if="flagError" :title="flagError" type="error" :closable="false" show-icon />
           <div class="mail-tabs" role="tablist" aria-label="邮件分区">
             <button class="mail-tab" :class="{ active: activeTab === 'received' }" type="button" @click="selectTab('received')">
@@ -685,9 +689,9 @@ onBeforeUnmount(() => {
               show-icon
             />
             <template v-else>
-              <div class="mail-notice">
-                <b>外部内容提示：</b>
-                收到邮件的正文属于不可信内容。当前页面仅展示服务端返回的邮件元数据，不展示正文。
+              <div v-if="showExternalNotice" class="mail-notice" role="note">
+                <span><b>外部内容提示：</b>收到邮件的正文属于不可信内容。当前页面仅展示服务端返回的邮件元数据，不展示正文。</span>
+                <el-button size="small" type="warning" plain @click="acknowledgeExternalNotice">确认</el-button>
               </div>
               <div class="section-head">
                 <div>

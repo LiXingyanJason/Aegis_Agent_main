@@ -144,10 +144,16 @@ async def _run_event_stream(
     订阅 Redis事件、补发数据库历史事件持续、等 Redis 新事件并推给前端
     """
     pubsub = redis.pubsub() # 创建 Redis Pub/Sub 订阅对象
-    await pubsub.subscribe(run_event_channel(run_id)) # 订阅当前任务专属频道 aegis:run:2dde...:events
+    subscribed=False
     # Redis 不需要预先创建或登记频道。第一次执行 publish 或 subscribe 时，这个名字对应的频道就自然存在
     last_sent_event_no = after_event_no
     try:
+        try:
+            await pubsub.subscribe(run_event_channel(run_id))
+            subscribed=True
+        except Exception:
+            # Redis仅用于唤醒；不可用时保留SQL历史和有界间隔轮询。
+            pass
         # 订阅成功后，从 PostgreSQL 补发该任务此前已经产生、但前端可能没收到的事件。
         async with database.session() as session:
             async with tenant_transaction(session, current_user.tenant_context):
@@ -162,25 +168,35 @@ async def _run_event_stream(
 
         while not await request.is_disconnected(): # 浏览器没有关闭页面、取消请求或网络断开，就持续循环
             # 等待 Redis 频道的新消息，最长等待 15 秒
-            message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=15.0)
-            if message is None:
-                yield ": keepalive\n\n" # 没有事件时，向前端发一条 SSE 心跳注释
-                continue
-            raw_payload = message["data"]
-            if not isinstance(raw_payload, str): # 忽略非字符串的异常消息
-                continue
-            event = RunEvent.from_wire_payload(raw_payload) #将 JSON 字符串还原为后端的 RunEvent 对象
-            if event.event_no <= last_sent_event_no: # 去重，不在补发已经发送的事件
-                continue
-            yield _format_sse_event(event) # 将历史事件转换成 SSE 文本并立即推送给前端
-            last_sent_event_no = event.event_no
-            if event.event_type in _terminal_event_types:
-                return
+            if subscribed:
+                try:
+                    message=await pubsub.get_message(ignore_subscribe_messages=True,timeout=15.0)
+                except Exception:
+                    subscribed=False
+                    message=None
+            else:
+                await asyncio.sleep(15.0)
+                message=None
+            # Pub/Sub仅唤醒，权威内容及完整顺序始终来自SQL；超时也补查，避免通知丢失后漏进度。
+            async with database.session() as session:
+                async with tenant_transaction(session,current_user.tenant_context):
+                    pending=await _run_service.list_run_events(session,current_user.user,run_id,last_sent_event_no)
+            for event in pending:
+                if event.run_id!=run_id or event.event_no<=last_sent_event_no:
+                    continue
+                yield _format_sse_event(event)
+                last_sent_event_no=event.event_no
+                if event.event_type in _terminal_event_types:
+                    return
+            if message is None and not pending:
+                yield ": keepalive\n\n"
     except asyncio.CancelledError:
         raise
     finally:
-        await pubsub.unsubscribe(run_event_channel(run_id))
-        await pubsub.aclose()
+        try:
+            if subscribed: await pubsub.unsubscribe(run_event_channel(run_id))
+        finally:
+            await pubsub.aclose()
 
 
 def _format_sse_event(event: RunEvent) -> str:

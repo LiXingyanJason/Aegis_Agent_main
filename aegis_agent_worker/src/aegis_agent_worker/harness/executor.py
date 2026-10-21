@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aegis_agent_worker.config.database import Database, TenantContext, tenant_transaction
 from aegis_agent_worker.harness.context import bind_execution, get_execution, reset_execution
 from aegis_agent_worker.harness.exceptions import HarnessError
+from aegis_agent_worker.harness.failures import execution_error_code
 from aegis_agent_worker.harness.timeout import execution_timeout
 from aegis_agent_worker.harness.policies.execution import TaskExecutionPolicy
 from aegis_agent_worker.harness.policy_provider import PolicyProvider, PolicyBundle, DEFAULT_POLICIES
@@ -82,6 +83,8 @@ class HarnessExecutor:
                 time_limit_ms=self.policy.active_seconds * 1000,
             )
             if active_ms is None:
+                # 区分取消/状态变化与预算不足；原子占用SQL本身也检查running，防止预检后取消。
+                await self._check_snapshot(session, runtime, require_model=False, require_tool=False)
                 raise HarnessError("EXECUTION_BUDGET_EXCEEDED", "任务执行次数或时间预算已耗尽")
             remaining = self.policy.active_seconds - active_ms / 1000 - runtime.elapsed_seconds
             attempt_id = await self._repository.start_attempt(
@@ -93,7 +96,7 @@ class HarnessExecutor:
             async with execution_timeout(min(self.policy.call_timeout(kind), max(0.01, remaining))):
                 yield audit
         except BaseException as error:
-            status, code = "failed", getattr(error, "code", "EXECUTION_FAILED")
+            status, code = "failed", execution_error_code(error)
             if isinstance(error, TimeoutError):
                 code = "EXECUTION_TIMEOUT"
                 raise HarnessError("EXECUTION_TIMEOUT", "任务执行超时") from error
@@ -104,3 +107,24 @@ class HarnessExecutor:
                     session, attempt_id, status=status, error_code=code,
                     **audit,
                 )
+
+    async def _check_snapshot(self, session, runtime, *, require_model, require_tool):
+        row = await self._repository.snapshot(session, runtime.run)
+        if row is None:
+            raise HarnessError("EXECUTION_STATE_UNAVAILABLE", "无法核验任务执行状态")
+        if row["run_status"] == "cancelled":
+            raise HarnessError("RUN_CANCELLED", "任务已取消，停止后续执行")
+        if row["run_status"] != "running":
+            raise HarnessError("EXECUTION_STATE_CHANGED", "任务已不处于可执行状态")
+        if row["policy_version"] != self.policy.version:
+            raise HarnessError("POLICY_VERSION_CONFLICT", "执行策略版本与任务预算不一致")
+        if (row["active_ms"]+round(runtime.elapsed_seconds*1000) >= self.policy.active_seconds*1000
+                or require_model and row["model_calls"] >= self.policy.max_models
+                or require_tool and row["tool_calls"] >= self.policy.max_tools):
+            raise HarnessError("EXECUTION_BUDGET_EXCEEDED", "任务执行次数或时间预算已耗尽")
+
+    async def check_remaining(self, *, require_model=True, require_tool=True):
+        """委派前只读预检，不扣预算；真实调用仍必须原子reserve_call。"""
+        runtime = get_execution()
+        async with self._session(runtime.run) as session:
+            await self._check_snapshot(session, runtime, require_model=require_model, require_tool=require_tool)

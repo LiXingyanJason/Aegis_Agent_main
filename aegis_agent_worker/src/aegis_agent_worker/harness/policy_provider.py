@@ -1,4 +1,4 @@
-"""当前生产使用的执行限制集中在 LEGACY_POLICY，版本为 harness-v1，由 PolicyProvider 提供"""
+"""不可变执行策略快照；生产默认值由harness.bootstrap选择，旧run沿用持久化版本。"""
 from dataclasses import dataclass, field, replace
 from types import MappingProxyType
 
@@ -8,6 +8,7 @@ from aegis_agent_worker.harness.policies.workflow import MainContextPolicy, Mail
 from aegis_agent_worker.harness.policies.output import OutputPolicy
 from aegis_agent_worker.harness.policies.memory import MemoryContextPolicy
 from aegis_agent_worker.harness.policies.session_memory import SessionMemoryPolicy
+from aegis_agent_worker.harness.policies.cooperation import CooperationPolicy, MailMeetingPolicy, CalendarTeamPolicy
 
 
 @dataclass(frozen=True)
@@ -18,10 +19,15 @@ class PolicyBundle:
     output: OutputPolicy = field(default_factory=OutputPolicy)
     memory: MemoryContextPolicy = field(default_factory=MemoryContextPolicy)
     session_memory: SessionMemoryPolicy = field(default_factory=SessionMemoryPolicy)
+    cooperation: CooperationPolicy = field(default_factory=CooperationPolicy)
+    mail_meeting: MailMeetingPolicy = field(default_factory=MailMeetingPolicy)
+    calendar_team: CalendarTeamPolicy = field(default_factory=CalendarTeamPolicy)
     def __post_init__(self):
         for name, kind in (("execution", TaskExecutionPolicy), ("main_context", MainContextPolicy),
                            ("mail_collection", MailCollectionPolicy), ("output", OutputPolicy),
-                           ("memory", MemoryContextPolicy), ("session_memory", SessionMemoryPolicy)):
+                           ("memory", MemoryContextPolicy), ("session_memory", SessionMemoryPolicy),
+                           ("cooperation", CooperationPolicy), ("mail_meeting", MailMeetingPolicy),
+                           ("calendar_team", CalendarTeamPolicy)):
             if not isinstance(getattr(self, name), kind):
                 raise ValueError(f"策略包{name}类型无效")
     @property
@@ -30,6 +36,12 @@ class PolicyBundle:
 
 # 已发布版本必须固定全部值。以后调整默认值应新增版本，不能修改此快照。
 LEGACY_POLICY = PolicyBundle(
+    calendar_team=CalendarTeamPolicy(enabled=False, max_rounds=8, max_candidates=10,
+        max_context_bytes=18000, max_answers=4),
+    mail_meeting=MailMeetingPolicy(enabled=False, max_rounds=8, max_candidates=10,
+        max_context_bytes=18000, max_answers=4),
+    cooperation=CooperationPolicy(enabled=False, max_rounds=6, max_delegations=4,
+        max_context_bytes=16000, max_repeated_results=2),
     session_memory=SessionMemoryPolicy(version="session-work-v1",ttl_seconds=1800,max_user_sessions=32,
         max_tasks=6,max_cards=4,max_cache_bytes=12000,history_items=20,history_chars=12000,
         message_chars=4000,redis_timeout_seconds=1.0),
@@ -61,6 +73,41 @@ KNOWLEDGE_CONTRACT_POLICY = replace(LEGACY_POLICY, execution=replace(
     tool_scopes=tuple((kind, tools | frozenset({"knowledge.search"}) if kind == "conversation" else tools)
                       for kind, tools in LEGACY_POLICY.execution.tool_scopes),
 ))
+
+# 8.1运行骨架专用，尚未加入生产Provider；不扩大旧任务工具范围或预算。
+COOPERATION_CONTRACT_POLICY = replace(
+    LEGACY_POLICY,
+    execution=replace(LEGACY_POLICY.execution, version="harness-v3-team-runtime"),
+    cooperation=CooperationPolicy(enabled=True, max_rounds=6, max_delegations=4,
+        max_context_bytes=16000, max_repeated_results=2),
+)
+
+# 8.2真实邮件专家专用；仍不加入生产Provider，8.3完成后再组装完整入口。
+COOPERATION_MAIL_POLICY = replace(
+    COOPERATION_CONTRACT_POLICY,
+    execution=replace(COOPERATION_CONTRACT_POLICY.execution, version="harness-v4-team-mail",
+        max_models=16, max_tools=10, active_seconds=180,
+        tool_scopes=tuple((kind, tools | frozenset({"mail.messages.get"}) if kind == "conversation" else tools)
+                          for kind, tools in COOPERATION_CONTRACT_POLICY.execution.tool_scopes)),
+    mail_meeting=MailMeetingPolicy(enabled=True, max_rounds=8, max_candidates=10,
+        max_context_bytes=18000, max_answers=4),
+)
+
+# 8.3建立的完整团队快照；8.4显式启用时供新任务使用，不修改旧任务快照。
+COOPERATION_CALENDAR_POLICY = replace(
+    COOPERATION_MAIL_POLICY,
+    execution=replace(COOPERATION_MAIL_POLICY.execution, version="harness-v5-team-calendar"),
+    calendar_team=CalendarTeamPolicy(enabled=True, max_rounds=8, max_candidates=10,
+        max_context_bytes=18000, max_answers=4),
+)
+
+# 8.4生产组合快照：知识与团队可同时启用，不改写v1～v5或丢失knowledge.search。
+COOPERATION_KNOWLEDGE_POLICY = replace(
+    COOPERATION_CALENDAR_POLICY,
+    execution=replace(COOPERATION_CALENDAR_POLICY.execution, version="harness-v6-team-knowledge",
+        tool_scopes=tuple((kind, tools | frozenset({"knowledge.search"}) if kind == "conversation" else tools)
+                          for kind, tools in COOPERATION_CALENDAR_POLICY.execution.tool_scopes)),
+)
 
 
 

@@ -30,6 +30,10 @@ class Database:
 
 
 class Execution:
+    async def snapshot(self,session,run):
+        from aegis_agent_worker.harness.context import get_execution
+        return dict(run_status="running",policy_version=get_execution().policy_bundle.version,
+                    model_calls=0,tool_calls=0,active_ms=0)
     def __init__(self): self.finished=[]
     async def ensure_budget(self,session,run,version): return version
     async def add_active_time(self,*args): pass

@@ -9,6 +9,16 @@ from aegis_agent_worker.repository.run_repository import ClaimedRun
 
 
 class ExecutionRepository:
+    async def snapshot(self, session, run):
+        """SQL归属/状态与累计用量，供委派预检；不是调用预算的原子占用。"""
+        result = await session.execute(text("""
+            SELECT b.model_calls,b.tool_calls,b.active_ms,b.policy_version,ar.status AS run_status
+            FROM run_execution_budgets b JOIN agent_runs ar
+              ON ar.id=b.run_id AND ar.tenant_id=b.tenant_id AND ar.user_id=b.user_id
+            WHERE b.run_id=:id AND b.tenant_id=:tenant AND b.user_id=:user
+        """),dict(id=run.id,tenant=run.tenant_id,user=run.user_id))
+        return result.mappings().first()
+
     async def ensure_budget(self, session: AsyncSession, run: ClaimedRun, version: str) -> str:
         """首次固定策略包版本；恢复返回原版本，不重置次数／耗时或改写版本。"""
         result = await session.execute(text("""
@@ -40,9 +50,11 @@ class ExecutionRepository:
             UPDATE run_execution_budgets SET {field}={field}+1
             WHERE run_id=:id AND tenant_id=:tenant AND {field}<:maximum
               AND policy_version=:policy AND active_ms+:elapsed<:time_limit
+              AND user_id=:user AND EXISTS(SELECT 1 FROM agent_runs ar
+                WHERE ar.id=:id AND ar.tenant_id=:tenant AND ar.user_id=:user AND ar.status='running')
             RETURNING active_ms
         """), dict(id=run.id, tenant=run.tenant_id, maximum=maximum, policy=policy_version,
-                   elapsed=elapsed_ms, time_limit=time_limit_ms))
+                   elapsed=elapsed_ms, time_limit=time_limit_ms,user=run.user_id))
         row = result.mappings().first()
         return row["active_ms"] if row is not None else None
 

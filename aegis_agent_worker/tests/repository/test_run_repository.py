@@ -40,7 +40,7 @@ class _FakeSession:
 
     def __init__(self) -> None:
         self._results = iter([
-            _Result({"id": CONVERSATION_ID}), _Result({"next_sequence_no": 2}),
+            _Result({"id": CONVERSATION_ID}), _Result({"status": "running"}), _Result({"next_sequence_no": 2}),
             _Result({"id": UUID(int=10)}),
         ])
         self.statements: list[str] = []

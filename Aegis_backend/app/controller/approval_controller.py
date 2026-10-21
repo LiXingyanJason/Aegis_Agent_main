@@ -72,7 +72,7 @@ async def decide_approval(
     if result.outcome == "workflow_not_ready":
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="确认流程正在初始化，请等待任务进度显示“等待发送确认”后重试",
+            detail="确认流程正在初始化，请等待任务进入等待确认状态后重试",
         )
     if result.outcome == "not_pending":
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="待确认操作已处理，不能重复确认")

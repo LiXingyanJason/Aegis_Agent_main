@@ -46,6 +46,8 @@ class TaskGraphState(TypedDict, total=False):
     draft_id: str
     approval_item_id: str
     approval_decision: str
+    approval_ready_required: bool
+    draft_version: int
     confirmation_error: str
     llm_step_id: str
     assistant_content: str
@@ -61,3 +63,7 @@ class TaskGraphState(TypedDict, total=False):
     input_request_id: str
     input_request: dict[str, Any]
     mail_workflow_completed: bool
+    # 团队输出；局部轮次/交接过程保留在协同子图，而非根图协议。
+    cooperation_status: str
+    cooperation_error_code: str
+    cooperation_draft: dict[str, Any]

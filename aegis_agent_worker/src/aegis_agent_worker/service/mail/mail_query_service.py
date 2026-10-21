@@ -1,6 +1,7 @@
 """邮件查询业务执行；LLM 规划在 MailAgent／Workflow。"""
 
 from time import monotonic
+from uuid import uuid4
 from pydantic import ValidationError
 
 from aegis_agent_worker.agent.contracts.mail import MailQueryPlan, MailListMessage
@@ -33,7 +34,8 @@ class MailQueryService:
         async with self._database.session() as session:
             async with tenant_transaction(session, context):
                 step_id = await self._runs.create_running_tool_step(
-                    session, run_id=run.id, tenant_id=run.tenant_id, step_key="mail_query", label="正在查询邮件")
+                    session, run_id=run.id, tenant_id=run.tenant_id,
+                    step_key=f"mail_query_{uuid4().hex}", label="正在查询邮件")
                 tool_id = await self._tool_calls.create_running(
                     session, tenant_id=run.tenant_id, run_id=run.id, step_id=step_id, connection_id=None,
                     tool_name=definition.name, risk_level=definition.risk_level, tool_version=definition.version,

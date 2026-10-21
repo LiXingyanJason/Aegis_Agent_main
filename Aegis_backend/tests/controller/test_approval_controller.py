@@ -106,3 +106,24 @@ def test_approve_pending_item_registers_resume_after_commit() -> None:
     }
     assert len(session.calls) == 3
     assert app.state.test_dispatcher.calls == [(RUN_ID, "approved")]
+
+
+def test_calendar_approval_rejected_before_worker_checkpoint_is_ready():
+    session = _Session([_Result({"id":APPROVAL_ID,"run_id":RUN_ID,"status":"pending","expired":False,
+        "run_type":"conversation","run_status":"running","resource_type":"calendar_event_draft"})])
+    app = _app(session)
+    with TestClient(app) as client:
+        response = client.post(f"/approvals/{APPROVAL_ID}/decision",json={"decision":"approved"},
+                               headers={"Authorization":"Bearer test"})
+    assert response.status_code==409
+    assert len(session.calls)==1 and not app.state.test_dispatcher.calls
+
+
+def test_calendar_approval_after_checkpoint_ready_keeps_existing_api_contract():
+    session = _Session([_Result({"id":APPROVAL_ID,"run_id":RUN_ID,"status":"pending","expired":False,
+        "run_type":"conversation","run_status":"waiting_confirmation","resource_type":"calendar_event_draft"}),_Result(),_Result()])
+    app = _app(session)
+    with TestClient(app) as client:
+        response = client.post(f"/approvals/{APPROVAL_ID}/decision",json={"decision":"approved"},
+                               headers={"Authorization":"Bearer test"})
+    assert response.status_code==200 and app.state.test_dispatcher.calls==[(RUN_ID,"approved")]
