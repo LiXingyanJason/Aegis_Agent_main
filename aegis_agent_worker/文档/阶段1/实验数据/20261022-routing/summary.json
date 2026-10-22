@@ -1,0 +1,337 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-22T23:14:43.866997+08:00",
+  "provenance": {
+    "routing_file": "evaluation-results\\20261022-routing-live-3rounds.json",
+    "routing_sha256": "4eead231742e574c78abf8545fa6f12cb8752be3a3fe70eda434969001147e4b",
+    "dataset_sha256": "8d1659af4d653a951634de1d7b3bc4b115f42adf36b1a511f0c6a4f5b7c2f278",
+    "source_commit": "cb68f58a41a206d16d7b14d55d49c44e91449369",
+    "source_dirty": false,
+    "source_sha256": "01a186a26598dbe1c69ca3d3aa800d0510ea702ef6fa505d872ed2f85643cedd",
+    "source_unchanged_since_report": true,
+    "models": [
+      "deepseek/deepseek-flash"
+    ],
+    "python": "3.12.14",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "dependencies": {
+      "langgraph": "0.6.11",
+      "httpx": "0.28.1",
+      "pydantic": "2.13.5",
+      "pytest": "8.4.2"
+    },
+    "analysis_script_sha256": "9e5c7c577afec856b23d8ee332aaf7e284ffa7135be2fd7e23d0be4619d6e85f",
+    "evaluator_script_sha256": "c83a1333be6011d40601c6b798d1e87ec1dd4106040f563e98744c756edc4aeb"
+  },
+  "routing": {
+    "scope": "four_registered_capabilities_route_only_fixed_facts",
+    "live": true,
+    "report_complete": true,
+    "correct": 152,
+    "runs": 159,
+    "accuracy": 0.9559748427672956,
+    "unique_cases": 53,
+    "balanced_repetitions": true,
+    "per_case_repetitions": {
+      "3": 53
+    },
+    "round_metrics": {
+      "1": {
+        "correct": 50,
+        "runs": 53,
+        "accuracy": 0.9433962264150944
+      },
+      "2": {
+        "correct": 52,
+        "runs": 53,
+        "accuracy": 0.9811320754716981
+      },
+      "3": {
+        "correct": 50,
+        "runs": 53,
+        "accuracy": 0.9433962264150944
+      }
+    },
+    "category_metrics": {
+      "amb": {
+        "correct": 17,
+        "runs": 18,
+        "accuracy": 0.9444444444444444
+      },
+      "cal": {
+        "correct": 18,
+        "runs": 18,
+        "accuracy": 1
+      },
+      "card": {
+        "correct": 18,
+        "runs": 21,
+        "accuracy": 0.8571428571428571
+      },
+      "chat": {
+        "correct": 16,
+        "runs": 18,
+        "accuracy": 0.8888888888888888
+      },
+      "free": {
+        "correct": 18,
+        "runs": 18,
+        "accuracy": 1
+      },
+      "mail": {
+        "correct": 30,
+        "runs": 30,
+        "accuracy": 1
+      },
+      "meet": {
+        "correct": 17,
+        "runs": 18,
+        "accuracy": 0.9444444444444444
+      },
+      "safe": {
+        "correct": 18,
+        "runs": 18,
+        "accuracy": 1
+      }
+    },
+    "cluster_confidence_interval": {
+      "method": "case_cluster_percentile_bootstrap",
+      "draws": 10000,
+      "seed": 20261022,
+      "lower": 0.9056603773584906,
+      "upper": 0.9937106918238994,
+      "note": "按固定题组重采样；不证明新问题/生产分布的泛化，也非159个独立问题"
+    },
+    "stable_route_and_target_cases": 47,
+    "all_repetitions_correct_cases": 48,
+    "per_case_majority_correct": 52,
+    "clarification_runs": 50,
+    "unnecessary_clarifications": 6,
+    "candidate_recall": {
+      "retained": 93,
+      "eligible_observations": 93
+    },
+    "repair": {
+      "tasks": 8,
+      "finally_correct": 6
+    },
+    "latency_ms": {
+      "mean": 1808.3647798742138,
+      "p50": 1453.0,
+      "p95": 3766.0
+    },
+    "real_model_calls": 186,
+    "usage": {
+      "prompt_tokens": {
+        "reported_calls": 186,
+        "unknown_calls": 0,
+        "reported_sum": 408382
+      },
+      "completion_tokens": {
+        "reported_calls": 186,
+        "unknown_calls": 0,
+        "reported_sum": 34393
+      },
+      "total_tokens": {
+        "reported_calls": 186,
+        "unknown_calls": 0,
+        "reported_sum": 442775
+      }
+    },
+    "prohibited_handoff": {
+      "eligible_observations": 21,
+      "violations": 0
+    },
+    "illegal_business_tool_rate": null,
+    "failures": [
+      {
+        "case_id": "chat04",
+        "repetition": 1,
+        "actual": "clarify",
+        "target_ok": true,
+        "outcome": "invalid_output",
+        "error": null,
+        "repair_count": 1
+      },
+      {
+        "case_id": "chat05",
+        "repetition": 1,
+        "actual": "clarify",
+        "target_ok": true,
+        "outcome": "invalid_output",
+        "error": null,
+        "repair_count": 1
+      },
+      {
+        "case_id": "card02",
+        "repetition": 1,
+        "actual": "clarify",
+        "target_ok": false,
+        "outcome": "invalid_target",
+        "error": null,
+        "repair_count": 0
+      },
+      {
+        "case_id": "card02",
+        "repetition": 2,
+        "actual": "clarify",
+        "target_ok": false,
+        "outcome": "invalid_target",
+        "error": null,
+        "repair_count": 0
+      },
+      {
+        "case_id": "meet01",
+        "repetition": 3,
+        "actual": "clarify",
+        "target_ok": true,
+        "outcome": "validated",
+        "error": null,
+        "repair_count": 0
+      },
+      {
+        "case_id": "amb05",
+        "repetition": 3,
+        "actual": "mail.query_mail",
+        "target_ok": true,
+        "outcome": "validated",
+        "error": null,
+        "repair_count": 0
+      },
+      {
+        "case_id": "card02",
+        "repetition": 3,
+        "actual": "clarify",
+        "target_ok": false,
+        "outcome": "invalid_target",
+        "error": null,
+        "repair_count": 0
+      }
+    ]
+  },
+  "regression": [
+    {
+      "path": "evaluation-results\\20261022-worker-junit-final.xml",
+      "sha256": "6a070ae1933996562ccd2b8d8980c44bb1b1d8332e8ff7af7999bc981c1c5e2c",
+      "total": 802,
+      "passed": 800,
+      "failed": 0,
+      "skipped": 2,
+      "categories": {
+        "cooperation": {
+          "total": 184,
+          "passed": 184,
+          "failed": 0,
+          "skipped": 0
+        },
+        "harness": {
+          "total": 13,
+          "passed": 13,
+          "failed": 0,
+          "skipped": 0
+        },
+        "knowledge": {
+          "total": 125,
+          "passed": 125,
+          "failed": 0,
+          "skipped": 0
+        },
+        "memory": {
+          "total": 147,
+          "passed": 145,
+          "failed": 0,
+          "skipped": 2
+        },
+        "other": {
+          "total": 258,
+          "passed": 258,
+          "failed": 0,
+          "skipped": 0
+        },
+        "routing_evaluation": {
+          "total": 75,
+          "passed": 75,
+          "failed": 0,
+          "skipped": 0
+        }
+      },
+      "governance_related": {
+        "total": 94,
+        "passed": 94,
+        "failed": 0,
+        "skipped": 0,
+        "modules": [
+          "tests.agent.test_cooperation_governance",
+          "tests.agent.test_harness_layers",
+          "tests.agent.test_harness_react_revision",
+          "tests.agent.test_input_choices",
+          "tests.agent.test_main_card_react",
+          "tests.knowledge.test_hybrid_retrieval",
+          "tests.memory.test_manual_memory_read_guard",
+          "tests.memory.test_memory_priority"
+        ]
+      },
+      "note": "参数化本地测试数，不是独立漏洞数或模型正确率；跳过未验收"
+    },
+    {
+      "path": "evaluation-results\\20261022-api-junit.xml",
+      "sha256": "c8a076f064dfe652cea2d1ace75f53d88d3875de3c9355fc81b6f9f03bbe9f68",
+      "total": 210,
+      "passed": 174,
+      "failed": 0,
+      "skipped": 36,
+      "categories": {
+        "cooperation": {
+          "total": 5,
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0
+        },
+        "other": {
+          "total": 205,
+          "passed": 169,
+          "failed": 0,
+          "skipped": 36
+        }
+      },
+      "governance_related": {
+        "total": 16,
+        "passed": 16,
+        "failed": 0,
+        "skipped": 0,
+        "modules": [
+          "tests.controller.test_approval_controller",
+          "tests.controller.test_input_choices"
+        ]
+      },
+      "note": "参数化本地测试数，不是独立漏洞数或模型正确率；跳过未验收"
+    }
+  ],
+  "archived_evidence": [
+    {
+      "path": "文档\\阶段1\\实验数据\\20261022-routing\\20261022-routing-live-3rounds.json",
+      "sha256": "4eead231742e574c78abf8545fa6f12cb8752be3a3fe70eda434969001147e4b",
+      "bytes": 248227
+    },
+    {
+      "path": "文档\\阶段1\\实验数据\\20261022-routing\\main_routing_cases.json",
+      "sha256": "8d1659af4d653a951634de1d7b3bc4b115f42adf36b1a511f0c6a4f5b7c2f278",
+      "bytes": 9113
+    },
+    {
+      "path": "文档\\阶段1\\实验数据\\20261022-routing\\20261022-worker-junit-final.xml",
+      "sha256": "6a070ae1933996562ccd2b8d8980c44bb1b1d8332e8ff7af7999bc981c1c5e2c",
+      "bytes": 121720
+    },
+    {
+      "path": "文档\\阶段1\\实验数据\\20261022-routing\\20261022-api-junit.xml",
+      "sha256": "c8a076f064dfe652cea2d1ace75f53d88d3875de3c9355fc81b6f9f03bbe9f68",
+      "bytes": 42481
+    },
+    {
+      "path": "文档\\阶段1\\实验数据\\20261022-routing\\20261022-routing-offline.json",
+      "sha256": "8e28c9e23c5ae2600f77361101bf1dff9492489899d482095883d548f7c9cb73",
+      "bytes": 82418
+    }
+  ]
+}

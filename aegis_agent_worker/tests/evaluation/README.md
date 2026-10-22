@@ -39,7 +39,7 @@ D:\anaconda\envs\Aegis\python.exe -m pytest tests/evaluation -q -p no:cacheprovi
 默认每轮最多 200 次 HTTP 请求；耗尽时报告不完整／受限错误，不能当完整结果对比。
 Mock 报告 `semantic_routing_accuracy=null`，Token 缺失也为 null，绝不把 Mock 100% 当模型准确率。
 
-## 显式启用真实模型（尚未执行）
+## 显式启用真实模型（须授权，历史结果见下文）
 
 本地 Worker `.env` 放模型配置，不把 Key 发到聊天。脚本使用已有 Settings，数据库／Redis配置仅解析而不连接。
 初次建议只跑 5 条，确认配置、费用和报告后再扩展：
@@ -85,5 +85,13 @@ D:\anaconda\envs\Aegis\python.exe scripts/compare_routing_reports.py evaluation-
 - `illegal_call_rate=null`：沙箱不执行业务工具，不能将预设零调用当成权限／审批安全证明。
 - `ready_for_release=false`：始终不能仅凭这份路由报告声明上线通过。
 
-下一步仍需人工审定标签、实际新旧模型评测、运行现有全部安全／恢复测试，以及独立测试库的真实端到端联调。
+历史单轮新旧对比及本次三轮结果均已记录；后续仍需人工复核标签、独立留出集、同条件多轮基线与完整权限／恢复场景的端到端联调，不能仅凭本集结果声明生产验收完成。
 代表性正确率≥90%只是目标；关键非法写入／审批绕过为0需在真实治理链及端到端测试中验证。
+
+## 2026-10-22：简历量化实验与三轮重复评测
+
+已新增[实验设计、实测结果及可用简历表述](../../文档/阶段1/24-简历量化实验设计与记录-2026-10-22.md)。同一53题×3轮，真实语义152/159合格（95.60%）；重复观测不是159个独立问题，不能混入故障Mock/页面对照或只挑最高一轮。保留7次失败，不据此修改标签。没有同期基线，不能宣称提升百分比。
+
+scripts/summarize_resume_experiments.py可统计逐轮/逐题一致性、按题聚类bootstrap区间、只包含live请求的供应商usage、JUnit模块覆盖，并用--evidence-directory归档显式输入到非忽略目录；拒绝覆盖历史证据。模型外发/费用需另外授权，汇总脚本本身不调用模型/数据库/MCP。统计/归档逻辑有9项离线测试。
+
+本轮证据已归档于文档/阶段1/实验数据/20261022-routing，不依赖evaluation-results中的临时文件。新的RAG、记忆和Schema消融仍为设计，不把既有单测当成召回率或成本提升。

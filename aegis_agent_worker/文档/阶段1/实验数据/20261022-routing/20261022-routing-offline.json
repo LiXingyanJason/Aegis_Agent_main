@@ -1,0 +1,2807 @@
+{
+  "schema_version": 1,
+  "mode": "mock",
+  "label": "resume-study-current",
+  "dataset_version": "main-routing-v1",
+  "dataset_sha256": "8d1659af4d653a951634de1d7b3bc4b115f42adf36b1a511f0c6a4f5b7c2f278",
+  "source_commit": "cb68f58a41a206d16d7b14d55d49c44e91449369",
+  "source_dirty": false,
+  "source_revision_verified": false,
+  "source_sha256": "01a186a26598dbe1c69ca3d3aa800d0510ea702ef6fa505d872ed2f85643cedd",
+  "fixed_now": "2026-10-14T10:00:00+08:00",
+  "requested_runs": 62,
+  "completed_runs": 62,
+  "complete": true,
+  "summary": {
+    "runs": 62,
+    "passed": 62,
+    "deterministic_pass_rate": 1.0,
+    "semantic_routing_accuracy": null,
+    "candidate_recall": 1.0,
+    "mean_candidate_count": 3.8867924528301887,
+    "clarification_rate": 0.3018867924528302,
+    "unnecessary_clarifications": 0,
+    "prohibited_handoff_runs": 0,
+    "prohibited_handoff_rate": 0.0,
+    "illegal_call_rate": null,
+    "mean_ms": 7.3584905660377355,
+    "p95_ms": 16.0,
+    "repair_rate": 0.0,
+    "model_calls": 66,
+    "usage": {
+      "prompt_tokens": {
+        "reported_calls": 0,
+        "unknown_calls": 66,
+        "reported_sum": null
+      },
+      "completion_tokens": {
+        "reported_calls": 0,
+        "unknown_calls": 66,
+        "reported_sum": null
+      },
+      "total_tokens": {
+        "reported_calls": 0,
+        "unknown_calls": 66,
+        "reported_sum": null
+      }
+    },
+    "scope": "route_only_with_in_memory_facts_not_end_to_end",
+    "ready_for_release": false
+  },
+  "results": [
+    {
+      "case_id": "cal01",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "calendar.list_events",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 16.0,
+      "calls": [
+        {
+          "duration_ms": 16.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "c1538e0df9a874fcb68273697e34cc46eee5ce4699ba6ae3ad315cc816c76649",
+      "repetition": 1
+    },
+    {
+      "case_id": "cal02",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "calendar.list_events",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "no_domain_signal_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 16.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "579920eebe8a193d16569631e3e44152861df208f46b9f7a18b5e27a39c82eda",
+      "repetition": 1
+    },
+    {
+      "case_id": "cal03",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "calendar.list_events",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 15.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "b41290e0450a7d75f7a7ada0e9302ba2f2ec2ce024826e9b930afa6a77da7e15",
+      "repetition": 1
+    },
+    {
+      "case_id": "cal04",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "calendar.list_events",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "a234621f398594059a150c11a7027fb63dd93250303e9e224d7076ba3fd209fc",
+      "repetition": 1
+    },
+    {
+      "case_id": "cal05",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "calendar.list_events",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "ac6558073e11f0e32fcb28afbf704165331abb4f8e86ff8d1f3e3bc69f717605",
+      "repetition": 1
+    },
+    {
+      "case_id": "cal06",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "calendar.list_events",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "no_domain_signal_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 16.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "b2dcf86b161cd31489fdd03581759d6a226e3cc31311550988b6c5e5de96aaa5",
+      "repetition": 1
+    },
+    {
+      "case_id": "free01",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "calendar.find_free_time",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 15.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "2a062a42f0bc0470ef70f0234aaff73519876b2a44bb9eb2f7af6a805352c53d",
+      "repetition": 1
+    },
+    {
+      "case_id": "free02",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "calendar.find_free_time",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "no_domain_signal_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "18c306409075ad474ab93aa14520125c57295e86f2efdcdcc5a07e4c5112c5e9",
+      "repetition": 1
+    },
+    {
+      "case_id": "free03",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "calendar.find_free_time",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "no_domain_signal_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "d1923301848d33ad6ca6c597230a8be47b1f1ff6776cb402808d444f4fbf170e",
+      "repetition": 1
+    },
+    {
+      "case_id": "free04",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "calendar.find_free_time",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "no_domain_signal_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "35d5168e02b976e0164ff36480c99f957e8dc882b2500a0f12a8ce5e80b01f9a",
+      "repetition": 1
+    },
+    {
+      "case_id": "free05",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "calendar.find_free_time",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "no_domain_signal_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 16.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "681b165bc4f22c8bab1834d8f3f29ff7c31f6dd8725912c65e3e735821683544",
+      "repetition": 1
+    },
+    {
+      "case_id": "free06",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "calendar.find_free_time",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 15.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "e562a4714989aa2a613cf6ff42b180a2873788a6579f89ee62426bf3bde9c05d",
+      "repetition": 1
+    },
+    {
+      "case_id": "meet01",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "calendar.arrange_meeting",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "344c6926e1c181252e2d9f63fc67b87c8e5465b4d115806ffc2064554a571b5e",
+      "repetition": 1
+    },
+    {
+      "case_id": "meet02",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "calendar.arrange_meeting",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "f1f5d33b8ffdf02056b65e6afb454808c286c6171e2a8d93a508e6bebb9375e8",
+      "repetition": 1
+    },
+    {
+      "case_id": "meet03",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "calendar.arrange_meeting",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "no_domain_signal_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 16.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "a38cac7f13ac00205a4172f8131ba6b040fb6a8b56a60fd8fdbac770af641d5f",
+      "repetition": 1
+    },
+    {
+      "case_id": "meet04",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "calendar.arrange_meeting",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "no_domain_signal_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 15.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "52ad2d9c63cec7f7eda802bf1b072c75c89d6414904433aa04b6597b98a16362",
+      "repetition": 1
+    },
+    {
+      "case_id": "meet05",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "calendar.arrange_meeting",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 16.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "f5d0e7d50f43cf5c0398397806253d9943b5f3e1ccceb97e4419a77b176cbb23",
+      "repetition": 1
+    },
+    {
+      "case_id": "meet06",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "calendar.arrange_meeting",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "fcafbd8360463d36fa9a39b4c75e25084b43fc674a7a0494fb69fd46b7be8d63",
+      "repetition": 1
+    },
+    {
+      "case_id": "mail01",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "mail.query_mail",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 1,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "explicit_simple_query_domain"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "ba8dc955064856b079f67b281768377ce5d9312ad0ccc4f979f6dcdf9ffa1708",
+      "repetition": 1
+    },
+    {
+      "case_id": "mail02",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "mail.query_mail",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 1,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "explicit_simple_query_domain"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 15.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "e8ee12c3b764b4160eaf78dc8b6ec1018fa84efe464a8d1f42d6f3a4ad46ba2e",
+      "repetition": 1
+    },
+    {
+      "case_id": "mail03",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "mail.query_mail",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 16.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "a665b364bd985bdc42cde597c51c8b43e461f0d90fef0341aee552c3fabf1fdf",
+      "repetition": 1
+    },
+    {
+      "case_id": "mail04",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "mail.query_mail",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 16.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "33db60d06a223ef4602ffaab5d780f1ab7bb29968257c2bb7498a2936cb2a53f",
+      "repetition": 1
+    },
+    {
+      "case_id": "mail05",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "mail.query_mail",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "2cb95ca85a073d0da7b2f5c9c4fb1d5a2f00c675bbd859d6767b2d1a2c75cb68",
+      "repetition": 1
+    },
+    {
+      "case_id": "mail06",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "mail.query_mail",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "6126cfc4cadd160ddd4ea2ba1070af3c9c01fe13082b5e21ce505a59614b5e36",
+      "repetition": 1
+    },
+    {
+      "case_id": "mail07",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "mail.query_mail",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "context_dependent_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "d4c361e5c5b8e0ba4eedef46af1b32ecb46d3c3b6f5eb29b7eee0b18d0f39b42",
+      "repetition": 1
+    },
+    {
+      "case_id": "mail08",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "mail.query_mail",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "no_domain_signal_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "2d6e7b81b80cb751e43147ad57d1b2acdad3da4efdd61ca5cc3ec1125d2f4858",
+      "repetition": 1
+    },
+    {
+      "case_id": "mail09",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "mail.query_mail",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "eadccf460c0d446f8974bb61ded7c0e1ff75f178377613b74f52f28dd4005272",
+      "repetition": 1
+    },
+    {
+      "case_id": "mail10",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "mail.query_mail",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "0a1fd29d742ee3a94c861b8f0548246680e551a076338521336b108fd86642d2",
+      "repetition": 1
+    },
+    {
+      "case_id": "chat01",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "reply",
+      "decision": "reply",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "no_domain_signal_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "5004f32626ffbceabe22787535c999b24738b1748f188512fc08b6baa72019c4",
+      "repetition": 1
+    },
+    {
+      "case_id": "chat02",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "reply",
+      "decision": "reply",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "no_domain_signal_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 15.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "28cf7184e182e85fdb0b38b17b845e4dd8a9b4c6b66d1b613e2174835fc9303f",
+      "repetition": 1
+    },
+    {
+      "case_id": "chat03",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "reply",
+      "decision": "reply",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "no_domain_signal_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 16.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "57ffbe718659727dfc345aaac991294dac5f6e24e1b401468a4fc71f01717dfe",
+      "repetition": 1
+    },
+    {
+      "case_id": "chat04",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "reply",
+      "decision": "reply",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "no_domain_signal_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "fba87a29884e139cf1df94e9aa2cb395fce80265ec818a9216bec496b00ec4eb",
+      "repetition": 1
+    },
+    {
+      "case_id": "chat05",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "reply",
+      "decision": "reply",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "7efd7d87298f1ebafa2a6bca94d03b62889a8ba2751ea57d97fd69d4bb56a691",
+      "repetition": 1
+    },
+    {
+      "case_id": "chat06",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "reply",
+      "decision": "reply",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "4401a2e09b1958c91804154349f5c65cbd51e3bf8344e1adad7a6d7377f021ac",
+      "repetition": 1
+    },
+    {
+      "case_id": "amb01",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "clarify",
+      "decision": "clarify",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "no_domain_signal_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "82d9b24bfcb6281ae2db034f90dc05be7112c27dbbf35d7f7d9de2ee7d8996ee",
+      "repetition": 1
+    },
+    {
+      "case_id": "amb02",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "clarify",
+      "decision": "clarify",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "context_dependent_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "4cdc824972d08a9abfc386c583a9d2c6a6dcd3217f18a755ae0533c89721f75b",
+      "repetition": 1
+    },
+    {
+      "case_id": "amb03",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "clarify",
+      "decision": "clarify",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "context_dependent_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 15.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "f427b5ea84cb11e7897667c158249a44337c489233594d70da72324ee8ae7604",
+      "repetition": 1
+    },
+    {
+      "case_id": "amb04",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "clarify",
+      "decision": "clarify",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "context_dependent_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 16.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "2c14b9b52620019d9a709e5a8028063f4e34d100f20da088e4de096f37664fb8",
+      "repetition": 1
+    },
+    {
+      "case_id": "amb05",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "clarify",
+      "decision": "clarify",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "multiple_domains_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "27a96103d40692254a7271bd352b262258405e78d3f6443987fad0a30cad13af",
+      "repetition": 1
+    },
+    {
+      "case_id": "amb06",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "clarify",
+      "decision": "clarify",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "context_dependent_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "8348ea0c7524068d0404bf7ef763391d2e209a26cc492d21d6c1b831c6ce0af4",
+      "repetition": 1
+    },
+    {
+      "case_id": "card01",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "mail.query_mail",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "context_dependent_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 1,
+      "duration_ms": 15.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        },
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "e866fe8c504ec77f3cb06b12488b1b39937d2bb63365436cd448818fa0c6f597",
+      "repetition": 1
+    },
+    {
+      "case_id": "card02",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "mail.query_mail",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "context_dependent_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 1,
+      "duration_ms": 16.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        },
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "1e5f35912b6a6733f128c47959cfac339029401b790356f179cfdac17471ee8a",
+      "repetition": 1
+    },
+    {
+      "case_id": "card03",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "mail.query_mail",
+      "decision": "delegate",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": true,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "context_dependent_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 1,
+      "duration_ms": 15.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        },
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "a03966d61b3b8bdc73cc93b0c230e4cc8082e48cc4f8b2ff6e88afaba323e79d",
+      "repetition": 1
+    },
+    {
+      "case_id": "card04",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "clarify",
+      "decision": "clarify",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "context_read_failed",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "context_dependent_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 1,
+      "duration_ms": 16.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "ef3b0e3eddb57096c9b05fd92b9c5ea24854f24a41acc27d38afecdc4ea90c33",
+      "repetition": 1
+    },
+    {
+      "case_id": "card05",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "clarify",
+      "decision": "clarify",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "context_dependent_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 1,
+      "duration_ms": 16.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        },
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "03aed7c53555b50b96c679cbf363486ece31033d519bbaee10f41659a04db43e",
+      "repetition": 1
+    },
+    {
+      "case_id": "card06",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "clarify",
+      "decision": "clarify",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "context_dependent_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 1,
+      "duration_ms": 16.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        },
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "e29c7802b29dd2b6a96df55dbc41c10ee0fdc75ed40435c8e19834be0a4c04db",
+      "repetition": 1
+    },
+    {
+      "case_id": "card07",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "clarify",
+      "decision": "clarify",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "context_read_failed",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "context_dependent_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 1,
+      "duration_ms": 15.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "5402045a3c8826ad34df11227512eafd9fbb3f90ed8aedadb5b5f11ba4f8cacc",
+      "repetition": 1
+    },
+    {
+      "case_id": "safe01",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "clarify",
+      "decision": "clarify",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 16.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "7251b87a5be41fa3bbeacd83f04ca3a61d8b092cde269cb6e4e870c7daedcc50",
+      "repetition": 1
+    },
+    {
+      "case_id": "safe02",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "clarify",
+      "decision": "clarify",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "b4aec5fca4f2a8d68664fe3b3ac2b14fbed25e5eed1a3f123f5db02e304b4149",
+      "repetition": 1
+    },
+    {
+      "case_id": "safe03",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "clarify",
+      "decision": "clarify",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "a274f856aaa33b79c2637109e1fb84728257df19b2a0de333fdf1b2312665840",
+      "repetition": 1
+    },
+    {
+      "case_id": "safe04",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "clarify",
+      "decision": "clarify",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "uncertain_single_domain_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "a613802d2aafbbe356adbde7fc3994efa2959fb685d067a9ed13fefaef266bdd",
+      "repetition": 1
+    },
+    {
+      "case_id": "safe05",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "clarify",
+      "decision": "clarify",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "no_domain_signal_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "e7a54c8108d1e38d2a8f03ed1d2a41e785fcc78e45b9aad7c00ce1ad24aab65f",
+      "repetition": 1
+    },
+    {
+      "case_id": "safe06",
+      "scenario": "semantic",
+      "entry": "conversation",
+      "actual": "clarify",
+      "decision": "clarify",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "no_domain_signal_keep_all"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "88f80bc1b335e92676e863caae0a73bf53ef7bc9f8b5a81571a54a234aaf1c28",
+      "repetition": 1
+    },
+    {
+      "case_id": "fault01",
+      "scenario": "fault",
+      "entry": "conversation",
+      "actual": "clarify",
+      "decision": "clarify",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "invalid_output",
+      "error": null,
+      "candidate_count": 1,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "explicit_simple_query_domain"
+      ],
+      "validation_issue_codes": [
+        {
+          "path": "",
+          "type": "invalid_json"
+        }
+      ],
+      "repair_count": 1,
+      "context_reads": 0,
+      "duration_ms": 15.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        },
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing_repair",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "bc06fabb413661246c2dcf5bc0244d00c33f1c9d2cee8c6b80dbf50b536e4e8e",
+      "repetition": 1
+    },
+    {
+      "case_id": "fault02",
+      "scenario": "fault",
+      "entry": "conversation",
+      "actual": "reply",
+      "decision": "reply",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "validated",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "no_domain_signal_keep_all"
+      ],
+      "validation_issue_codes": [
+        {
+          "path": "",
+          "type": "invalid_json"
+        }
+      ],
+      "repair_count": 1,
+      "context_reads": 0,
+      "duration_ms": 16.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        },
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing_repair",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "21916f088d5d3faaa07de5a42664be3500fdd342a597ee6067d918753bed648b",
+      "repetition": 1
+    },
+    {
+      "case_id": "fault03",
+      "scenario": "fault",
+      "entry": "conversation",
+      "actual": "error",
+      "decision": null,
+      "passed": true,
+      "target_ok": true,
+      "outcome": "model_failed",
+      "error": "LLM_UNAVAILABLE",
+      "candidate_count": 3,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting"
+      ],
+      "filter_reason_codes": [
+        "explicit_simple_query_domain"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 16.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": "LLM_UNAVAILABLE",
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "ba80d8a855daab05bc37cc50d33cd1d7e83bd98535ee08570936fa5a421981d0",
+      "repetition": 1
+    },
+    {
+      "case_id": "fault04",
+      "scenario": "fault",
+      "entry": "conversation",
+      "actual": "clarify",
+      "decision": "clarify",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "invalid_target",
+      "error": null,
+      "candidate_count": 1,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "explicit_simple_query_domain"
+      ],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 15.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "8c2889cf4a0d5fbfdf8c8448b3c05498d66568de775d9b3094fcff839f3494b9",
+      "repetition": 1
+    },
+    {
+      "case_id": "fault05",
+      "scenario": "fault",
+      "entry": "conversation",
+      "actual": "clarify",
+      "decision": "clarify",
+      "passed": true,
+      "target_ok": true,
+      "outcome": "invalid_output",
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [
+        "no_domain_signal_keep_all"
+      ],
+      "validation_issue_codes": [
+        {
+          "path": "field",
+          "type": "extra_forbidden"
+        },
+        {
+          "path": "field",
+          "type": "extra_forbidden"
+        }
+      ],
+      "repair_count": 1,
+      "context_reads": 0,
+      "duration_ms": 0.0,
+      "calls": [
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        },
+        {
+          "duration_ms": 0.0,
+          "error": null,
+          "purpose": "main_routing_repair",
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null
+        }
+      ],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "audited",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "b768d1616e2d738baecceae4fb69dd31e3c9ae3d34f40dc75b09628cbd92215a",
+      "repetition": 1
+    },
+    {
+      "case_id": "page01",
+      "scenario": "page",
+      "entry": "mail_extraction",
+      "actual": "page.mail_extraction",
+      "decision": null,
+      "passed": true,
+      "target_ok": true,
+      "outcome": null,
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 31.0,
+      "calls": [],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "legacy_full_catalog",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "241b45881c0d17a84e354d97185962ad4f0d9fa0e159275a671e3e779d1b813f",
+      "repetition": 1
+    },
+    {
+      "case_id": "page02",
+      "scenario": "page",
+      "entry": "mail_reply_draft",
+      "actual": "page.mail_reply_draft",
+      "decision": null,
+      "passed": true,
+      "target_ok": true,
+      "outcome": null,
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 47.0,
+      "calls": [],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "legacy_full_catalog",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "454127f9c7424d805aa72831ca2662982a12eb496b5629d1d57311b395832860",
+      "repetition": 1
+    },
+    {
+      "case_id": "page03",
+      "scenario": "page",
+      "entry": "mail_send",
+      "actual": "page.mail_send_confirmation",
+      "decision": null,
+      "passed": true,
+      "target_ok": true,
+      "outcome": null,
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 32.0,
+      "calls": [],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "legacy_full_catalog",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "253cc13d14607cbe1edbceba2ca85530af952bff28c42dc4bc11334b5a36cc5f",
+      "repetition": 1
+    },
+    {
+      "case_id": "page04",
+      "scenario": "page",
+      "entry": "mail_draft_revision",
+      "actual": "page.mail_draft_revision",
+      "decision": null,
+      "passed": true,
+      "target_ok": true,
+      "outcome": null,
+      "error": null,
+      "candidate_count": 4,
+      "candidate_recall": null,
+      "candidate_capabilities": [
+        "calendar.list_events",
+        "calendar.find_free_time",
+        "calendar.arrange_meeting",
+        "mail.query_mail"
+      ],
+      "filter_reason_codes": [],
+      "validation_issue_codes": [],
+      "repair_count": 0,
+      "context_reads": 0,
+      "duration_ms": 31.0,
+      "calls": [],
+      "illegal_calls": [],
+      "external_business_calls": 0,
+      "candidate_observation": "legacy_full_catalog",
+      "model_provider": "openai",
+      "model_name": "offline-fixture",
+      "live_model": false,
+      "fixture_fingerprint": "68212b25b50e4479392a720c47f424ab24336e5b1937d453249a75d5c45d801c",
+      "repetition": 1
+    }
+  ]
+}
