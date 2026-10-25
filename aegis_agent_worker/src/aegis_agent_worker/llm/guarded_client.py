@@ -14,8 +14,9 @@ from aegis_agent_worker.agent.contracts.memory import PERSONALIZATION_PURPOSES
 class GuardedLLMClient:
     """统一所有模型调用预算，包括主路由、领域规划、格式修复和正文生成。"""
 
-    def __init__(self, client: OpenAICompatibleClient, harness: HarnessExecutor) -> None:
+    def __init__(self, client: OpenAICompatibleClient, harness: HarnessExecutor, skill_context=None) -> None:
         self._client, self._harness = client, harness
+        self._skills = skill_context
 
     @property
     def provider_name(self) -> str:
@@ -49,6 +50,9 @@ class GuardedLLMClient:
         # 输入大小上限校验
         if sum(len(item.content) for item in messages) > self._harness.policy.max_input_chars:
             raise HarnessError("MODEL_INPUT_TOO_LARGE", "模型上下文超过允许大小")
+        purpose = current_model_purpose(json_mode)
+        if self._skills is not None:
+            await self._skills.ensure_selection(self,messages,purpose)
         # 提示注入启发式检测：拼接user消息，标记常见指令覆盖模式。
         # 中文：忽略 后0~12个字符再跟 系统/之前/以上/指令。
         # 命中只添加风险标记，不宣称启发式检测可以完全阻断提示注入。
@@ -63,6 +67,13 @@ class GuardedLLMClient:
             purpose = current_model_purpose(json_mode)
             audit.update(purpose=purpose, model_provider=self.provider_name,
                          model_name=self.model_name)
+            skill_row=None
+            if self._skills is not None:
+                skill_row=await self._skills.prepare_call(purpose,audit.attempt_id)
+                if skill_row is not None:
+                    offset=next((i for i,item in enumerate(messages) if item.role!='system'),len(messages))
+                    messages=[*messages[:offset],LLMMessage('user',self._skills.format(skill_row)),*messages[offset:]]
+                    original_messages=messages
 
             # 调用 LLM 前，为本次调用按需装配长期记忆，并留下审计记录
 
@@ -97,6 +108,10 @@ class GuardedLLMClient:
                     audit.update(memory_selection_reason='memory_service_unavailable')
             if prepare_messages is not None and bundle is None:
                 messages=prepare_messages(None)
+            # Current Skill-enabled mail calls do not use prepared factories. Refuse silent omission
+            # if a future caller combines a factory and a selected guide.
+            if skill_row is not None and prepare_messages is not None:
+                raise HarnessError('SKILL_FACTORY_UNSUPPORTED','该调用尚未支持Skill消息工厂')
             if (sum(len(item.content) for item in messages)>self._harness.policy.max_input_chars
                     and bundle is not None and bundle.items):
                 # 纯工厂可能因时区长度变化增加输入；审计前回退无记忆并同步重建时间语义。
@@ -120,6 +135,8 @@ class GuardedLLMClient:
                     raise
                 audit.update(memory_count=len(bundle.items))
             reset_usage = getattr(self._client, "reset_usage", None)
+            if skill_row is not None:
+                await self._skills.record_call(purpose,audit.attempt_id,skill_row)
             if reset_usage is not None:
                 reset_usage()
             # json_mode=True，需要 JSON 输出。等价于

@@ -1,0 +1,455 @@
+{
+  "version": "e04-summary-v1",
+  "generated_at": "2026-10-22T23:46:36.671884+08:00",
+  "source_sha256": "01a186a26598dbe1c69ca3d3aa800d0510ea702ef6fa505d872ed2f85643cedd",
+  "source_unchanged_since_report": true,
+  "profile": {
+    "provider": "openai_compatible",
+    "model": "text-embedding-v4",
+    "version": "text-embedding-v4-profile-v1",
+    "dimensions": 1024,
+    "embedding_host": "ws-3lkm10whozzrqn9s.cn-beijing.maas.aliyuncs.com",
+    "qdrant_host": "3215a063-f647-45a4-a217-bb442d9b9d30.eu-west-2-0.aws.cloud.qdrant.io"
+  },
+  "schema_contract": "LIKE public INCLUDING ALL does not clone foreign keys or RLS; no roles changed",
+  "complete": true,
+  "cleanup": true,
+  "summary": {
+    "dev": {
+      "lexical": {
+        "recall": 0.8333333333333334,
+        "mrr": 0.7916666666666666,
+        "hit": 0.9166666666666666,
+        "ndcg": 0.7252540739115125
+      },
+      "vector": {
+        "recall": 0.9583333333333334,
+        "mrr": 0.9166666666666666,
+        "hit": 1.0,
+        "ndcg": 0.7977919323529313
+      },
+      "rrf": {
+        "recall": 0.9583333333333334,
+        "mrr": 0.8083333333333333,
+        "hit": 1.0,
+        "ndcg": 0.7721085004093852
+      }
+    },
+    "test": {
+      "lexical": {
+        "recall": 0.9027777777777778,
+        "mrr": 0.8981481481481481,
+        "hit": 0.9444444444444444,
+        "ndcg": 0.7671652814581996
+      },
+      "vector": {
+        "recall": 1.0,
+        "mrr": 0.9861111111111112,
+        "hit": 1.0,
+        "ndcg": 0.893385934703319
+      },
+      "rrf": {
+        "recall": 0.9861111111111112,
+        "mrr": 0.9583333333333334,
+        "hit": 1.0,
+        "ndcg": 0.8466214788137757
+      }
+    },
+    "test_query_variants": {
+      "direct": {
+        "lexical": {
+          "recall": 1.0,
+          "mrr": 0.9351851851851852,
+          "hit": 1.0,
+          "ndcg": 0.9517183196428587
+        },
+        "vector": {
+          "recall": 1.0,
+          "mrr": 0.9722222222222222,
+          "hit": 1.0,
+          "ndcg": 0.9794960974206365
+        },
+        "rrf": {
+          "recall": 1.0,
+          "mrr": 0.9444444444444444,
+          "hit": 1.0,
+          "ndcg": 0.9589921948412731
+        }
+      },
+      "semantic": {
+        "lexical": {
+          "recall": 0.8055555555555556,
+          "mrr": 0.8611111111111112,
+          "hit": 0.8888888888888888,
+          "ndcg": 0.5826122432735404
+        },
+        "vector": {
+          "recall": 1.0,
+          "mrr": 1.0,
+          "hit": 1.0,
+          "ndcg": 0.8072757719860014
+        },
+        "rrf": {
+          "recall": 0.9722222222222222,
+          "mrr": 0.9722222222222222,
+          "hit": 1.0,
+          "ndcg": 0.7342507627862783
+        }
+      }
+    },
+    "paired_bootstrap": {
+      "method": "paired_document_cluster_bootstrap",
+      "draws": 10000,
+      "seed": 20261022,
+      "groups": 18,
+      "comparisons": {
+        "lexical": {
+          "recall": {
+            "delta": 0.08333333333333333,
+            "delta_percentage_points": 8.333333333333332,
+            "relative_change": 0.0923076923076923,
+            "ci95": [
+              0.027777777777777776,
+              0.1527777777777778
+            ]
+          },
+          "mrr": {
+            "delta": 0.06018518518518519,
+            "delta_percentage_points": 6.018518518518519,
+            "relative_change": 0.06701030927835051,
+            "ci95": [
+              -0.013888888888888888,
+              0.14351851851851852
+            ]
+          },
+          "hit": {
+            "delta": 0.05555555555555555,
+            "delta_percentage_points": 5.555555555555555,
+            "relative_change": 0.058823529411764705,
+            "ci95": [
+              0.0,
+              0.1388888888888889
+            ]
+          },
+          "ndcg": {
+            "delta": 0.07945619735557606,
+            "delta_percentage_points": 7.945619735557606,
+            "relative_change": 0.10357115901354222,
+            "ci95": [
+              0.022661861818768024,
+              0.13865303301180906
+            ]
+          }
+        },
+        "vector": {
+          "recall": {
+            "delta": -0.013888888888888888,
+            "delta_percentage_points": -1.3888888888888888,
+            "relative_change": -0.013888888888888888,
+            "ci95": [
+              -0.041666666666666664,
+              0.0
+            ]
+          },
+          "mrr": {
+            "delta": -0.027777777777777776,
+            "delta_percentage_points": -2.7777777777777777,
+            "relative_change": -0.02816901408450704,
+            "ci95": [
+              -0.06944444444444445,
+              0.0
+            ]
+          },
+          "hit": {
+            "delta": 0.0,
+            "delta_percentage_points": 0.0,
+            "relative_change": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "ndcg": {
+            "delta": -0.04676445588954331,
+            "delta_percentage_points": -4.676445588954331,
+            "relative_change": -0.052345189321872564,
+            "ci95": [
+              -0.08834811658841388,
+              -0.014298987168584064
+            ]
+          }
+        }
+      }
+    },
+    "no_answer": {
+      "lexical": {
+        "queries": 6,
+        "returned_candidates": 6
+      },
+      "vector": {
+        "queries": 6,
+        "returned_candidates": 6
+      },
+      "rrf": {
+        "queries": 6,
+        "returned_candidates": 6
+      }
+    },
+    "safety": {
+      "acl_queries": 6,
+      "leaked_canary_queries": 0,
+      "forbidden_scope_queries": 0,
+      "direct_source_checks": [
+        {
+          "case": "C01",
+          "passed": true
+        },
+        {
+          "case": "C02",
+          "passed": true
+        },
+        {
+          "case": "C03",
+          "passed": true
+        },
+        {
+          "case": "C04",
+          "passed": true
+        },
+        {
+          "case": "C05",
+          "passed": true
+        },
+        {
+          "case": "C06",
+          "passed": true
+        }
+      ],
+      "governance_checks": [
+        {
+          "case": "sensitive",
+          "passed": true
+        },
+        {
+          "case": "external_revoked",
+          "passed": true
+        },
+        {
+          "case": "disabled",
+          "passed": true
+        },
+        {
+          "case": "deleted",
+          "passed": true
+        },
+        {
+          "case": "not_ready",
+          "passed": true
+        },
+        {
+          "case": "no_current_version",
+          "passed": true
+        },
+        {
+          "case": "private_revoked",
+          "passed": true
+        },
+        {
+          "case": "chunk_not_indexed",
+          "passed": true,
+          "verified_by": "one_additional_governed_query"
+        },
+        {
+          "case": "empty_scope",
+          "passed": true
+        }
+      ],
+      "original_governance_checks": [
+        {
+          "case": "sensitive",
+          "passed": true
+        },
+        {
+          "case": "external_revoked",
+          "passed": true
+        },
+        {
+          "case": "disabled",
+          "passed": true
+        },
+        {
+          "case": "deleted",
+          "passed": true
+        },
+        {
+          "case": "not_ready",
+          "passed": true
+        },
+        {
+          "case": "no_current_version",
+          "passed": true
+        },
+        {
+          "case": "private_revoked",
+          "passed": true
+        },
+        {
+          "case": "chunk_not_indexed",
+          "passed": false
+        },
+        {
+          "case": "empty_scope",
+          "passed": true
+        }
+      ],
+      "injected_vector_faults": [
+        {
+          "case": "unavailable_denied",
+          "passed": true,
+          "code": "QDRANT_UNAVAILABLE"
+        },
+        {
+          "case": "unavailable_fallback",
+          "passed": true,
+          "mode": "lexical_only"
+        },
+        {
+          "case": "timeout_not_fallback",
+          "passed": true,
+          "code": "QDRANT_TIMEOUT"
+        }
+      ],
+      "rls_tested": false
+    },
+    "hybrid_latency_ms": {
+      "observations": 60,
+      "mean": 715.1886916668445,
+      "p50": 602.7516000031028,
+      "p95": 1032.9514000040945,
+      "note": "单次真实Hybrid管线；消融候选重放不能做完整单路时延对比"
+    },
+    "embedding": {
+      "requests": 103,
+      "reported_total_tokens": 3962,
+      "unknown_usage": 0,
+      "audit": [
+        {
+          "purpose": "knowledge_index",
+          "status": "succeeded",
+          "calls": 31,
+          "input_chars": "4276",
+          "total_tokens": "2771",
+          "unknown_usage": 0
+        },
+        {
+          "purpose": "knowledge_query",
+          "status": "succeeded",
+          "calls": 72,
+          "input_chars": "1800",
+          "total_tokens": "1191",
+          "unknown_usage": 0
+        }
+      ]
+    },
+    "limitations": [
+      "构造式合成相关性，未独立盲审",
+      "测试集36条/18份文档，非生产分布",
+      "纯向量本集优于RRF",
+      "6条无答案均返回候选，未测生成回答幻觉/拒答",
+      "不验证数据库角色RLS/HTTP来源详情接口",
+      "无Rerank/LLM改写/上传切块评测"
+    ]
+  },
+  "regression": [
+    {
+      "path": "evaluation-results\\20261022-e04-worker-junit.xml",
+      "sha256": "a98376dd9ab3bded9389cace010d7408c89f6a86a217f55989db53480bb56b7e",
+      "total": 815,
+      "passed": 813,
+      "failed": 0,
+      "skipped": 2,
+      "categories": {
+        "cooperation": {
+          "total": 184,
+          "passed": 184,
+          "failed": 0,
+          "skipped": 0
+        },
+        "harness": {
+          "total": 13,
+          "passed": 13,
+          "failed": 0,
+          "skipped": 0
+        },
+        "knowledge": {
+          "total": 125,
+          "passed": 125,
+          "failed": 0,
+          "skipped": 0
+        },
+        "memory": {
+          "total": 147,
+          "passed": 145,
+          "failed": 0,
+          "skipped": 2
+        },
+        "other": {
+          "total": 258,
+          "passed": 258,
+          "failed": 0,
+          "skipped": 0
+        },
+        "routing_evaluation": {
+          "total": 88,
+          "passed": 88,
+          "failed": 0,
+          "skipped": 0
+        }
+      },
+      "governance_related": {
+        "total": 94,
+        "passed": 94,
+        "failed": 0,
+        "skipped": 0,
+        "modules": [
+          "tests.agent.test_cooperation_governance",
+          "tests.agent.test_harness_layers",
+          "tests.agent.test_harness_react_revision",
+          "tests.agent.test_input_choices",
+          "tests.agent.test_main_card_react",
+          "tests.knowledge.test_hybrid_retrieval",
+          "tests.memory.test_manual_memory_read_guard",
+          "tests.memory.test_memory_priority"
+        ]
+      },
+      "note": "参数化本地测试数，不是独立漏洞数或模型正确率；跳过未验收"
+    }
+  ],
+  "provenance": {
+    "original_sha256": "bc68747a355584affca7c7a1d7dc1ba8a637ec511001a5b23680f52206c2a044",
+    "verified_sha256": "cb5d5b65057ceb972178f0a5d5a79ac57b2cb11b840db811d12dac504dffbd59",
+    "dataset_sha256": "725fa58a79038b787dba8bef8a6029a8ea56142036726d7fb8d1844785c8f525"
+  },
+  "archived_evidence": [
+    {
+      "path": "文档\\阶段1\\实验数据\\20261022-e04\\20261022-e04-live.json",
+      "sha256": "bc68747a355584affca7c7a1d7dc1ba8a637ec511001a5b23680f52206c2a044",
+      "bytes": 322719
+    },
+    {
+      "path": "文档\\阶段1\\实验数据\\20261022-e04\\20261022-e04-verified.json",
+      "sha256": "cb5d5b65057ceb972178f0a5d5a79ac57b2cb11b840db811d12dac504dffbd59",
+      "bytes": 324019
+    },
+    {
+      "path": "文档\\阶段1\\实验数据\\20261022-e04\\hybrid_retrieval_e04_v1.json",
+      "sha256": "725fa58a79038b787dba8bef8a6029a8ea56142036726d7fb8d1844785c8f525",
+      "bytes": 19407
+    },
+    {
+      "path": "文档\\阶段1\\实验数据\\20261022-e04\\20261022-e04-worker-junit.xml",
+      "sha256": "a98376dd9ab3bded9389cace010d7408c89f6a86a217f55989db53480bb56b7e",
+      "bytes": 123686
+    }
+  ]
+}

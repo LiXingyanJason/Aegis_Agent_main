@@ -95,3 +95,11 @@ D:\anaconda\envs\Aegis\python.exe scripts/compare_routing_reports.py evaluation-
 scripts/summarize_resume_experiments.py可统计逐轮/逐题一致性、按题聚类bootstrap区间、只包含live请求的供应商usage、JUnit模块覆盖，并用--evidence-directory归档显式输入到非忽略目录；拒绝覆盖历史证据。模型外发/费用需另外授权，汇总脚本本身不调用模型/数据库/MCP。统计/归档逻辑有9项离线测试。
 
 本轮证据已归档于文档/阶段1/实验数据/20261022-routing，不依赖evaluation-results中的临时文件。新的RAG、记忆和Schema消融仍为设计，不把既有单测当成召回率或成本提升。
+
+## E04真实Hybrid消融（2026-10-22）
+
+后续已单独授权并完成E04：[预注册方案、结果与限制](../../文档/阶段1/25-Hybrid检索消融实验-E04-2026-10-22.md)。scripts/evaluate_hybrid_retrieval.py使用冻结虚构语料、真实PostgreSQL SQL/阿里云Embedding治理/Qdrant/RRF，仅建隔离schema/collection；不可未经授权运行。无聊天模型、真实业务资料或原始Embedding响应入报告。
+
+scripts/retrieval_eval提供qrels、Recall/MRR/Hit/nDCG和按文档聚类的配对区间；summarize_hybrid_retrieval.py负责只读归档，核验断言复核未改变原始排名/标注/参数。verify_hybrid_e04_report.py仅处理本次旧报告的一项片段断言过严，不是自动重试/绕过其他失败的通道；原资源已清理，不能再次复核那个旧run。
+
+证据位于文档/阶段1/实验数据/20261022-e04：36条测试查询上RRF Recall@5=98.61%，全文90.28%，纯向量100%；不能只报告对全文的改善而隐瞒纯向量更优。6条无答案均返回候选，不是拒答验证；权限验证是实际SQL谓词，不是完整角色RLS。E04新增13项本地测试，Worker813通过/2跳过；不把测试数当模型检索正确率。

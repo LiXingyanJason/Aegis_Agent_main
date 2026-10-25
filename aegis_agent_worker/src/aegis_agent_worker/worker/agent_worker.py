@@ -74,9 +74,12 @@ async def run_worker() -> None:
         async with AsyncPostgresSaver.from_conn_string(settings.database_psycopg_url) as checkpointer:
             await checkpointer.setup() # 建立checkpointer数据库表，我们通过run_id关联每一个checkpointer
             policies = create_worker_policy_provider(knowledge_enabled=settings.knowledge_query_enabled,
-                cooperation_enabled=settings.cooperation_enabled)
+                cooperation_enabled=settings.cooperation_enabled,skills_enabled=settings.skills_enabled)
             harness = HarnessExecutor(database, policy_provider=policies)
-            llm_client = GuardedLLMClient(OpenAICompatibleClient(settings), harness)
+            from aegis_agent_worker.repository.skill_repository import SkillRepository
+            from aegis_agent_worker.service.skills.skill_context_service import SkillContextService
+            skills = SkillContextService(SkillRepository(database))
+            llm_client = GuardedLLMClient(OpenAICompatibleClient(settings), harness,skill_context=skills)
             events = RunEventPublisher(redis)
             runs = AgentRunRepository()
             session_memory = SessionMemoryService(database,
@@ -90,7 +93,8 @@ async def run_worker() -> None:
             knowledge_retrieval = HybridRetrievalService(settings,KnowledgeRetrievalRepository(database),
                 create_embedding_executor(settings,database),QdrantSearch(settings)) if settings.knowledge_query_enabled else None
             tools = create_default_tool_gateway(settings,harness=harness,card_context=cards,
-                knowledge_retrieval=knowledge_retrieval)
+                knowledge_retrieval=knowledge_retrieval,skill_context=skills)
+            skills.gateway=tools
             tool_calls = ToolCallRepository()
             tool_execution = CalendarToolExecutionService(database, runs, tools, tool_calls, events)
             artifact_service = ConversationArtifactService(database, runs, events)

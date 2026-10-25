@@ -15,9 +15,14 @@ from aegis_agent_worker.tool.knowledge.handler import KnowledgeSearchHandler
 from aegis_agent_worker.service.knowledge.retrieval_service import RetrievalService
 
 
-def create_default_tool_gateway(settings: Settings, harness=None, card_context=None, knowledge_retrieval=None) -> ToolGateway:
+def create_default_tool_gateway(settings: Settings, harness=None, card_context=None, knowledge_retrieval=None, skill_context=None) -> ToolGateway:
     """注册日历、邮件 MCP 工具及各自的连接权限要求。"""
     registry = ToolRegistry()
+    if skill_context is not None:
+        from aegis_agent_worker.agent.skills.contracts import SkillReadRequest
+        registry.register(ToolDefinition(name='skills.read',version='1.0',risk_level='read',
+            mcp_server='aegis-internal',description='读取已选个人Skill的固定版本，不授予执行权限。',
+            argument_schema=SkillReadRequest),skill_context)
     registry.register(ToolDefinition(name="knowledge.search", version="1.0", risk_level="read",
         mcp_server="aegis-internal", description="查询当前用户已授权知识资料；未配置不返回虚构数据。",
         argument_schema=KnowledgeQueryPlan), KnowledgeSearchHandler(knowledge_retrieval or RetrievalService()))

@@ -1,0 +1,66 @@
+FILE: C:\Users\JASON\Desktop\李星言-简历.docx
+size: 184326 bytes
+
+===== SECTIONS =====
+[0] page=21.00x29.70cm margins L/R/T/B=3.17/3.17/2.54/2.54cm header_dist=1.50 footer_dist=1.75
+    header: ''
+    footer: ''
+[1] page=21.00x29.70cm margins L/R/T/B=3.17/3.17/2.54/2.54cm header_dist=1.50 footer_dist=1.75
+    header: ''
+    footer: ''
+
+===== BODY (document order) =====
+[-000] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-001] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-002] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-003] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-004] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-005] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-006] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-007] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-008] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-009] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-010] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-011] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-012] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-013] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-014] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-015] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-016] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-017] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-018] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-019] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-020] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-021] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-022] style='Normal' align=None before=None,after=None,line=None first=None,left=None
+      TEXT: 
+[-023] style='Normal' align=LEFT (0) before=None,after=None,line=None first=None,left=None
+      TEXT: 	
+
+TOTAL paragraphs=24 tables=0
+inline_shapes=0
+
+===== STYLES USED =====
+  Normal: 24

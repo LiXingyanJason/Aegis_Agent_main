@@ -4,7 +4,7 @@ from contextvars import ContextVar
 
 
 _purpose = ContextVar("model_call_purpose", default=None)
-PURPOSES = frozenset({"main_routing", "main_routing_repair", "model_completion", "model_json",
+PURPOSES = frozenset({"skill_selection", "main_routing", "main_routing_repair", "model_completion", "model_json",
     "cooperation_routing", "cooperation_routing_repair",
     "mail_meeting_planning", "mail_meeting_extraction",
     "calendar_planning", "calendar_draft_personalization", "calendar_recommendation",

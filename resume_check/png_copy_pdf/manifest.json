@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "backend": "native",
+  "rasterEngine": "pdfium",
+  "source": "saved",
+  "inputPath": "C:\\Users\\JASON\\Desktop\\李星言-简历 - 副本.pdf",
+  "sourceSha256": "143170d09c3c33a69deec634ff5c65defc15bb66f8e2a125e17720c51a10e09d",
+  "dpi": 130,
+  "pageCount": 1,
+  "images": [
+    {
+      "index": 1,
+      "page": 1,
+      "path": "D:\\AI\\Aegis_Agent_main\\resume_check\\png_copy_pdf\\page-0001.png",
+      "width": 1075,
+      "height": 1521,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 793.7333333333333,
+        "height": 1122.5333333333333
+      },
+      "byteLength": 518804
+    }
+  ],
+  "missingFonts": []
+}

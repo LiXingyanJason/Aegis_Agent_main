@@ -32,6 +32,9 @@ build-backend = "setuptools.build_meta"
 include = ["app*"]
 exclude = ["migrations*", "tests*"]
 
+[tool.setuptools.package-data]
+app = ["assets/skills/*/SKILL.md"]
+
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0,<9.0",

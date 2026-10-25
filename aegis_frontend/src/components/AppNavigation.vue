@@ -9,6 +9,7 @@ const items = [
   { name: 'todo-plans', label: '待办计划', path: 'M5 3h14v18H5z M8 8l1.5 1.5L12 7 M14 8h3 M8 15l1.5 1.5L12 14 M14 15h3' },
   { name: 'confirmations', label: '操作确认', path: 'M12 2l8 3v6c0 5-3 8-8 11-5-3-8-6-8-11V5z M8 11l2.5 2.5L16 8' },
   { name: 'knowledge', label: '知识资料', path: 'M12 5C9 3.5 6 3.5 3 4v15c3-.5 6-.5 9 1 3-1.5 6-1.5 9-1V4c-3-.5-6-.5-9 1z M12 5v15' },
+  { name: 'skills', label: 'Skill 管理', path: 'M9 3h6l1 3 3 1-1 3 3 2-3 2 1 3-3 1-1 3H9l-1-3-3-1 1-3-3-2 3-2-1-3 3-1z M9 12h6 M12 9v6' },
   { name: 'memories', label: '长期记忆', path: 'M12 4c-2-2-5-1-6 1-2 0-3 2-2 4-2 1-2 4 0 5-1 3 1 5 4 5 1 2 4 2 4 0 0 2 3 2 4 0 3 0 5-2 4-5 2-1 2-4 0-5 1-2 0-4-2-4-1-2-4-3-6-1z M12 4v15 M8 9l4 2 M16 9l-4 2 M8 15l4-2 M16 15l-4-2' },
   { name: 'connections', label: '连接与审计（待接入）', path: 'M4 8h5v8H4z M9 12h5 M14 9h6v6h-6z M16 9V5 M18 9V5 M17 15v4' },
 ]

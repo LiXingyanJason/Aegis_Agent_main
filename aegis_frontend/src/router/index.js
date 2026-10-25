@@ -14,6 +14,7 @@ const router = createRouter({
     { path: '/todos', name: 'todo-plans', component: () => import('../views/TodoPlanView.vue') },
     { path: '/confirmations', name: 'confirmations', component: () => import('../views/ConfirmationView.vue') },
     { path: '/knowledge', name: 'knowledge', component: () => import('../views/KnowledgeView.vue') },
+    { path: '/skills', name: 'skills', component: () => import('../views/SkillsView.vue') },
     { path: '/memory', name: 'memories', component: () => import('../views/MemoryView.vue') },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('../views/NotFoundView.vue'), meta: { public: true } },
   ],

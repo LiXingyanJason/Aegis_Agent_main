@@ -9,10 +9,12 @@ from aegis_agent_worker.harness.policies.output import OutputPolicy
 from aegis_agent_worker.harness.policies.memory import MemoryContextPolicy
 from aegis_agent_worker.harness.policies.session_memory import SessionMemoryPolicy
 from aegis_agent_worker.harness.policies.cooperation import CooperationPolicy, MailMeetingPolicy, CalendarTeamPolicy
+from aegis_agent_worker.harness.policies.skills import SkillPolicy
 
 
 @dataclass(frozen=True)
 class PolicyBundle:
+    skills: SkillPolicy = field(default_factory=SkillPolicy)
     execution: TaskExecutionPolicy = field(default_factory=TaskExecutionPolicy)
     main_context: MainContextPolicy = field(default_factory=MainContextPolicy)
     mail_collection: MailCollectionPolicy = field(default_factory=MailCollectionPolicy)
@@ -23,7 +25,7 @@ class PolicyBundle:
     mail_meeting: MailMeetingPolicy = field(default_factory=MailMeetingPolicy)
     calendar_team: CalendarTeamPolicy = field(default_factory=CalendarTeamPolicy)
     def __post_init__(self):
-        for name, kind in (("execution", TaskExecutionPolicy), ("main_context", MainContextPolicy),
+        for name, kind in (("skills", SkillPolicy), ("execution", TaskExecutionPolicy), ("main_context", MainContextPolicy),
                            ("mail_collection", MailCollectionPolicy), ("output", OutputPolicy),
                            ("memory", MemoryContextPolicy), ("session_memory", SessionMemoryPolicy),
                            ("cooperation", CooperationPolicy), ("mail_meeting", MailMeetingPolicy),
@@ -109,6 +111,15 @@ COOPERATION_KNOWLEDGE_POLICY = replace(
                           for kind, tools in COOPERATION_CALENDAR_POLICY.execution.tool_scopes)),
 )
 
+
+
+def with_skills(profile):
+    """New immutable variants; old task budgets keep their original scopes."""
+    return replace(profile,skills=SkillPolicy(enabled=True),execution=replace(profile.execution,
+        version=profile.version+'-skills-v1',
+        tool_scopes=tuple((kind,tools|frozenset({'skills.read'}) if kind in
+            {'conversation','mail_reply_draft','mail_draft_revision'} else tools)
+            for kind,tools in profile.execution.tool_scopes)))
 
 
 class PolicyProvider:
