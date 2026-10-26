@@ -1,0 +1,398 @@
+{
+  "metric": "explicit literal/sentence/paragraph constraints only",
+  "scope": "exploratory subset; not overall guide quality",
+  "scores": [
+    {
+      "case_id": "S17",
+      "repeat": 1,
+      "arm": "C",
+      "passed": false,
+      "body": "您好，\n\n附件已收到。\n\n谢谢！"
+    },
+    {
+      "case_id": "S17",
+      "repeat": 1,
+      "arm": "A",
+      "passed": false,
+      "body": "您好，\n\n附件已收到，谢谢。\n\n此致\n敬礼"
+    },
+    {
+      "case_id": "S17",
+      "repeat": 1,
+      "arm": "B",
+      "passed": false,
+      "body": "您好，\n\n附件已收到，谢谢。\n\n此致"
+    },
+    {
+      "case_id": "S22",
+      "repeat": 1,
+      "arm": "B",
+      "passed": true,
+      "body": "续约资料附件已收到。"
+    },
+    {
+      "case_id": "S22",
+      "repeat": 1,
+      "arm": "C",
+      "passed": true,
+      "body": "续约资料附件已收到。"
+    },
+    {
+      "case_id": "S22",
+      "repeat": 1,
+      "arm": "A",
+      "passed": true,
+      "body": "续约资料附件已收到。"
+    },
+    {
+      "case_id": "S23",
+      "repeat": 1,
+      "arm": "A",
+      "passed": true,
+      "body": "已收到续约会议照片。照片很清晰"
+    },
+    {
+      "case_id": "S23",
+      "repeat": 1,
+      "arm": "C",
+      "passed": true,
+      "body": "已收到续约会议照片。照片很清晰"
+    },
+    {
+      "case_id": "S23",
+      "repeat": 1,
+      "arm": "B",
+      "passed": true,
+      "body": "已收到续约会议照片。照片很清晰。"
+    },
+    {
+      "case_id": "S25",
+      "repeat": 1,
+      "arm": "A",
+      "passed": false,
+      "body": "您好，\n\n感谢您的续约建议。想确认一下：5万元的一年期续约总价中是否包含现场支持服务？\n\n期待您的回复。\n\n顺祝商祺"
+    },
+    {
+      "case_id": "S25",
+      "repeat": 1,
+      "arm": "C",
+      "passed": false,
+      "body": "您好，\n\n感谢您发来续约报价。已记录您提出的续约期限为一年、总价5万元；续约事宜我们尚未确认，需要内部进一步核对。\n\n需要向您确认：该报价是否包含现场支持？\n\n下一步，我们会在完成内部核对后另行回复您；在收到您对现场支持的确认前，暂不作出任何续约承诺。\n\n谢谢！"
+    },
+    {
+      "case_id": "S25",
+      "repeat": 1,
+      "arm": "B",
+      "passed": true,
+      "body": "您好，感谢您关于一年期续约及总价5万元的报价，想确认一下该报价是否包含现场支持？"
+    },
+    {
+      "case_id": "S29",
+      "repeat": 1,
+      "arm": "A",
+      "passed": true,
+      "body": "我方尚未同意续约。请补充响应时效及故障处理范围。"
+    },
+    {
+      "case_id": "S29",
+      "repeat": 1,
+      "arm": "B",
+      "passed": true,
+      "body": "我方尚未同意续约。请补充响应时效及故障处理范围。"
+    },
+    {
+      "case_id": "S29",
+      "repeat": 1,
+      "arm": "C",
+      "passed": true,
+      "body": "我方尚未同意续约。请补充响应时效及故障处理范围。"
+    },
+    {
+      "case_id": "S30",
+      "repeat": 1,
+      "arm": "A",
+      "passed": true,
+      "body": "我方同意续约一年，7万元报价已确认，请发送正式合同。"
+    },
+    {
+      "case_id": "S30",
+      "repeat": 1,
+      "arm": "C",
+      "passed": true,
+      "body": "我方同意续约一年，7万元报价已确认，请发送正式合同。"
+    },
+    {
+      "case_id": "S30",
+      "repeat": 1,
+      "arm": "B",
+      "passed": true,
+      "body": "续约一年、报价7万元已确认，请发送正式合同。"
+    },
+    {
+      "case_id": "S17",
+      "repeat": 2,
+      "arm": "A",
+      "passed": false,
+      "body": "您好，\n\n附件已收到，谢谢。\n\n顺颂商祺"
+    },
+    {
+      "case_id": "S17",
+      "repeat": 2,
+      "arm": "B",
+      "passed": false,
+      "body": "您好，\n\n附件已收到，谢谢。\n\n顺祝商祺"
+    },
+    {
+      "case_id": "S17",
+      "repeat": 2,
+      "arm": "C",
+      "passed": false,
+      "body": "您好，\n\n附件已收到，谢谢。\n\n此致\n敬礼"
+    },
+    {
+      "case_id": "S22",
+      "repeat": 2,
+      "arm": "C",
+      "passed": true,
+      "body": "续约资料附件已收到，。"
+    },
+    {
+      "case_id": "S22",
+      "repeat": 2,
+      "arm": "B",
+      "passed": true,
+      "body": "续约资料附件已收到。"
+    },
+    {
+      "case_id": "S22",
+      "repeat": 2,
+      "arm": "A",
+      "passed": true,
+      "body": "续约资料附件已收到。"
+    },
+    {
+      "case_id": "S23",
+      "repeat": 2,
+      "arm": "B",
+      "passed": true,
+      "body": "已收到续约会议照片。照片很清晰。"
+    },
+    {
+      "case_id": "S23",
+      "repeat": 2,
+      "arm": "A",
+      "passed": true,
+      "body": "已收到续约会议照片。照片很清晰"
+    },
+    {
+      "case_id": "S23",
+      "repeat": 2,
+      "arm": "C",
+      "passed": true,
+      "body": "已收到续约会议照片。照片很清晰。"
+    },
+    {
+      "case_id": "S25",
+      "repeat": 2,
+      "arm": "C",
+      "passed": false,
+      "body": "您好，\n\n感谢您发来续约方案。我们已收到“续约一年、总价5万元”的报价内容；关于该方案，想先确认一点：是否包含现场支持？\n\n待您回复后，我们会进一步核对相关条款，再与您沟通后续安排。\n\n谢谢！"
+    },
+    {
+      "case_id": "S25",
+      "repeat": 2,
+      "arm": "A",
+      "passed": true,
+      "body": "感谢您发来的一年期续约报价（总价5万元），想确认一下该报价是否包含现场支持？"
+    },
+    {
+      "case_id": "S25",
+      "repeat": 2,
+      "arm": "B",
+      "passed": true,
+      "body": "感谢您提出的续约一年、总价5万元的方案，想确认一下：该方案是否包含现场支持？"
+    },
+    {
+      "case_id": "S29",
+      "repeat": 2,
+      "arm": "B",
+      "passed": true,
+      "body": "我方尚未同意续约。请补充响应时效及故障处理范围。"
+    },
+    {
+      "case_id": "S29",
+      "repeat": 2,
+      "arm": "C",
+      "passed": true,
+      "body": "我方尚未同意续约。请补充响应时效及故障处理范围。"
+    },
+    {
+      "case_id": "S29",
+      "repeat": 2,
+      "arm": "A",
+      "passed": true,
+      "body": "我方尚未同意续约。请补充响应时效及故障处理范围。"
+    },
+    {
+      "case_id": "S30",
+      "repeat": 2,
+      "arm": "A",
+      "passed": true,
+      "body": "我方同意续约一年，7万元报价已确认，请发送正式合同。"
+    },
+    {
+      "case_id": "S30",
+      "repeat": 2,
+      "arm": "C",
+      "passed": true,
+      "body": "我方同意续约一年，确认报价7万元，请发送正式合同。"
+    },
+    {
+      "case_id": "S30",
+      "repeat": 2,
+      "arm": "B",
+      "passed": true,
+      "body": "我方同意续约一年，报价7万元已确认，请发正式合同。"
+    },
+    {
+      "case_id": "S17",
+      "repeat": 3,
+      "arm": "A",
+      "passed": false,
+      "body": "您好，\n\n附件已收到，感谢您的发送。\n\n此致\n敬礼"
+    },
+    {
+      "case_id": "S17",
+      "repeat": 3,
+      "arm": "C",
+      "passed": false,
+      "body": "您好：\n\n邮件及附件已收到，特此回复确认。\n\n谢谢！"
+    },
+    {
+      "case_id": "S17",
+      "repeat": 3,
+      "arm": "B",
+      "passed": false,
+      "body": "您好，\n\n附件已收到。\n\n谢谢。"
+    },
+    {
+      "case_id": "S22",
+      "repeat": 3,
+      "arm": "B",
+      "passed": true,
+      "body": "续约资料附件已收到。"
+    },
+    {
+      "case_id": "S22",
+      "repeat": 3,
+      "arm": "C",
+      "passed": true,
+      "body": "续约资料附件已收到。"
+    },
+    {
+      "case_id": "S22",
+      "repeat": 3,
+      "arm": "A",
+      "passed": true,
+      "body": "续约资料附件已收到。"
+    },
+    {
+      "case_id": "S23",
+      "repeat": 3,
+      "arm": "B",
+      "passed": true,
+      "body": "已收到续约会议照片。照片很清晰。"
+    },
+    {
+      "case_id": "S23",
+      "repeat": 3,
+      "arm": "A",
+      "passed": true,
+      "body": "已收到续约会议照片。照片很清晰"
+    },
+    {
+      "case_id": "S23",
+      "repeat": 3,
+      "arm": "C",
+      "passed": true,
+      "body": "已收到续约会议照片。照片很清晰。"
+    },
+    {
+      "case_id": "S25",
+      "repeat": 3,
+      "arm": "B",
+      "passed": false,
+      "body": "您好，\n\n感谢您关于续约一年、总价5万元的报价建议，我们已收到并正在评估。\n\n在进一步确认前，想先了解一点：该报价是否包含现场支持？\n\n待您回复后，我们再继续核对相关条款并推进后续安排。\n\n顺祝商祺"
+    },
+    {
+      "case_id": "S25",
+      "repeat": 3,
+      "arm": "A",
+      "passed": true,
+      "body": "您好，感谢您发来的续约建议；我想确认一下，这份一年期、总价5万元的报价中是否包含现场支持？"
+    },
+    {
+      "case_id": "S25",
+      "repeat": 3,
+      "arm": "C",
+      "passed": false,
+      "body": "您好，感谢您发来一年期续约报价；请问该 5 万元总价是否包含现场支持？其余条款我们后续再逐项核对确认。"
+    },
+    {
+      "case_id": "S29",
+      "repeat": 3,
+      "arm": "C",
+      "passed": true,
+      "body": "我方尚未同意续约。请补充响应时效及故障处理范围。"
+    },
+    {
+      "case_id": "S29",
+      "repeat": 3,
+      "arm": "A",
+      "passed": true,
+      "body": "我方尚未同意续约。请补充响应时效及故障处理范围。"
+    },
+    {
+      "case_id": "S29",
+      "repeat": 3,
+      "arm": "B",
+      "passed": true,
+      "body": "我方尚未同意续约，请补充响应时效及故障处理范围。请提供响应时效及故障处理范围的具体说明。"
+    },
+    {
+      "case_id": "S30",
+      "repeat": 3,
+      "arm": "C",
+      "passed": true,
+      "body": "同意续约一年，7万元报价已确认，请发送正式合同。"
+    },
+    {
+      "case_id": "S30",
+      "repeat": 3,
+      "arm": "A",
+      "passed": true,
+      "body": "我方同意续约一年，确认报价7万元，请发送正式合同。"
+    },
+    {
+      "case_id": "S30",
+      "repeat": 3,
+      "arm": "B",
+      "passed": true,
+      "body": "我方同意续约一年，报价7万元已确认，请发送正式合同。"
+    }
+  ],
+  "arms": {
+    "A": {
+      "passed": 14,
+      "total": 18
+    },
+    "B": {
+      "passed": 14,
+      "total": 18
+    },
+    "C": {
+      "passed": 12,
+      "total": 18
+    }
+  }
+}

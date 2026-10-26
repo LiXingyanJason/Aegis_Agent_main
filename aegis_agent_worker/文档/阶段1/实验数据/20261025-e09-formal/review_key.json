@@ -1,0 +1,1622 @@
+[
+  {
+    "review_id": "R001",
+    "case_id": "S26",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R002",
+    "case_id": "S19",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R003",
+    "case_id": "S06",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R004",
+    "case_id": "S11",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R005",
+    "case_id": "S07",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R006",
+    "case_id": "S12",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R007",
+    "case_id": "S01",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R008",
+    "case_id": "S23",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R009",
+    "case_id": "S24",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R010",
+    "case_id": "S08",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R011",
+    "case_id": "S07",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R012",
+    "case_id": "S19",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R013",
+    "case_id": "S14",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R014",
+    "case_id": "S30",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R015",
+    "case_id": "S09",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R016",
+    "case_id": "S13",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R017",
+    "case_id": "S23",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R018",
+    "case_id": "S03",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R019",
+    "case_id": "S13",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R020",
+    "case_id": "S26",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R021",
+    "case_id": "S10",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R022",
+    "case_id": "S23",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R023",
+    "case_id": "S06",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R024",
+    "case_id": "S16",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R025",
+    "case_id": "S02",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R026",
+    "case_id": "S13",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R027",
+    "case_id": "S27",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R028",
+    "case_id": "S11",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R029",
+    "case_id": "S25",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R030",
+    "case_id": "S29",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R031",
+    "case_id": "S19",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R032",
+    "case_id": "S25",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R033",
+    "case_id": "S27",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R034",
+    "case_id": "S27",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R035",
+    "case_id": "S21",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R036",
+    "case_id": "S23",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R037",
+    "case_id": "S11",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R038",
+    "case_id": "S30",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R039",
+    "case_id": "S22",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R040",
+    "case_id": "S24",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R041",
+    "case_id": "S12",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R042",
+    "case_id": "S14",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R043",
+    "case_id": "S29",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R044",
+    "case_id": "S25",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R045",
+    "case_id": "S06",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R046",
+    "case_id": "S17",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R047",
+    "case_id": "S17",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R048",
+    "case_id": "S17",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R049",
+    "case_id": "S25",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R050",
+    "case_id": "S09",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R051",
+    "case_id": "S05",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R052",
+    "case_id": "S04",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R053",
+    "case_id": "S14",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R054",
+    "case_id": "S05",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R055",
+    "case_id": "S10",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R056",
+    "case_id": "S02",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R057",
+    "case_id": "S11",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R058",
+    "case_id": "S19",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R059",
+    "case_id": "S13",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R060",
+    "case_id": "S12",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R061",
+    "case_id": "S14",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R062",
+    "case_id": "S15",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R063",
+    "case_id": "S06",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R064",
+    "case_id": "S29",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R065",
+    "case_id": "S15",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R066",
+    "case_id": "S08",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R067",
+    "case_id": "S20",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R068",
+    "case_id": "S27",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R069",
+    "case_id": "S20",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R070",
+    "case_id": "S03",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R071",
+    "case_id": "S09",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R072",
+    "case_id": "S10",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R073",
+    "case_id": "S17",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R074",
+    "case_id": "S21",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R075",
+    "case_id": "S08",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R076",
+    "case_id": "S01",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R077",
+    "case_id": "S28",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R078",
+    "case_id": "S03",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R079",
+    "case_id": "S05",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R080",
+    "case_id": "S11",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R081",
+    "case_id": "S25",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R082",
+    "case_id": "S24",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R083",
+    "case_id": "S24",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R084",
+    "case_id": "S06",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R085",
+    "case_id": "S03",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R086",
+    "case_id": "S08",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R087",
+    "case_id": "S25",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R088",
+    "case_id": "S22",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R089",
+    "case_id": "S04",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R090",
+    "case_id": "S01",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R091",
+    "case_id": "S18",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R092",
+    "case_id": "S30",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R093",
+    "case_id": "S21",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R094",
+    "case_id": "S15",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R095",
+    "case_id": "S30",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R096",
+    "case_id": "S05",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R097",
+    "case_id": "S26",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R098",
+    "case_id": "S26",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R099",
+    "case_id": "S17",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R100",
+    "case_id": "S14",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R101",
+    "case_id": "S16",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R102",
+    "case_id": "S20",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R103",
+    "case_id": "S29",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R104",
+    "case_id": "S24",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R105",
+    "case_id": "S17",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R106",
+    "case_id": "S29",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R107",
+    "case_id": "S12",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R108",
+    "case_id": "S16",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R109",
+    "case_id": "S21",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R110",
+    "case_id": "S12",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R111",
+    "case_id": "S07",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R112",
+    "case_id": "S12",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R113",
+    "case_id": "S11",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R114",
+    "case_id": "S29",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R115",
+    "case_id": "S27",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R116",
+    "case_id": "S08",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R117",
+    "case_id": "S09",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R118",
+    "case_id": "S18",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R119",
+    "case_id": "S08",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R120",
+    "case_id": "S04",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R121",
+    "case_id": "S10",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R122",
+    "case_id": "S07",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R123",
+    "case_id": "S02",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R124",
+    "case_id": "S12",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R125",
+    "case_id": "S22",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R126",
+    "case_id": "S07",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R127",
+    "case_id": "S23",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R128",
+    "case_id": "S15",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R129",
+    "case_id": "S13",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R130",
+    "case_id": "S03",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R131",
+    "case_id": "S15",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R132",
+    "case_id": "S19",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R133",
+    "case_id": "S22",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R134",
+    "case_id": "S03",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R135",
+    "case_id": "S21",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R136",
+    "case_id": "S19",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R137",
+    "case_id": "S08",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R138",
+    "case_id": "S30",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R139",
+    "case_id": "S07",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R140",
+    "case_id": "S28",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R141",
+    "case_id": "S02",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R142",
+    "case_id": "S15",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R143",
+    "case_id": "S26",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R144",
+    "case_id": "S14",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R145",
+    "case_id": "S14",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R146",
+    "case_id": "S06",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R147",
+    "case_id": "S22",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R148",
+    "case_id": "S22",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R149",
+    "case_id": "S23",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R150",
+    "case_id": "S02",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R151",
+    "case_id": "S17",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R152",
+    "case_id": "S30",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R153",
+    "case_id": "S18",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R154",
+    "case_id": "S21",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R155",
+    "case_id": "S18",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R156",
+    "case_id": "S02",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R157",
+    "case_id": "S30",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R158",
+    "case_id": "S16",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R159",
+    "case_id": "S01",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R160",
+    "case_id": "S02",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R161",
+    "case_id": "S10",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R162",
+    "case_id": "S05",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R163",
+    "case_id": "S23",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R164",
+    "case_id": "S27",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R165",
+    "case_id": "S19",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R166",
+    "case_id": "S23",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R167",
+    "case_id": "S21",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R168",
+    "case_id": "S28",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R169",
+    "case_id": "S08",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R170",
+    "case_id": "S06",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R171",
+    "case_id": "S07",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R172",
+    "case_id": "S18",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R173",
+    "case_id": "S22",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R174",
+    "case_id": "S01",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R175",
+    "case_id": "S15",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R176",
+    "case_id": "S04",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R177",
+    "case_id": "S01",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R178",
+    "case_id": "S29",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R179",
+    "case_id": "S15",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R180",
+    "case_id": "S27",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R181",
+    "case_id": "S16",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R182",
+    "case_id": "S14",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R183",
+    "case_id": "S16",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R184",
+    "case_id": "S01",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R185",
+    "case_id": "S09",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R186",
+    "case_id": "S26",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R187",
+    "case_id": "S16",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R188",
+    "case_id": "S20",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R189",
+    "case_id": "S23",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R190",
+    "case_id": "S03",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R191",
+    "case_id": "S26",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R192",
+    "case_id": "S07",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R193",
+    "case_id": "S28",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R194",
+    "case_id": "S30",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R195",
+    "case_id": "S18",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R196",
+    "case_id": "S17",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R197",
+    "case_id": "S05",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R198",
+    "case_id": "S04",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R199",
+    "case_id": "S18",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R200",
+    "case_id": "S24",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R201",
+    "case_id": "S18",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R202",
+    "case_id": "S02",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R203",
+    "case_id": "S05",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R204",
+    "case_id": "S26",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R205",
+    "case_id": "S14",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R206",
+    "case_id": "S10",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R207",
+    "case_id": "S27",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R208",
+    "case_id": "S15",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R209",
+    "case_id": "S28",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R210",
+    "case_id": "S11",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R211",
+    "case_id": "S28",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R212",
+    "case_id": "S24",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R213",
+    "case_id": "S29",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R214",
+    "case_id": "S25",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R215",
+    "case_id": "S01",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R216",
+    "case_id": "S05",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R217",
+    "case_id": "S26",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R218",
+    "case_id": "S09",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R219",
+    "case_id": "S10",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R220",
+    "case_id": "S12",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R221",
+    "case_id": "S20",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R222",
+    "case_id": "S28",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R223",
+    "case_id": "S21",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R224",
+    "case_id": "S27",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R225",
+    "case_id": "S10",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R226",
+    "case_id": "S17",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R227",
+    "case_id": "S04",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R228",
+    "case_id": "S20",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R229",
+    "case_id": "S28",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R230",
+    "case_id": "S29",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R231",
+    "case_id": "S02",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R232",
+    "case_id": "S04",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R233",
+    "case_id": "S13",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R234",
+    "case_id": "S19",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R235",
+    "case_id": "S11",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R236",
+    "case_id": "S06",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R237",
+    "case_id": "S22",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R238",
+    "case_id": "S03",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R239",
+    "case_id": "S09",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R240",
+    "case_id": "S06",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R241",
+    "case_id": "S19",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R242",
+    "case_id": "S25",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R243",
+    "case_id": "S21",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R244",
+    "case_id": "S04",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R245",
+    "case_id": "S11",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R246",
+    "case_id": "S20",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R247",
+    "case_id": "S20",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R248",
+    "case_id": "S12",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R249",
+    "case_id": "S22",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R250",
+    "case_id": "S30",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R251",
+    "case_id": "S08",
+    "repeat": 1,
+    "arm": "A"
+  },
+  {
+    "review_id": "R252",
+    "case_id": "S24",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R253",
+    "case_id": "S20",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R254",
+    "case_id": "S01",
+    "repeat": 2,
+    "arm": "B"
+  },
+  {
+    "review_id": "R255",
+    "case_id": "S18",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R256",
+    "case_id": "S13",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R257",
+    "case_id": "S07",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R258",
+    "case_id": "S16",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R259",
+    "case_id": "S28",
+    "repeat": 2,
+    "arm": "C"
+  },
+  {
+    "review_id": "R260",
+    "case_id": "S09",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R261",
+    "case_id": "S24",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R262",
+    "case_id": "S25",
+    "repeat": 1,
+    "arm": "C"
+  },
+  {
+    "review_id": "R263",
+    "case_id": "S03",
+    "repeat": 3,
+    "arm": "A"
+  },
+  {
+    "review_id": "R264",
+    "case_id": "S10",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R265",
+    "case_id": "S13",
+    "repeat": 1,
+    "arm": "B"
+  },
+  {
+    "review_id": "R266",
+    "case_id": "S16",
+    "repeat": 3,
+    "arm": "C"
+  },
+  {
+    "review_id": "R267",
+    "case_id": "S04",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R268",
+    "case_id": "S09",
+    "repeat": 2,
+    "arm": "A"
+  },
+  {
+    "review_id": "R269",
+    "case_id": "S05",
+    "repeat": 3,
+    "arm": "B"
+  },
+  {
+    "review_id": "R270",
+    "case_id": "S13",
+    "repeat": 3,
+    "arm": "B"
+  }
+]

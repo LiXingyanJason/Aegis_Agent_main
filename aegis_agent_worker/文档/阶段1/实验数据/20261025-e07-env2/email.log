@@ -1,0 +1,8 @@
+2026-10-25 16:24:56,653 INFO __main__ 启动 Email MCP Server：http://127.0.0.1:57160/mcp
+INFO:     Started server process [11512]
+INFO:     Waiting for application startup.
+2026-10-25 16:24:56,701 INFO mcp.server.streamable_http_manager StreamableHTTP session manager started
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:57160 (Press CTRL+C to quit)
+INFO:     127.0.0.1:57187 - "GET /mcp HTTP/1.1" 200 OK
+2026-10-25 16:24:57,690 INFO mcp.server.streamable_http Terminating session: None

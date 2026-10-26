@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "backend": "native",
+  "rasterEngine": "pdfium",
+  "source": "saved",
+  "inputPath": "C:\\Users\\JASON\\Desktop\\李星言-简历-Agent开发.pdf",
+  "sourceSha256": "0333bd773a526fdd6f8cf0d60ea9070c06205126e05dc0a01b5bea7bd9825496",
+  "dpi": 140,
+  "pageCount": 1,
+  "images": [
+    {
+      "index": 1,
+      "page": 1,
+      "path": "D:\\AI\\Aegis_Agent_main\\resume_check\\png_agent\\page-0001.png",
+      "width": 1158,
+      "height": 1638,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 793.7333333333333,
+        "height": 1122.5333333333333
+      },
+      "byteLength": 626689
+    }
+  ],
+  "missingFonts": []
+}

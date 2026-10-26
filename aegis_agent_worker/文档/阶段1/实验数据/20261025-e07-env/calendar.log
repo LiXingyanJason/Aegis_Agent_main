@@ -1,0 +1,6 @@
+2026-10-25 16:23:41,887 INFO __main__ 启动 Calendar MCP Server：http://127.0.0.1:57016/mcp
+INFO:     Started server process [15912]
+INFO:     Waiting for application startup.
+2026-10-25 16:23:41,996 INFO mcp.server.streamable_http_manager StreamableHTTP session manager started
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:57016 (Press CTRL+C to quit)

@@ -1,0 +1,9 @@
+.........                                                                [100%]
+============================== warnings summary ===============================
+..\..\..\anaconda\envs\Aegis\Lib\site-packages\langgraph\checkpoint\base\__init__.py:18
+  D:\anaconda\envs\Aegis\Lib\site-packages\langgraph\checkpoint\base\__init__.py:18: LangChainPendingDeprecationWarning: The default value of `allowed_objects` will change in a future version. Pass an explicit value (e.g., allowed_objects='messages' or allowed_objects='core') to suppress this warning.
+    from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: D:\AI\Aegis_Agent_main\aegis_agent_worker\文档\阶段1\实验数据\20261025-e08-baseline\budget_and_repair.xml -
+9 passed, 1 warning in 8.06s

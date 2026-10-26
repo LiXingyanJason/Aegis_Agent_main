@@ -1,0 +1,1126 @@
+{
+  "tasks": 90,
+  "expected_write": 63,
+  "verified_writes": 49,
+  "write_rate_cluster_bootstrap_95": [
+    0.6507936507936508,
+    0.8888888888888888
+  ],
+  "expected_no_write": 27,
+  "no_write_observed": 27,
+  "actual_events": 49,
+  "unverified_actual_writes": [],
+  "duplicate_event_runs": 0,
+  "raw_mechanical_pass": 76,
+  "model_attempts": 956,
+  "total_tokens_known": 1629769,
+  "usage_unknown": 2,
+  "tool_attempts": 439,
+  "mean_wall_seconds": 23.659455555555258,
+  "p95_wall_seconds": 35.625,
+  "failures": [
+    {
+      "case_id": "C07",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MODEL_OUTPUT_INVALID"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C09",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MODEL_OUTPUT_INVALID"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C11",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MODEL_OUTPUT_INVALID"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C15",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C25",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "COOPERATION_INVALID_DECISION"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C08",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MODEL_OUTPUT_INVALID"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C10",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MODEL_OUTPUT_INVALID"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C15",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C18",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C02",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "CALENDAR_TEAM_OUTPUT_INVALID"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C07",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MODEL_OUTPUT_INVALID"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C08",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MODEL_OUTPUT_INVALID"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C12",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C15",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": false,
+      "stop": null
+    }
+  ],
+  "observations": [
+    {
+      "case_id": "C01",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C02",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C03",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C04",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C05",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C06",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C07",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MODEL_OUTPUT_INVALID"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C08",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C09",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MODEL_OUTPUT_INVALID"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C10",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C11",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MODEL_OUTPUT_INVALID"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C12",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C13",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C14",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C15",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C16",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C17",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C18",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C19",
+      "repeat": 1,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C20",
+      "repeat": 1,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C21",
+      "repeat": 1,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C22",
+      "repeat": 1,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MODEL_OUTPUT_INVALID"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C23",
+      "repeat": 1,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": false,
+      "stop": "expected_waiting"
+    },
+    {
+      "case_id": "C24",
+      "repeat": 1,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": false,
+      "stop": "expected_waiting"
+    },
+    {
+      "case_id": "C25",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "COOPERATION_INVALID_DECISION"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C26",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C27",
+      "repeat": 1,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C28",
+      "repeat": 1,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MAIL_SOURCE_CHANGED"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C29",
+      "repeat": 1,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "CALENDAR_DRAFT_CHANGED"
+      ],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C30",
+      "repeat": 1,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "CALENDAR_DRAFT_CHANGED"
+      ],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C01",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C02",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C03",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C04",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C05",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C06",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C07",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C08",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MODEL_OUTPUT_INVALID"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C09",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C10",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MODEL_OUTPUT_INVALID"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C11",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C12",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C13",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C14",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C15",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C16",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C17",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C18",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C19",
+      "repeat": 2,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C20",
+      "repeat": 2,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C21",
+      "repeat": 2,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C22",
+      "repeat": 2,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MAIL_MEETING_SEARCH_NO_PROGRESS"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C23",
+      "repeat": 2,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": false,
+      "stop": "expected_waiting"
+    },
+    {
+      "case_id": "C24",
+      "repeat": 2,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": false,
+      "stop": "expected_waiting"
+    },
+    {
+      "case_id": "C25",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C26",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C27",
+      "repeat": 2,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C28",
+      "repeat": 2,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MAIL_SOURCE_CHANGED"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C29",
+      "repeat": 2,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "CALENDAR_DRAFT_CHANGED"
+      ],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C30",
+      "repeat": 2,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "CALENDAR_DRAFT_CHANGED"
+      ],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C01",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C02",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "CALENDAR_TEAM_OUTPUT_INVALID"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C03",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C04",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C05",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C06",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C07",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MODEL_OUTPUT_INVALID"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C08",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MODEL_OUTPUT_INVALID"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C09",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C10",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C11",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C12",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C13",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C14",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C15",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C16",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C17",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C18",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C19",
+      "repeat": 3,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C20",
+      "repeat": 3,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C21",
+      "repeat": 3,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C22",
+      "repeat": 3,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MAIL_MEETING_SEARCH_NO_PROGRESS"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C23",
+      "repeat": 3,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": false,
+      "stop": "expected_waiting"
+    },
+    {
+      "case_id": "C24",
+      "repeat": 3,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [],
+      "draft_ok": false,
+      "stop": "expected_waiting"
+    },
+    {
+      "case_id": "C25",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C26",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C27",
+      "repeat": 3,
+      "expected": "write",
+      "actual_event_count": 1,
+      "verified_write": true,
+      "errors": [],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C28",
+      "repeat": 3,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "MAIL_SOURCE_CHANGED"
+      ],
+      "draft_ok": false,
+      "stop": null
+    },
+    {
+      "case_id": "C29",
+      "repeat": 3,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "CALENDAR_DRAFT_CHANGED"
+      ],
+      "draft_ok": true,
+      "stop": null
+    },
+    {
+      "case_id": "C30",
+      "repeat": 3,
+      "expected": "no_write",
+      "actual_event_count": 0,
+      "verified_write": false,
+      "errors": [
+        "CALENDAR_DRAFT_CHANGED"
+      ],
+      "draft_ok": true,
+      "stop": null
+    }
+  ],
+  "caveat": "Mechanical no-write is not semantic success. Repeats clustered by template case; no independent quality review."
+}

@@ -1,0 +1,3692 @@
+[
+  {
+    "review_id": "R001",
+    "case_id": "S26",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约决定",
+      "body": "您好，\n\n感谢您就续约事宜发来建议。关于续约一年的事项，我方尚需进行内部评估，暂无法在本邮件中确认续约意向，也未就付款等事项作出任何承诺。\n\n为便于评估，请您补充提供本年度及拟续约期间的完整服务清单（含服务项目、范围与交付方式等）。收到后我们将结合内部评估结果进一步与您沟通。\n\n下一步：请您先行发送上述服务清单，我方收到后将启动内部评估并另行回复沟通时间安排。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R002",
+    "case_id": "S19",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 办公室网络维护",
+      "body": "您好，感谢您的通知。我们已知悉网络维护时间为明晚20点到21点。谢谢。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R003",
+    "case_id": "S06",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续约范围调整",
+      "body": "尊敬的测试客户：\n\n感谢您就续约方案与我方沟通。\n\n关于新方案中拟去除现场巡检、价格保持不变的内容，我方暂无法接受。为便于双方进一步评估，烦请您说明以下两点：\n\n1. 拟去除现场巡检的具体原因；\n2. 针对服务范围缩减，贵方拟提供的补偿方案。\n\n收到上述说明后，我方将尽快内部评估并与您进一步沟通。期待您的回复。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R004",
+    "case_id": "S11",
+    "output": "感谢续签方案。以下两项费用我方尚需核对：\n1. 数据迁移费用；\n2. 现场培训费用。\n\n请就上述两项补充说明，以便我方进一步核对。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R005",
+    "case_id": "S07",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约折扣申请",
+      "body": "您好，\n\n感谢您就年度支持服务续约及折扣事宜的来函。我们已了解目前情况：年度支持服务报价为 10 万元，相关折扣尚在审批中。\n\n关于折扣，我们希望就此提出优惠申请。为便于后续衔接，请您在内部审批完成后再回复本邮件，并告知审批结果及可适用的折扣条件。\n\n在收到您的审批结果前，我们先不确认续约及相关商务条款。下一步：请您于审批完成后回复审批结论与折扣方案，我们收到后再行确认后续事项。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R006",
+    "case_id": "S12",
+    "output": "非常感谢您就续约事项与我们联系。目前我们暂时还无法确认续约事宜，想烦请您先提供安全服务清单及对应报价，以便我们进一步了解和评估。期待您的回复，谢谢！",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R007",
+    "case_id": "S01",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 澄海维护续约",
+      "body": "您好，\n\n感谢您关于澄海维护服务续约的提醒。我们了解到当前维护服务将于12月15日到期，目前尚未就续约作出决定。\n\n为便于内部评估，请贵方提供下一年的服务清单和报价。我们收到后将进行核对，并再与您沟通后续安排。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R008",
+    "case_id": "S23",
+    "output": "已收到续约会议照片。照片很清晰",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R009",
+    "case_id": "S24",
+    "output": "祝你旅途愉快，一路平安。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R010",
+    "case_id": "S08",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：托管服务续约",
+      "body": "您好，\n\n感谢您就托管服务续约事项来信。关于您提出的续约两年建议，我们目前只考虑一年的续约方案，尚需进一步确认，暂不能视为已确认续约。\n\n需要与您核实：本次一年期续约是否包含迁移支持？如包含，请说明具体支持范围；如不包含，也请明确相关安排。\n\n下一步，请您协助确认迁移支持是否包含及其范围，我们将据此继续核对续约条款并回复。\n\n谢谢。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R011",
+    "case_id": "S07",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约折扣申请",
+      "body": "您好：\n\n感谢您就年度支持服务续约及折扣事项发来说明。已收到您提到的年度支持服务报价10万元、折扣尚未审批的情况，我方也希望就本次续约申请相应优惠，但优惠幅度与最终条件仍需双方各自确认，暂不能作为最终承诺。\n\n目前已了解的事项：\n1. 年度支持服务报价为10万元（以贵方来函所述为准）；\n2. 折扣尚在贵方审批流程中，尚未获批。\n\n仍需核对确认的事项：\n1. 折扣审批完成后的具体优惠幅度及适用条件；\n2. 优惠后的最终报价与对应的服务范围、服务期限；\n3. 续约合同的生效时间与签署安排。\n\n下一步建议：请贵方在折扣审批完成后回复本邮件，告知审批结果及具体优惠条件，我方将据此核对并推进后续续约事宜。如贵方审批过程中需要我方补充材料，也请随时告知。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R012",
+    "case_id": "S19",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 办公室网络维护",
+      "body": "您好，\n\n感谢您的通知。我们已收悉，确认明晚20点至21点进行办公室网络维护，届时将断网。\n\n我们会提前知悉相关安排。如需我们配合，请随时告知。\n\n谢谢！\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R013",
+    "case_id": "S14",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 设备盘点",
+      "body": "您好，\n\n关于工位显示器数量的核对事项，我下午会进行核对，核对后再回复您。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R014",
+    "case_id": "S30",
+    "output": "我方同意续约一年，7万元报价已确认，请发送正式合同。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R015",
+    "case_id": "S09",
+    "output": "感谢您就续约事宜与我方联系。我方愿意就续约事宜进行讨论，惟具体服务范围尚待核对确认。烦请提供完整的服务清单，以便我方进一步评估。期待您的回复。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R016",
+    "case_id": "S13",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 交付材料",
+      "body": "您好，\n\n收到，谢谢。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R017",
+    "case_id": "S23",
+    "output": "已收到续约会议照片。照片很清晰。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R018",
+    "case_id": "S03",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：远辰合同到期",
+      "body": "测试客户，您好：\n\n感谢您告知远辰合同将于2026年12月31日到期。\n\n我们愿意就续签事宜与贵方进一步沟通。烦请将修订后的合同发送给我们，以便我们查阅。\n\n本次暂不安排会议；后续如需沟通，可通过邮件联系。\n\n期待您的回复。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R019",
+    "case_id": "S13",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 交付材料",
+      "body": "收到，谢谢。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R020",
+    "case_id": "S26",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约决定",
+      "body": "测试客户，您好：\n\n感谢您来信提出续约一年的建议。\n\n关于续约事宜，我们尚需进行内部评估，目前暂无法给出确认意见，也未就付款等事项作出任何承诺。为便于评估，烦请您补充本次续约涉及的服务清单（包括服务项目、范围及相关说明）。收到后我们将尽快推进内部评估，并与您进一步沟通。\n\n感谢您的理解与配合。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R021",
+    "case_id": "S10",
+    "output": "感谢贵方就续约事项与我们就行沟通。我方认可续约期限为一年、总额为3万元；付款日期尚待确认，烦请贵方发送合同草案，以便我方进一步核对，谢谢。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R022",
+    "case_id": "S23",
+    "output": "已收到续约会议照片。照片很清晰",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R023",
+    "case_id": "S06",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续约范围调整",
+      "body": "您好：\n\n感谢您就续约方案调整进行沟通。您提到新方案拟去除现场巡检、价格保持不变；就此我们暂无法接受，希望先了解以下情况后再进一步讨论：\n\n1. 去除现场巡检的原因：希望您说明这一调整的背景以及主要考虑。\n2. 拟去除的巡检范围：请明确涉及的服务项目、频次和覆盖范围。\n3. 补偿方案：在服务范围减少的情况下，请说明贵方拟提供的相应补偿安排。\n\n在收到上述说明前，我们暂不对该调整作出确认，续约事项也仍需双方进一步核对确认。\n\n下一步，请贵方就以上三点提供书面说明；收到后我们将内部评估并与您约定后续沟通安排。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R024",
+    "case_id": "S16",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：发票资料",
+      "body": "您好：\n\n感谢您的来信。为准确准备开票信息，烦请先提供需要填写的字段清单，以便我们按清单逐项确认并回复。\n\n收到清单后，我们会尽快处理。谢谢！\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R025",
+    "case_id": "S02",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 青岚平台续签方案",
+      "body": "您好，\n\n感谢您发来青岚平台明年的续签方案，其中提到报价8万元，含工作日远程支持。\n\n在进一步评估之前，想向您确认一点：如果我们需要周末的远程支持，是否需要在上述报价之外另行收费？如果另收费，烦请说明计费方式。\n\n目前我们尚未对报价作出确认，待您回复后我们再进一步沟通。\n\n谢谢！\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R026",
+    "case_id": "S13",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 交付材料",
+      "body": "收到，谢谢。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R027",
+    "case_id": "S27",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续约范围核对",
+      "body": "您好，\n\n感谢您就续约范围来信说明，并建议保留原服务范围。\n\n为准确核对续约内容，想向您确认：本次续约涉及的完整服务范围包括哪些具体项目？如方便，请提供完整清单或说明，以便我们逐项核对。\n\n收到您的说明后，我们将据此整理续约范围，并与您确认后续安排。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R028",
+    "case_id": "S11",
+    "output": "感谢您提供的续签方案。\n\n为便于我方核对，请就以下事项补充说明：\n1. 数据迁移相关费用：待确认。\n2. 现场培训相关费用：待确认。\n\n下一步：请提供上述两项的说明，我方将据此完成核对。\n\n顺祝商祺",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R029",
+    "case_id": "S25",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：一年期续约报价",
+      "body": "感谢您提出的续约一年、总价5万元的方案，想确认一下：该方案是否包含现场支持？"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R030",
+    "case_id": "S29",
+    "output": "我方尚未同意续约。请补充响应时效及故障处理范围。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R031",
+    "case_id": "S19",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 办公室网络维护",
+      "body": "您好，感谢通知。我们已知悉明晚20:00至21:00的断网维护安排。谢谢。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R032",
+    "case_id": "S25",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 一年期续约报价",
+      "body": "您好，\n\n感谢您关于续约一年、总价5万元的报价建议，我们已收到并正在评估。\n\n在进一步确认前，想先了解一点：该报价是否包含现场支持？\n\n待您回复后，我们再继续核对相关条款并推进后续安排。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R033",
+    "case_id": "S27",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约范围核对",
+      "body": "您好，\n\n感谢您关于续约范围的来信。\n\n为准确核对续约内容，能否请您提供完整的服务范围说明（例如各项服务内容、范围边界及涉及的服务对象）？收到后我们将据此逐项核对，并回复需要进一步确认的事项。\n\n期待您的回复，谢谢。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R034",
+    "case_id": "S27",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约范围核对",
+      "body": "您好，\n\n感谢您关于续约范围的来信。我们注意到您建议保留原服务范围。\n\n为便于准确核对，请您提供完整、具体的服务范围清单（包括各项服务内容及相关说明）。\n\n收到后，我们将据此核对并回复下一步安排。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R035",
+    "case_id": "S21",
+    "output": "感谢您协助查找培训资料。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R036",
+    "case_id": "S23",
+    "output": "已收到续约会议照片。照片很清晰。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R037",
+    "case_id": "S11",
+    "output": "感谢续签方案。\n\n待确认事项：\n1. 数据迁移费用：请补充说明。\n2. 现场培训费用：请补充说明。\n\n下一步：请就上述两项费用提供说明，我方核对后再回复。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R038",
+    "case_id": "S30",
+    "output": "我方同意续约一年，报价7万元已确认，请发正式合同。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R039",
+    "case_id": "S22",
+    "output": "续约资料附件已收到。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R040",
+    "case_id": "S24",
+    "output": "祝假期愉快、一路平安！",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R041",
+    "case_id": "S12",
+    "output": "感谢您就续约事项联系我们。目前我们暂时还无法确认续约安排，想麻烦您先提供安全服务清单及对应报价，以便我们进一步评估。期待您的回复，谢谢。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R042",
+    "case_id": "S14",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：设备盘点",
+      "body": "您好，\n\n感谢您的邮件。关于工位显示器数量的核对事项，我已知悉。\n\n我今天下午会进行核对，核对完成后将再向您回复具体结果。目前暂不提供数量信息，请您稍候。\n\n如您在核对口径或范围上有进一步说明，也请告知，以便我核对时一并确认。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R043",
+    "case_id": "S29",
+    "output": "我方尚未同意续约。请补充响应时效及故障处理范围。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R044",
+    "case_id": "S25",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 一年期续约报价",
+      "body": "您好，感谢您发来一年期续约报价；请问该 5 万元总价是否包含现场支持？其余条款我们后续再逐项核对确认。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R045",
+    "case_id": "S06",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约范围调整",
+      "body": "您好：\n\n感谢您就续约范围调整事宜与我方沟通。关于新方案中拟去除现场巡检且价格保持不变这一安排，我方目前无法接受，续约事项也暂不作确认。\n\n为便于进一步评估，烦请说明以下两点：\n1. 贵方拟去掉现场巡检的原因；\n2. 针对服务范围减少而价格未调整的情况，贵方拟提供的补偿方案。\n\n收到上述说明后，我方将内部讨论并尽快回复后续处理意见。\n\n谢谢。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R046",
+    "case_id": "S17",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续约文件收件回执",
+      "body": "您好，\n\n附件已收到，谢谢。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R047",
+    "case_id": "S17",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约文件收件回执",
+      "body": "您好，\n\n附件已收到，谢谢。\n\n顺颂商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R048",
+    "case_id": "S17",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续约文件收件回执",
+      "body": "您好，\n\n附件已收到。\n\n谢谢。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R049",
+    "case_id": "S25",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 一年期续约报价",
+      "body": "感谢您发来的一年期续约报价（总价5万元），想确认一下该报价是否包含现场支持？"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R050",
+    "case_id": "S09",
+    "output": "感谢贵方就续约事宜与我方联系。我方愿就续约事宜进行商讨，但鉴于目前具体服务范围尚未最终核对确认，暂不便就续约作出确认。为进一步推进相关沟通，敬请贵方提供完整的服务清单，以便我方核对后再行商议后续安排。期待贵方回复。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R051",
+    "case_id": "S05",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续签联系人确认",
+      "body": "您好，\n\n下一年度签约联系人为刘宁。关于服务范围，我们仍在评估中，请贵方列出可选服务项目，以便我们进一步确认。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R052",
+    "case_id": "S04",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 维保续约与付款",
+      "body": "您好，\n\n感谢您的来信。关于维保续约事项，我们已确认续约期限为一年、总额为6万元。\n\n就付款安排，我们希望能了解是否可分两期付款：由于具体分期比例、各期付款时间节点及对应的开票安排尚未确定，这些细节均待与您进一步确认。\n\n下一步，烦请您确认两期付款的方案是否可行，并告知可接受的分期节点；我们收到后将据此核对并回复。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R053",
+    "case_id": "S14",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 设备盘点",
+      "body": "您好：\n\n已收到您关于核对工位显示器数量的邮件。我今天下午完成核对后再回复您具体的核对结果，暂不在此给出数量。\n\n如您对盘点口径或范围有特别要求，请一并告知，以便我核对时参考。\n\n感谢您的耐心等待。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R054",
+    "case_id": "S05",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续签联系人确认",
+      "body": "您好，\n\n感谢您的来信。关于下一年度续签事宜，先向您确认：签约联系人为刘宁。\n\n服务范围方面，我们目前仍在评估中，尚未最终确定。为便于我们开展评估，烦请贵方列出可供选择的服务项目及相关说明，我们将据此进一步研究。\n\n如后续需要补充信息，我们会及时与您沟通。期待您的回复。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R055",
+    "case_id": "S10",
+    "output": "感谢您就续约事宜与我们联系。我们认可续约期限为一年、总金额为3万元；付款日期目前尚未确定，需进一步确认。烦请发送合同草案，谢谢。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R056",
+    "case_id": "S02",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 青岚平台续签方案",
+      "body": "您好，\n\n感谢您发来青岚平台的续签方案。我们注意到方案中提到明年报价为8万元，包含工作日远程支持。\n\n关于该方案，我们需要进一步确认：工作日远程支持之外的周末支持是否会另行收费？如会收费，计费方式如何？\n\n待上述事项明确后，我们再进一步沟通。目前我们尚未对报价作出接受确认。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R057",
+    "case_id": "S11",
+    "output": "感谢续签方案。\n\n待确认事项：\n1. 数据迁移费用：请补充说明。\n2. 现场培训费用：请补充说明。\n\n下一步：请提供上述两项费用的具体说明，我方据此核对。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R058",
+    "case_id": "S19",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 办公室网络维护",
+      "body": "您好，\n\n感谢您的通知，我们已知悉明晚20点至21点将进行办公室网络维护并断网。我们会提前做好相应安排。\n\n如维护时间有变化，请再告知我们，谢谢。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R059",
+    "case_id": "S13",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 交付材料",
+      "body": "收到，谢谢。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R060",
+    "case_id": "S12",
+    "output": "感谢您就续约事宜与我们联系。目前我们暂时还无法确认续约，希望能先请您提供安全服务清单及对应报价，以便我们进一步了解并评估。期待您的回复，谢谢！",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R061",
+    "case_id": "S14",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 设备盘点",
+      "body": "您好：\n\n来件已收到。关于工位显示器数量的核对，我会在今天下午完成盘点后再回复您确认结果。\n\n届时如有需要进一步说明的地方，我会一并告知。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R062",
+    "case_id": "S15",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 活动照片",
+      "body": "您好，感谢您分享上周的活动照片。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R063",
+    "case_id": "S06",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约范围调整",
+      "body": "您好，\n\n感谢您就续约范围调整一事来函说明。关于新方案中拟去除现场巡检、价格保持不变这一点，我方目前无法接受，需要进一步了解情况后再行讨论。\n\n为便于我方评估，烦请说明：\n1. 拟去除现场巡检的原因及背景；\n2. 针对服务范围缩减的补偿方案（如价格调整或其他替代安排）。\n\n在收到上述说明前，现有续约条款仍需双方继续核对确认，我方暂不作任何确认。烦请您回复上述两项内容，我方收到后将尽快评估并反馈下一步安排。\n\n顺颂商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R064",
+    "case_id": "S29",
+    "output": "我方尚未同意续约。请补充响应时效及故障处理范围。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R065",
+    "case_id": "S15",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 活动照片",
+      "body": "您好，感谢您分享上周的活动照片！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R066",
+    "case_id": "S08",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 托管服务续约",
+      "body": "您好，\n\n感谢您就托管服务续约事项来信。\n\n关于续约期限：我们目前只考虑一年期的续约方案，两年期暂不在考虑范围内。\n\n关于迁移支持：您在邮件中提到迁移支持需要单独确认，目前我们尚不清楚该部分是否包含在续约方案中，烦请说明迁移支持的具体内容范围，以及是否需要另行确认或安排。\n\n下一步：请就上述迁移支持事项予以确认，我们收到您的答复后再继续推进一年期续约的相关讨论。\n\n谢谢。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R067",
+    "case_id": "S20",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：资料排版",
+      "body": "您好，\n\n收到更新后的排版稿。我们会检查排版，检查完成后回复您。\n\n谢谢。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R068",
+    "case_id": "S27",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "关于续约范围核对的确认",
+      "body": "您好，\n\n感谢您就续约范围进行核对，并提到建议保留原服务范围。\n\n为准确核对，方便的话请提供完整的服务范围清单及相关说明，以便我们依照原范围逐项确认。\n\n如方便，请直接回复本邮件。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R069",
+    "case_id": "S20",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 资料排版",
+      "body": "您好，\n\n已收到您更新后的排版稿（附件），感谢您发来。\n\n我们会安排检查排版，检查完成后会再回复您。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R070",
+    "case_id": "S03",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：远辰合同到期",
+      "body": "您好，\n\n感谢您告知远辰合同将于2026年12月31日到期的情况。我们愿意就续签事宜与贵方进一步讨论。\n\n为便于推进，烦请将修订后的合同发送给我们，我们收到后会进行审阅，并就其中的条款与贵方沟通确认。\n\n本次无需安排会议，后续可通过邮件往来推进。期待您的修订合同。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R071",
+    "case_id": "S09",
+    "output": "感谢贵方就续约事宜与我方联系。我方愿就续约事宜进行讨论，惟目前具体服务范围尚待进一步核对确认。烦请贵方提供完整的服务清单，以便我方据此评估。期待贵方回复。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R072",
+    "case_id": "S10",
+    "output": "您好，我们认可续约一年、总额3万元。付款日期目前尚未确定，烦请发送合同草案，谢谢。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R073",
+    "case_id": "S17",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约文件收件回执",
+      "body": "您好，\n\n附件已收到。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R074",
+    "case_id": "S21",
+    "output": "感谢您协助查找培训资料。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R075",
+    "case_id": "S08",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 托管服务续约",
+      "body": "测试客户，您好：\n\n感谢您的邮件及续约建议。\n\n关于续约期限，我们目前只考虑一年的方案，暂不考虑两年期。烦请据此提供一年期的续约安排。\n\n另外，您在邮件中提到迁移支持需要单独确认，烦请核实并告知迁移支持是否包含在本次续约范围内；如包含，请说明具体的支持内容与范围。\n\n期待您的回复。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R076",
+    "case_id": "S01",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 澄海维护续约",
+      "body": "您好，\n\n感谢您关于澄海维护续约的提醒。我们已注意到当前维护服务将于12月15日到期。\n\n目前我方尚未就续约作出决定。为便于内部评估，请贵方提供下一年的服务清单和报价，并说明清单中的服务范围与期限安排。\n\n收到上述材料后，我们将尽快核对并反馈下一步安排。如您方便，请告知预计可提供的时间。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R077",
+    "case_id": "S28",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续签截止日期",
+      "body": "您好，\n\n感谢您的来信。关于续签事项，我们已注意到现有合同截止日期为 2026 年 12 月 20 日，下一年服务计划我们正在核对中，暂未最终确认。\n\n在推进下一年服务计划前，想先向您确认一项信息：下一年度的支持时段安排是怎样的（例如工作日支持的具体起止时间，以及是否包含非工作时段支持）？\n\n收到您关于支持时段的说明后，我们会据此核对下一年服务计划并再与您同步。本次无需安排会议，后续可通过邮件沟通。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R078",
+    "case_id": "S03",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 远辰合同到期",
+      "body": "您好，\n\n关于贵方提到的远辰合同将于2026年12月31日到期一事，我们愿意就续签事宜进行讨论。请贵方发送修订后的合同文本，我们收到后将核对相关条款并反馈意见。\n\n后续以合同文本核对和书面沟通推进，暂不安排会议。期待您的回复。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R079",
+    "case_id": "S05",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续签联系人确认",
+      "body": "您好，\n\n感谢您就下一年度续约事项与我方联系。\n\n关于您提出的两项内容，回复如下：\n\n1. 签约联系人：下一年度签约联系人确定为刘宁。\n2. 服务范围：服务范围目前仍在评估中，暂无法确认。为便于我方评估，烦请贵方列出可选服务项目及相关说明。\n\n下一步：收到可选服务清单后，我方将结合评估情况与贵方进一步沟通服务范围及后续签约安排。如贵方对联系人事宜还有其他需要确认的内容，也请一并告知。\n\n期待您的回复。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R080",
+    "case_id": "S11",
+    "output": "感谢您提供续签方案。\n\n需继续核对的事项：\n1. 数据迁移费用：待您补充说明。\n2. 现场培训费用：待您补充说明。\n\n下一步：请就以上两项费用提供具体说明，我方核对后再作回复。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R081",
+    "case_id": "S25",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 一年期续约报价",
+      "body": "您好，感谢您发来的续约建议；我想确认一下，这份一年期、总价5万元的报价中是否包含现场支持？"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R082",
+    "case_id": "S24",
+    "output": "祝你假期愉快，一路平安！",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R083",
+    "case_id": "S24",
+    "output": "祝假期愉快、一路平安。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R084",
+    "case_id": "S06",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续约范围调整",
+      "body": "您好，\n\n感谢您就续约方案与我方沟通。关于贵方提出的新方案（去除现场巡检、价格不变），经内部初步评估，我方暂无法按该方案接受本次调整。\n\n为便于进一步评估可行性，烦请贵方就以下两点作出说明：\n1. 拟去除现场巡检的主要原因及相关考虑；\n2. 针对服务范围缩减，贵方拟提供的补偿方案（如价格调整、替代服务内容或其他安排）。\n\n收到上述说明后，我方将尽快组织评估并与贵方进一步沟通。期待您的回复。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R085",
+    "case_id": "S03",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 远辰合同到期",
+      "body": "您好，\n\n感谢您告知合同将于2026年12月31日到期的情况。我们愿意就续签事宜进行讨论。\n\n为便于后续核对，烦请将修订后的合同发送给我们，我们收到后会进行审阅。\n\n目前暂不安排会议；如有需要，我们可通过邮件继续沟通。\n\n期待您的回复。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R086",
+    "case_id": "S08",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 托管服务续约",
+      "body": "您好，\n\n感谢您的来信。关于托管服务续约，我们目前只考虑一年的续约期限，暂不考虑两年。\n\n另外，请您核实并确认迁移支持是否包含在本次续约服务中。\n\n期待您的回复。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R087",
+    "case_id": "S25",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：一年期续约报价",
+      "body": "您好，\n\n感谢您的续约建议。想确认一下：5万元的一年期续约总价中是否包含现场支持服务？\n\n期待您的回复。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R088",
+    "case_id": "S22",
+    "output": "续约资料附件已收到。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R089",
+    "case_id": "S04",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：维保续约与付款",
+      "body": "您好，\n\n感谢您就维保续约事项发来邮件。关于续约，我们已同意一年期限及总额6万元。\n\n关于付款方式，想与您确认：是否可以分两期付款？如可以，请告知两期的付款金额及时间安排，我们再据此确认。\n\n下一步，烦请回复分期付款的可行性及具体安排；收到后我们将及时跟进确认。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R090",
+    "case_id": "S01",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 澄海维护续约",
+      "body": "您好，\n\n感谢您关于澄海维护服务续约的提醒。我方已注意到当前维护服务将于12月15日到期。\n\n关于续约事项，我方目前尚未作出决定。为便于我方评估，烦请提供下一年的服务清单和报价，并说明清单中各项服务的范围与周期。\n\n收到上述材料后，我方将进行内部评估，并再与您确认后续安排。如有需要进一步说明的事项，也请一并告知。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R091",
+    "case_id": "S18",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续约会议照片",
+      "body": "您好，\n\n谢谢您发来的照片。\n\n祝好"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R092",
+    "case_id": "S30",
+    "output": "续约一年、报价7万元已确认，请发送正式合同。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R093",
+    "case_id": "S21",
+    "output": "感谢您协助查找培训资料。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R094",
+    "case_id": "S15",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 活动照片",
+      "body": "您好，感谢您分享上周的活动照片。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R095",
+    "case_id": "S30",
+    "output": "我方同意续约一年，确认报价7万元，请发送正式合同。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R096",
+    "case_id": "S05",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续签联系人确认",
+      "body": "您好，\n\n感谢您就下一年度续约事项与我们联系。关于签约联系人，确认由刘宁负责对接。\n\n关于服务范围，目前仍需进一步评估，暂无法确认具体范围。烦请贵方列出可选服务项目及相应说明，以便我们进行内部评估。\n\n下一步，请您提供可选服务清单；我们收到后将结合评估情况与您进一步沟通。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R097",
+    "case_id": "S26",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约决定",
+      "body": "您好，\n\n感谢您就续约事项提出建议，并告知倾向于续约一年。我们已收悉，目前该事项尚需内部评估，暂无法确认续约安排。\n\n为进一步核对，请补充完整的服务清单，以便我们据此评估；续约期限、费用及其他条款待内部评估完成后再与您确认。\n\n下一步，烦请提供上述服务清单，我们收到后将尽快推进内部评估，并及时向您反馈。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R098",
+    "case_id": "S26",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约决定",
+      "body": "您好，\n\n感谢您的邮件以及关于续约一年的建议。\n\n关于续约事项，目前我们这边尚需完成内部评估，因此暂时无法给出确认结论。为便于评估，能否请您补充提供本次续约所涉及的服务清单及其具体内容？收到后我们将据此推进内部沟通。\n\n需要核对的事项：\n1. 服务清单及服务范围（待您补充）\n2. 续约期限（您建议为一年，待我方内部确认）\n3. 其他商务条款（待内部评估后另行沟通）\n\n下一步：请您提供上述服务清单，我方将据此完成内部评估后再与您进一步沟通。\n\n顺祝商祺\n测试客户 收件方"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R099",
+    "case_id": "S17",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约文件收件回执",
+      "body": "您好，\n\n附件已收到，谢谢。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R100",
+    "case_id": "S14",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 设备盘点",
+      "body": "您好，收到。我今天下午核对工位显示器数量后再回复您。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R101",
+    "case_id": "S16",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 发票资料",
+      "body": "您好，\n\n感谢您的来信。关于开票信息，为便于我们准确、完整地提供所需内容，烦请先发送需要填写的字段清单（例如发票抬头、税号等具体项目），我们收到后会按要求填写并回复。\n\n谢谢！\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R102",
+    "case_id": "S20",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：资料排版",
+      "body": "您好，\n\n邮件及附件已收到。我们会检查更新后的排版稿，检查完成后回复您。\n\n如有进一步问题，我们会一并在此邮件中说明。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R103",
+    "case_id": "S29",
+    "output": "我方尚未同意续约。请补充响应时效及故障处理范围。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R104",
+    "case_id": "S24",
+    "output": "祝假期愉快，旅途平安！",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R105",
+    "case_id": "S17",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续约文件收件回执",
+      "body": "您好，\n\n附件已收到，感谢您的发送。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R106",
+    "case_id": "S29",
+    "output": "我方尚未同意续约，请补充响应时效及故障处理范围。请提供响应时效及故障处理范围的具体说明。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R107",
+    "case_id": "S12",
+    "output": "感谢您就续约事宜与我们联系。目前我们暂时还无法对续约作出确认，想先请您协助提供安全服务清单及对应报价，以便我们进一步了解与评估。烦请您方便时发送相关资料，收到后我们会尽快跟进并回复您。谢谢！",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R108",
+    "case_id": "S16",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 发票资料",
+      "body": "您好，\n\n感谢您就开票信息事宜与我们联系。\n\n为便于准确准备相关资料，能否请您先提供需要填写的字段清单（例如需填写哪些项目、格式要求等）？收到清单后，我们将据此整理并回复。\n\n如清单中有必填项或格式模板，也请一并说明。\n\n期待您的回复，谢谢！\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R109",
+    "case_id": "S21",
+    "output": "感谢您协助查找培训资料。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R110",
+    "case_id": "S12",
+    "output": "感谢您的来信。关于续约事宜，我们目前还无法给出确认，希望您能先提供安全服务清单及对应报价，以便我们进一步了解与评估。感谢您的理解与支持。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R111",
+    "case_id": "S07",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约折扣申请",
+      "body": "您好，感谢来信。我们已收到您关于续约折扣的申请，理解您希望获得优惠。关于年度支持服务报价10万元及折扣事项，目前尚未完成审批，待审批完成后再向您回复。谢谢。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R112",
+    "case_id": "S12",
+    "output": "感谢您关于续约的来信。目前我们还在内部评估中，暂时不便确认续约事宜，敬请理解。为便于我们进一步了解，方便时能否提供安全服务清单及对应报价？谢谢！",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R113",
+    "case_id": "S11",
+    "output": "感谢续签方案。\n\n待确认事项：\n1. 数据迁移相关费用，需补充说明；\n2. 现场培训费用，需补充说明。\n\n下一步：请贵方就上述两项提供具体说明，我方核对后再作回复。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R114",
+    "case_id": "S29",
+    "output": "我方尚未同意续约。请补充响应时效及故障处理范围。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R115",
+    "case_id": "S27",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续约范围核对",
+      "body": "您好，\n\n感谢您就续约范围发来说明。我们已经注意到您建议保留原服务范围。为了准确核对，能否请您提供完整的服务范围清单（包括各项服务内容及对应说明）？收到后我们会逐项核对，并再与您确认需要进一步沟通的事项。\n\n期待您的回复，谢谢。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R116",
+    "case_id": "S08",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 托管服务续约",
+      "body": "您好，\n\n感谢您就托管服务续约事宜来信。\n\n关于续约事项：目前我们只考虑一年的续约期限，两年期暂不在考虑范围内，因此续约期限仍需双方进一步确认。\n\n关于迁移支持：需要向您核实，迁移支持是否包含在本次续约的服务范围内？如包含，请说明其具体覆盖内容；如不包含，请告知是否需要单独确认及相应安排。\n\n下一步，烦请你就上述两点（一年期续约范围、迁移支持是否包含）予以确认，我们再据此推进后续事宜。\n\n谢谢！\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R117",
+    "case_id": "S09",
+    "output": "感谢贵方就续约事宜与我方沟通。我方愿意就续约事宜进行讨论，但具体服务范围尚待进一步核对确认。烦请贵方提供完整的服务清单，以便我方评估。期待贵方回复。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R118",
+    "case_id": "S18",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约会议照片",
+      "body": "您好，\n\n谢谢您发来续约会议现场合影。\n\n祝好"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R119",
+    "case_id": "S08",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 托管服务续约",
+      "body": "您好，\n\n感谢您就托管服务续约提出建议。\n\n关于续约期限：我方目前只考虑一年期方案，两年期方案暂不在考虑范围内，请知悉。\n\n关于迁移支持：您在邮件中提到该项需要单独确认。我方希望了解迁移支持是否包含在续约方案中；如包含，具体范围如何；如不包含，是否需另行安排。上述内容我方尚待确认，暂无法给出结论。\n\n下一步，烦请贵方就迁移支持是否包含及具体范围予以说明，我方将据此对一年期续约方案进行内部核对，之后再与您进一步沟通。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R120",
+    "case_id": "S04",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：维保续约与付款",
+      "body": "您好：\n\n感谢来信。关于本次维保续约，我们已确认续约期限为一年、总额为6万元。\n\n关于付款方式，我方希望了解是否可以分两期支付。如可以，烦请告知两期的付款节点、每期金额及对应的开票安排；上述内容我方尚待确认，暂不作最终确认。\n\n下一步，烦请贵方就分两期付款的可行性及具体安排给予回复，我方收到后将据此推进后续签约与付款事宜。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R121",
+    "case_id": "S10",
+    "output": "感谢您的来信。我们认可续约一年、总额3万元，付款日期目前尚未确定，烦请发送合同草案，谢谢！",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R122",
+    "case_id": "S07",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约折扣申请",
+      "body": "您好：\n\n感谢您就年度支持服务续约及折扣申请事宜来函。\n\n已了解的事项：\n1. 年度支持服务报价为10万元；\n2. 折扣目前尚未完成审批。\n\n待确认事项：\n1. 折扣审批的最终结果及适用范围；\n2. 审批完成后，续约合同的签署安排与时间节点。\n\n关于优惠，我方希望可以申请，但折扣尚在审批中，暂无法确认具体方案。烦请您在审批完成后回复本邮件告知结果，我们将据此推进后续续约事宜。\n\n如需我方补充任何资料，请随时告知。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R123",
+    "case_id": "S02",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：青岚平台续签方案",
+      "body": "您好，\n\n感谢您发来青岚平台的续签方案。我们已注意到方案中提到的明年报价8万元及工作日远程支持事项，目前暂未确认接受该报价。\n\n有一项需要进一步核对：周末支持是否另行收费？如另收费，请说明适用条件和计费方式。\n\n请您就上述事项予以确认，我们再继续推进后续沟通。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R124",
+    "case_id": "S12",
+    "output": "目前暂时还无法确认续约事宜，烦请提供安全服务清单及对应报价，谢谢。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R125",
+    "case_id": "S22",
+    "output": "续约资料附件已收到。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R126",
+    "case_id": "S07",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约折扣申请",
+      "body": "您好，\n\n感谢您的邮件。关于年度支持服务续约，我们已了解贵方希望申请优惠的意向。\n\n目前已知情况：\n- 年度支持服务报价为10万元；\n- 相应折扣尚未完成审批，因此暂时无法提供最终的优惠后价格。\n\n需要继续核对的事项：\n- 优惠幅度及审批结果（待确认）；\n- 最终报价与合同条款（待确认）。\n\n下一步：我方将就优惠事项推进内部申请流程。请在贵方审批流程完成后再回复本邮件，我方将根据审批结果与您确认后续安排。在审批完成前，上述价格与折扣均待确认，不构成最终报价。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R127",
+    "case_id": "S23",
+    "output": "已收到续约会议照片。照片很清晰。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R128",
+    "case_id": "S15",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：活动照片",
+      "body": "您好，感谢您分享上周的活动照片。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R129",
+    "case_id": "S13",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 交付材料",
+      "body": "收到，谢谢。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R130",
+    "case_id": "S03",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 远辰合同到期",
+      "body": "您好，\n\n感谢您的来信。我们已注意到远辰合同将于2026年12月31日到期。\n\n我方愿意就续签事宜与贵方进行沟通。烦请贵方发送修订后的合同文本，以便我方审阅。\n\n本次暂不安排会议，后续可通过邮件继续沟通。\n\n期待您的回复。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R131",
+    "case_id": "S15",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 活动照片",
+      "body": "您好，感谢您分享上周的活动照片，已收到。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R132",
+    "case_id": "S19",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 办公室网络维护",
+      "body": "您好，\n\n感谢您的通知。我方已知悉明晚20点到21点的网络维护安排。\n\n谢谢。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R133",
+    "case_id": "S22",
+    "output": "续约资料附件已收到。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R134",
+    "case_id": "S03",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：远辰合同到期",
+      "body": "您好，\n\n感谢您告知远辰合同将于2026年12月31日到期。我们愿意就续签事宜继续沟通，但目前尚未形成最终意向，具体条款仍需进一步核对。\n\n为便于推进，烦请将修订后的合同发送给我们，我方收到后将安排审阅。另，本次无需安排会议，如有问题可通过邮件沟通。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R135",
+    "case_id": "S21",
+    "output": "感谢您协助查找培训资料。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R136",
+    "case_id": "S19",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 办公室网络维护",
+      "body": "您好：\n\n感谢您的通知。我们已知悉明晚 20:00 至 21:00 将进行断网维护，并会提前做好准备。\n\n如有变动，烦请再告知。谢谢！\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R137",
+    "case_id": "S08",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 托管服务续约",
+      "body": "您好，\n\n感谢您就托管服务续约事宜与我们联系。关于您提出的续约方案，我们目前仅考虑一年期的续约安排，两年期的方案暂不在本次考虑范围内，敬请谅解。\n\n另有一项需要与您核实：您提到的迁移支持是否包含在本次续约的服务范围内？如包含，烦请说明其具体覆盖内容；如为单独项目，也请一并告知。\n\n在收到您关于迁移支持的确认后，我们再就一年期续约的具体条款进行进一步沟通。期待您的回复。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R138",
+    "case_id": "S30",
+    "output": "同意续约一年，7万元报价已确认，请发送正式合同。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R139",
+    "case_id": "S07",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约折扣申请",
+      "body": "您好：\n\n感谢您就年度支持服务续约事宜与我方联系，并告知目前报价为10万元、折扣尚在审批中。\n\n我方希望就本次续约申请优惠价格，具体方案可在贵方折扣审批完成后进一步沟通确认。烦请您在审批流程结束后回复本邮件，我方将及时跟进后续事宜。\n\n感谢您的理解与配合。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R140",
+    "case_id": "S28",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续签截止日期 - 下一年度服务支持时段确认",
+      "body": "您好，\n\n感谢您告知合同截止日期为2026年12月20日，并提示核对下一年度服务计划。\n\n就下一年度服务，我们希望先确认支持时段的安排，具体想了解：\n\n1. 下一年度期望的服务支持时段（例如工作日的时间范围）；\n2. 是否需要覆盖非工作时段或节假日；\n3. 对响应时效等方面的具体期望。\n\n上述内容目前仍需与您确认，我们暂未就续约条款作出确认。收到您的支持时段需求后，我们会据此整理下一年度服务计划并与您进一步核对。\n\n请告知您方便的支持时段安排，感谢配合。\n\n此致"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R141",
+    "case_id": "S02",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 青岚平台续签方案",
+      "body": "您好，\n\n感谢您发来青岚平台的续签方案。方案中提到的明年报价 8 万元、含工作日远程支持，我们已经收到并做了记录，但暂未作出确认，还需内部进一步核对。\n\n目前已了解的内容：\n- 明年报价：8 万元\n- 包含：工作日远程支持\n\n还需与您确认的事项：\n- 周末支持是否单独计费？如另行收费，具体的收费方式和标准请一并说明；如包含在报价内，也请明确周末支持的服务时段和响应方式。\n\n下一步，烦请您就上述周末支持的费用与范围给予说明；收到后我们会结合内部评估尽快回复后续安排。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R142",
+    "case_id": "S15",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 活动照片",
+      "body": "您好，\n\n感谢您分享上周的活动照片。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R143",
+    "case_id": "S26",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续约决定",
+      "body": "您好：\n\n感谢您关于续约一年的建议。此事尚需我方内部评估，暂无法确认续约或付款安排。\n\n为便于评估，请补充服务清单，包括服务项目、范围及对应期限等信息。\n\n收到服务清单后，我们将推进内部评估，并及时向您反馈后续安排。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R144",
+    "case_id": "S14",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：设备盘点",
+      "body": "您好，\n\n已收到您关于核对工位显示器数量的邮件。我会在今天下午进行核对，并在核对完成后回复您。\n\n顺颂商祺\n测试客户"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R145",
+    "case_id": "S14",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 设备盘点",
+      "body": "您好，\n\n邮件已收到。关于工位显示器数量的核对，我会在下午完成核对后再回复您。\n\n感谢您的耐心等待。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R146",
+    "case_id": "S06",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续约范围调整",
+      "body": "您好，\n\n感谢您就续约范围调整事宜与我们联系。关于新方案中拟去除现场巡检、价格保持不变的安排，我们目前无法接受。\n\n为便于进一步评估，烦请说明以下两点：\n1. 去除现场巡检的原因及相应服务安排；\n2. 针对服务范围缩减的补偿方案。\n\n在收到上述说明前，我们暂不对本次调整作出确认，原有条款继续作为后续沟通的基础。收到您的回复后，我们可安排一次沟通会进行讨论，具体时间待双方确认。\n\n期待您的回复。\n\n顺颂商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R147",
+    "case_id": "S22",
+    "output": "续约资料附件已收到，。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R148",
+    "case_id": "S22",
+    "output": "续约资料附件已收到。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R149",
+    "case_id": "S23",
+    "output": "已收到续约会议照片。照片很清晰。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R150",
+    "case_id": "S02",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：青岚平台续签方案",
+      "body": "您好：\n\n感谢您发来青岚平台续签方案。关于续签事项，我们已收到并记录您提出的“明年报价8万元、包含工作日远程支持”这一方案。\n\n目前还需请您确认：周末支持是否另行收费？如另收费，计费方式如何？\n\n待您就该事项确认后，我们再进一步评估并回复。\n\n谢谢。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R151",
+    "case_id": "S17",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约文件收件回执",
+      "body": "您好，\n\n附件已收到，谢谢。\n\n此致"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R152",
+    "case_id": "S30",
+    "output": "我方同意续约一年，7万元报价已确认，请发送正式合同。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R153",
+    "case_id": "S18",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续约会议照片",
+      "body": "您好，\n\n照片已收到，谢谢您！\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R154",
+    "case_id": "S21",
+    "output": "感谢您协助我查找培训资料。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R155",
+    "case_id": "S18",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续约会议照片",
+      "body": "您好，\n\n谢谢您发来的照片。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R156",
+    "case_id": "S02",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 青岚平台续签方案",
+      "body": "您好，\n\n感谢您发来青岚平台续签方案。关于明年的报价及工作日远程支持内容，我们已收悉，但暂未做接受确认，仍需进一步评估。\n\n目前我们想先确认一项：周末支持是否另行收费？如另收费，收费标准及包含的服务范围为何？\n\n烦请就上述问题予以说明，收到您的回复后我们再进一步沟通。谢谢。\n\n此致"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R157",
+    "case_id": "S30",
+    "output": "我方同意续约一年，报价7万元已确认，请发送正式合同。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R158",
+    "case_id": "S16",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：发票资料",
+      "body": "您好，\n\n感谢您的来信。为便于我们准确准备开票信息，能否请您先提供需要填写的字段清单？例如：需要填写的项目名称和格式要求。\n\n收到清单后，我们会按清单逐项确认并回复。\n\n如清单中有需要特别说明的事项，也请一并告知，谢谢。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R159",
+    "case_id": "S01",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：澄海维护续约",
+      "body": "您好，\n\n感谢您就澄海维护服务续约事宜与我们联系，并告知当前维护服务将于12月15日到期。\n\n目前我们内部尚未就下一年度的续约作出决定。为便于我们评估，烦请贵方提供下一年度的服务清单及相应报价。收到后我们将尽快进行内部讨论，并就后续安排与您进一步沟通。\n\n感谢您的配合，期待您的回复。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R160",
+    "case_id": "S02",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "关于青岚平台续签方案的咨询",
+      "body": "您好，\n\n感谢您发来青岚平台续签方案。我们注意到方案中提到明年报价8万元，含工作日远程支持。\n\n想进一步确认：周末支持是否另行收费？如另收费，烦请说明相关计费方式。\n\n感谢您的说明。\n\n此致"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R161",
+    "case_id": "S10",
+    "output": "感谢您就续约事宜与我们沟通。我们认可续约一年、总额3万元；关于付款日期，目前尚未确定，待进一步确认。烦请贵方发送合同草案，以便我们推进后续核对与签署工作。谢谢！",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R162",
+    "case_id": "S05",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续签联系人确认",
+      "body": "您好，\n\n感谢您就下一年度续签事项与我们联系。就您提出的两项内容，回复如下：\n\n1. 签约联系人：我方下一年度签约联系人为刘宁。\n2. 服务范围：目前服务范围仍在评估中，暂无法确认具体内容，待内部评估完成后另行与您沟通。\n\n下一步，烦请贵方列出可提供的服务选项及相应说明，以便我方结合评估情况进一步核对。如需补充其他信息，请随时告知。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R163",
+    "case_id": "S23",
+    "output": "已收到续约会议照片。照片很清晰。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R164",
+    "case_id": "S27",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续约范围核对",
+      "body": "您好，\n\n感谢您就续约范围与我联系。关于您提出保留原服务范围的建议，我想进一步了解完整服务范围的具体内容，以便准确核对续约事项。\n\n已知事项：您建议保留原服务范围。\n待确认事项：原服务范围的具体内容和边界。\n\n下一步：烦请提供完整服务范围的说明或相关条款明细，我在收到后与您进一步核对。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R165",
+    "case_id": "S19",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 办公室网络维护",
+      "body": "您好，\n\n感谢您的通知，我们已收到并知悉您邮件中提到的明晚20点至21点断网维护安排。\n\n如有需要我方配合的事项，请随时告知。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R166",
+    "case_id": "S23",
+    "output": "已收到续约会议照片。照片很清晰",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R167",
+    "case_id": "S21",
+    "output": "感谢您协助查找培训资料。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R168",
+    "case_id": "S28",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续签截止日期",
+      "body": "您好，测试客户：\n\n感谢您的来信。您提到合同截止日期为 2026 年 12 月 20 日，并希望核对下一年服务计划，我们已收到。\n\n为便于核对下一年服务计划，想向您确认一下：下一年度您希望的支持时段是哪些？例如具体的时间范围或时段安排，请您告知，我们会据此核对服务计划内容。\n\n本次仅就支持时段进行确认，不安排任何会议。\n\n期待您的回复。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R169",
+    "case_id": "S08",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：托管服务续约",
+      "body": "您好，\n\n感谢您就托管服务续约事项的来函。\n\n关于续约期限：我们目前仅考虑一年期的续约方案，两年期方案暂不在考虑范围内，敬请谅解。\n\n关于迁移支持：您在来信中提到迁移支持需要单独确认，我们尚未掌握其具体范围与安排，烦请确认该部分是否包含在本次续约方案中；如包含，请一并说明覆盖内容与生效方式。\n\n下一步：如您方便，请回复确认迁移支持是否包含，并就一年期方案的条款细节与我们进一步核对；我们收到确认后会据此推进后续沟通。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R170",
+    "case_id": "S06",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约范围调整",
+      "body": "您好，\n\n感谢您就续约方案调整进行说明。关于新方案中去除现场巡检且价格不变的安排，我们暂无法接受。\n\n烦请进一步说明去除现场巡检的具体原因，并提供相应的补偿方案，以便我方评估。\n\n期待您的回复。\n\n谢谢。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R171",
+    "case_id": "S07",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约折扣申请",
+      "body": "您好，\n\n感谢您就年度支持服务续约及折扣事宜来函。我们已注意到，您提供的年度支持服务报价为10万元，相关折扣尚待审批。\n\n关于优惠，我们希望申请；但目前折扣审批结果尚未明确，因此暂时无法就折扣条件作出确认。待您方审批完成后，请告知审批结果，我们再据此回复并推进后续续约事宜。\n\n如审批流程或所需材料方面需要我们配合，也请一并告知。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R172",
+    "case_id": "S18",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续约会议照片",
+      "body": "您好，\n\n照片已收到，谢谢您！\n\n祝好"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R173",
+    "case_id": "S22",
+    "output": "续约资料附件已收到。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R174",
+    "case_id": "S01",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 澄海维护续约",
+      "body": "您好，\n\n感谢您的来函，以及关于澄海维护服务续约的提醒。\n\n目前我们内部尚未就下一年度的续约作出决定。为便于我们评估，烦请贵方提供下一年度的服务清单及报价，供我们参考。\n\n收到上述材料后，我们会尽快推进内部评估，并就后续安排与您联系。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R175",
+    "case_id": "S15",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 活动照片",
+      "body": "您好，\n\n感谢您分享上周的活动照片。\n\n祝好"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R176",
+    "case_id": "S04",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 维保续约与付款",
+      "body": "您好，\n\n感谢您的邮件。我们已同意续约期限为一年、总额为6万元。关于付款方式，想请问是否可以分两期付款？如可以，烦请告知分期安排及相关要求。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R177",
+    "case_id": "S01",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：澄海维护续约",
+      "body": "测试客户，您好：\n\n感谢您就澄海维护续约事项的提醒，并告知当前维护服务将于12月15日到期。\n\n关于续约，我方目前尚未做出决定。为便于评估，烦请贵方提供下一年度的服务清单及报价。\n\n收到上述材料后，我们将进行内部核对，并就续约事宜另行回复。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R178",
+    "case_id": "S29",
+    "output": "我方尚未同意续约。请补充响应时效及故障处理范围。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R179",
+    "case_id": "S15",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 活动照片",
+      "body": "您好，\n\n感谢您分享上周的活动照片，已经收到。\n\n祝好"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R180",
+    "case_id": "S27",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约范围核对——请提供完整服务范围",
+      "body": "您好，\n\n感谢您就续约范围事宜来信，并建议保留原服务范围。\n\n为准确核对续约内容，烦请您提供完整的服务范围说明（例如各项服务项目及其边界）。收到后我们将据此进行核对。\n\n如有相关范围清单或附件，也请一并发送。谢谢。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R181",
+    "case_id": "S16",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：发票资料",
+      "body": "您好：\n\n感谢您的来信。关于开票信息提交事宜，为便于我们准确准备相关资料，烦请您先提供需要填写的字段清单（即开票信息所需的具体项目）。\n\n收到清单后，我们将按要求整理并回复。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R182",
+    "case_id": "S14",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 设备盘点",
+      "body": "您好，\n\n邮件已收到。关于工位显示器数量的核对，我会在今天下午完成核对后回复您。\n\n感谢您的耐心等待。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R183",
+    "case_id": "S16",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：发票资料",
+      "body": "您好，\n\n感谢您就开票信息一事与我们联系。\n\n为便于我们准确、完整地提交开票信息，烦请先提供需要填写的字段清单（即开票信息所需的具体项及填写要求）。收到清单后，我们将据此准备并提交相关内容。\n\n如清单中有需特别说明的填写规范或格式要求，也请一并告知。\n\n期待您的回复。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R184",
+    "case_id": "S01",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 澄海维护续约",
+      "body": "您好，\n\n感谢您关于澄海维护服务续约的提醒，以及告知当前维护服务将于12月15日到期。\n\n我们目前尚未就下一年度的续约作出决定。烦请您提供下一年度的服务清单及相应报价，以便我们评估。\n\n收到后我们会尽快回复。谢谢！\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R185",
+    "case_id": "S09",
+    "output": "我方谨此表示，愿就续约事宜与贵方进行讨论；惟具体服务范围尚待进一步核对确认，暂未最终确定。敬请贵方提供完整之服务清单，以便我方审阅。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R186",
+    "case_id": "S26",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约决定",
+      "body": "您好，\n\n感谢您就续约事项发来意见。关于您提出的一年续约建议，我们尚需进行内部评估，目前暂时无法确认续约安排，也无法确认付款相关事项。\n\n为便于评估，烦请补充完整的服务清单，包括各项服务内容及对应说明。收到服务清单后，我们将结合内部评估结果，再与您进一步沟通续约条款。\n\n如您方便，请于本周内提供上述服务清单；收到后，我们会告知下一步评估安排。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R187",
+    "case_id": "S16",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 发票资料",
+      "body": "您好：\n\n感谢您的邮件。关于开票信息，烦请先提供需要填写的字段清单，以便我们按清单准备和核对相关资料。\n\n收到字段清单后，我们会据此跟进。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R188",
+    "case_id": "S20",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 资料排版",
+      "body": "您好，\n\n附件中的更新排版稿已收到。我们会检查排版情况，检查完成后回复您。\n\n如有其他需要说明的事项，欢迎随时告知。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R189",
+    "case_id": "S23",
+    "output": "已收到续约会议照片。照片很清晰",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R190",
+    "case_id": "S03",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 远辰合同到期",
+      "body": "您好，\n\n感谢您告知远辰合同将于2026年12月31日到期的情况。我们愿意就续签事宜与您进一步讨论。\n\n为便于推进，烦请贵方将修订后的合同发送给我们，我们收到后会进行核对；如核对过程中有需要确认的条款，我们会及时与您沟通。\n\n关于续签的具体条款及安排，目前尚未确认，待双方核对后再行沟通。期待收到修订合同。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R191",
+    "case_id": "S26",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约决定",
+      "body": "您好：\n\n感谢您来信说明续约一年的建议。关于续约事项，我们目前仍在内部评估中，暂无法给出最终确认，请予理解。\n\n为便于评估，烦请贵方补充服务清单（服务项目、范围及相关说明）。收到后我们将结合内部评估结果，另行与您沟通后续安排。\n\n如服务清单已有现成版本，直接回复本邮件附上即可。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R192",
+    "case_id": "S07",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约折扣申请",
+      "body": "尊敬的测试客户：\n\n您好！感谢您的来信，关于年度支持服务（报价10万元）的续约折扣申请，我们已收到并了解相关情况。\n\n目前该折扣尚未完成审批。我们希望能为您申请相应的优惠，具体折扣幅度及方案需以审批结果为准，现阶段暂无法向您确认，敬请谅解。\n\n烦请您在审批完成后回复本邮件，我们将据此及时跟进后续续约事宜。\n\n如您还有其他问题，欢迎随时联系。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R193",
+    "case_id": "S28",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续签截止日期",
+      "body": "您好，\n\n感谢您告知合同截止日期为2026年12月20日，并提到需要核对下一年服务计划。\n\n关于续约事宜，我们正在内部确认，暂未形成最终结论；确认后会及时向您反馈。为便于核对下一年服务计划，想先向您了解：贵方对下一年度的支持时段（例如具体时间段、覆盖范围或响应时段）有哪些要求？如方便，请以邮件形式告知，我们将据此核对并回复。\n\n本次仅通过邮件沟通，不安排会议。收到您对支持时段的说明后，我们会进一步核对服务计划并回复您。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R194",
+    "case_id": "S30",
+    "output": "我方同意续约一年，确认报价7万元，请发送正式合同。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R195",
+    "case_id": "S18",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约会议照片",
+      "body": "您好，\n\n谢谢您发来的照片。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R196",
+    "case_id": "S17",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约文件收件回执",
+      "body": "您好：\n\n邮件及附件已收到，特此回复确认。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R197",
+    "case_id": "S05",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续签联系人确认",
+      "body": "您好，\n\n感谢您就下一年度续签联系人确认事项与我们联系。\n\n关于签约联系人：下一年度的签约联系人确定为刘宁。\n\n关于服务范围：目前我们仍在评估中，尚未最终确定。为便于我们评估，烦请贵方列出可提供的可选服务项目及相关说明。\n\n下一步：请您提供可选服务清单；我方收到后会结合评估情况再与您进一步确认服务范围及后续签约安排。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R198",
+    "case_id": "S04",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：维保续约与付款",
+      "body": "您好，\n\n感谢您的邮件。关于维保续约，我们已确认续约期限为一年、总额为6万元。\n\n付款方式方面，想与您确认：是否可以分两期付款？如可以，烦请告知两期付款的金额安排、付款时间及相关开票要求，我们据此核对并推进后续手续。\n\n期待您的回复，谢谢。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R199",
+    "case_id": "S18",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续约会议照片",
+      "body": "您好，\n\n谢谢您发来的照片！\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R200",
+    "case_id": "S24",
+    "output": "祝你假期愉快，一路平安。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R201",
+    "case_id": "S18",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约会议照片",
+      "body": "您好，谢谢您发来的照片。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R202",
+    "case_id": "S02",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：青岚平台续签方案",
+      "body": "您好：\n\n关于您发来的青岚平台续签方案，我们已收到。邮件中提到明年报价8万元，含工作日远程支持。\n\n我们希望进一步确认：周末支持是否另行收费？如另行收费，具体的适用范围和计费方式是什么？\n\n在收到上述说明前，我们暂不对报价及续约作出确认。请补充相关信息，以便我们进一步评估并推进后续沟通。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R203",
+    "case_id": "S05",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续签联系人确认",
+      "body": "您好，\n\n感谢来信。关于下一年度签约联系人，我方可由刘宁担任联系人。\n\n服务范围目前还需要进一步评估，暂无法确认。烦请贵方列出可选服务项目及相关说明，以便我方评估后再行沟通。\n\n下一步：请贵方提供可选服务清单，收到后我方将结合评估结果回复确认意见。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R204",
+    "case_id": "S26",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约决定",
+      "body": "测试客户，您好：\n\n感谢您的来信，以及关于续约一年的建议。\n\n关于续约事宜，我方目前尚需进行内部评估，暂无法就续约安排作出确认。为便于评估工作的开展，能否请您补充提供一份详细的服务清单？收到后我们将结合清单内容一并纳入评估。\n\n如有其他需要说明的事项，也欢迎一并告知。期待您的回复。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R205",
+    "case_id": "S14",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 设备盘点",
+      "body": "测试客户，您好：\n\n收到您的邮件。我下午核对工位显示器数量后再回复您。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R206",
+    "case_id": "S10",
+    "output": "您好，我们同意续约一年，合同总额为3万元；付款日期目前尚未确定。烦请您发送合同草案，谢谢。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R207",
+    "case_id": "S27",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约范围核对",
+      "body": "您好，\n\n感谢您就续约范围发来说明。关于您提到保留原服务范围的想法，我们已经收到。\n\n为了准确核对续约内容，想请您提供完整的服务范围清单，包括服务项目、覆盖对象及范围边界等信息，以便我们逐项比对确认。\n\n收到后我们会尽快核对，并就下一步安排与您确认。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R208",
+    "case_id": "S15",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 活动照片",
+      "body": "您好，感谢您分享上周的活动照片。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R209",
+    "case_id": "S28",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续签截止日期",
+      "body": "您好，\n\n感谢您的来信。已收到您提到合同截止日期为2026年12月20日，并需核对下一年服务计划。\n\n为便于核对下一年度的服务安排，想向您确认：下一年度希望支持服务的时段是如何安排的（例如起止时间或覆盖的时间范围）？请将您的具体需求告知我们，我们将据此核对服务计划。\n\n本次仅就支持时段进行确认，不安排任何会议。\n\n期待您的回复。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R210",
+    "case_id": "S11",
+    "output": "感谢续签方案。我方需核对以下事项，请补充说明：\n1. 数据迁移费用；\n2. 现场培训费用。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R211",
+    "case_id": "S28",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续签截止日期 — 下一年服务支持时段确认",
+      "body": "您好，\n\n感谢您的来信。已收到您关于合同截止日期（2026年12月20日）及下一年服务计划的信息。\n\n为了配合您核对下一年服务计划，想先向您确认一点：贵方对下一年度的服务支持时段有什么要求？例如希望覆盖的时段范围、工作日或非工作日的安排等。请将您的具体需求回复给我们，我们将据此对下一年服务计划进行核对。\n\n相关沟通可通过邮件进行，我们不会为此安排会议。\n\n期待您的回复。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R212",
+    "case_id": "S24",
+    "output": "祝您假期愉快，旅途平安。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R213",
+    "case_id": "S29",
+    "output": "我方尚未同意续约。请补充响应时效及故障处理范围。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R214",
+    "case_id": "S25",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：一年期续约报价",
+      "body": "您好，感谢您关于一年期续约及总价5万元的报价，想确认一下该报价是否包含现场支持？"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R215",
+    "case_id": "S01",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：澄海维护续约",
+      "body": "您好，\n\n感谢您就澄海维护服务续约事宜的来信。我们注意到当前维护服务将于12月15日到期。\n\n关于续约，我们目前尚未作出决定。为便于评估，烦请提供下一年度的服务清单及相应报价。\n\n收到上述材料后，我们将尽快内部评估并与您进一步沟通。谢谢。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R216",
+    "case_id": "S05",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续签联系人确认",
+      "body": "您好，\n\n感谢您的邮件。关于下一年度签约事宜，先向您确认：签约联系人为刘宁。\n\n关于服务范围，我们目前仍在评估中，暂无法给出最终确认。烦请贵方列出可选的服务项目及相关说明，以便我们内部评估后进一步沟通。\n\n如有其他需要补充的信息，请随时告知。\n\n祝好，"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R217",
+    "case_id": "S26",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约决定",
+      "body": "您好：\n\n感谢您就续约事宜作出说明。您提出的续约方案我们已收悉，目前仍需进行内部评估，因此暂无法就续约事项给出结论。\n\n为便于我们开展评估，可否请您补充提供本次续约涉及的服务清单，例如各项服务内容、服务范围及对应的服务标准等。\n\n收到上述信息后，我们将尽快推进内部评估，并再与您沟通后续安排。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R218",
+    "case_id": "S09",
+    "output": "我方愿意就续约事宜进行讨论，目前具体服务范围尚待进一步核对。敬请提供完整的服务清单，以便我方审阅。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R219",
+    "case_id": "S10",
+    "output": "感谢您。我们认可续约一年、总额3万元；付款日期目前尚未确定，烦请发送合同草案，谢谢。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R220",
+    "case_id": "S12",
+    "output": "关于续约事宜，目前我们暂无法确认；烦请提供安全服务清单及对应报价，以便进一步评估。谢谢。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R221",
+    "case_id": "S20",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 资料排版",
+      "body": "您好，\n\n邮件及附件已收到。我们会检查更新后的排版稿，检查完成后回复您。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R222",
+    "case_id": "S28",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续签截止日期",
+      "body": "您好，\n\n感谢您就续约事项发来邮件。我们已记录：现有合同截止日期为 2026 年 12 月 20 日，并需核对下一年度的服务计划。\n\n关于下一年度的服务，我们希望进一步了解贵方对支持时段的具体要求，例如需要覆盖的时段范围及是否有特殊时间安排。上述支持时段及其他服务条款细节目前均待确认，确认后我们会据此整理下一年度服务计划供您核对。\n\n下一步：请回复告知您期望的支持时段要求；我们收到后将据此核对并回复下一年度服务计划。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R223",
+    "case_id": "S21",
+    "output": "感谢您协助查找培训资料。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R224",
+    "case_id": "S27",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约范围核对（请提供完整服务范围）",
+      "body": "您好，\n\n感谢您就续约范围进行确认。\n\n为准确核对，请您提供本次续约所涉及的完整服务范围说明（例如各项服务内容及对应范围界定）。收到后我们将据此核对并回复。\n\n如方便，请直接回复本邮件。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R225",
+    "case_id": "S10",
+    "output": "您好：感谢您就续约事宜与我们联系。关于续约，我们希望按一年期限、总额人民币3万元推进；付款日期目前尚未确定，待进一步确认后再与您核对。烦请贵方发送合同草案，以便我们查看条款并安排后续沟通。期待您的回复，谢谢！",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R226",
+    "case_id": "S17",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约文件收件回执",
+      "body": "您好，\n\n附件已收到，谢谢。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R227",
+    "case_id": "S04",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：维保续约与付款",
+      "body": "您好，感谢来信。我们已同意续约期限为一年，总额为6万元。关于付款方式，请问能否分两期付款？如可以，请告知分期安排及相关要求；如不可以，也请说明。请回复确认后，我们再推进后续手续。谢谢。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R228",
+    "case_id": "S20",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 资料排版",
+      "body": "您好：\n\n收到您发来的更新排版稿。我们会安排检查排版，检查完成后回复您。\n\n如有需要进一步确认的内容，我们会一并在回复中说明。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R229",
+    "case_id": "S28",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续签截止日期",
+      "body": "您好，\n\n关于续签事项，我们注意到合同截止日期为2026年12月20日，下一年服务计划仍需进一步核对。请告知下一年度的支持时段（例如具体的服务时间范围），以便我们据此核对计划。\n\n本次仅通过邮件沟通，不安排任何会议。收到您对支持时段的说明后，我们再继续推进后续核对。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R230",
+    "case_id": "S29",
+    "output": "我方尚未同意续约。请补充响应时效及故障处理范围。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R231",
+    "case_id": "S02",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：青岚平台续签方案——关于周末支持收费的询问",
+      "body": "您好，\n\n感谢您发送青岚平台续签方案及报价信息。\n\n我们注意到方案中包含工作日远程支持。想向您确认一下：如果需要周末支持，是否需另行收费？如另收费，请说明计费方式及适用条件，以便我们内部评估。\n\n目前我们尚未对报价作出接受或其他决定，待上述信息明确后再与您进一步沟通。\n\n谢谢！\n\n此致"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R232",
+    "case_id": "S04",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：维保续约与付款",
+      "body": "您好：\n\n感谢您的来信。关于维保续约，我们已确认续约期限为一年、总额为 6 万元。\n\n关于付款方式，想与您确认一下：是否可以分两期付款？如可以，烦请告知每期的付款比例与时间安排，以及开票与合同签署的具体流程，我们据此安排后续手续。\n\n下一步：请您回复确认是否接受分两期付款；确认后我们再就分期安排与合同签署时间进行对接。\n\n顺颂商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R233",
+    "case_id": "S13",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 交付材料",
+      "body": "您好，\n\n附件已收到，谢谢。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R234",
+    "case_id": "S19",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：办公室网络维护",
+      "body": "您好：\n\n感谢您的通知。我们已知悉贵方安排的明晚20点至21点断网维护事宜，届时会提前做好相应准备。\n\n如需我方配合或提供相关信息，请随时告知。\n\n祝好"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R235",
+    "case_id": "S11",
+    "output": "感谢续签方案。我方有以下两项待确认事项：\n1. 数据迁移费用，请补充说明；\n2. 现场培训费用，请补充说明。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R236",
+    "case_id": "S06",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续约范围调整",
+      "body": "您好，\n\n感谢您就续约范围调整事宜与我们联系。关于新方案拟去除现场巡检、价格保持不变这一调整，我们目前无法接受。\n\n为便于进一步评估，请您说明以下两点：\n1. 去除现场巡检的原因；\n2. 就此项范围调整拟提供的补偿方案。\n\n收到上述说明后，我们将内部评估并尽快回复下一步安排。在双方就调整内容达成一致前，现有续约条款保持不变。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R237",
+    "case_id": "S22",
+    "output": "续约资料附件已收到。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R238",
+    "case_id": "S03",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 远辰合同到期",
+      "body": "您好，\n\n感谢您告知合同将于2026年12月31日到期的情况。我们愿意就续签事宜与贵方进行讨论。\n\n已确认事项：合同到期日为2026年12月31日。\n待确认事项：续签的具体条款尚需双方进一步核对。\n\n下一步：请贵方发送修订后的合同，我们收到后将进行审阅并回复。本次暂不安排会议。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R239",
+    "case_id": "S09",
+    "output": "我方愿就续约事宜进行商讨，具体服务范围仍有待核实。烦请提供完整服务清单。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R240",
+    "case_id": "S06",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约范围调整",
+      "body": "您好，\n\n感谢您的来函。关于续约范围调整的方案我们已收到。就目前方案而言，我们无法接受在价格不变的情况下去除现场巡检这一安排。\n\n为便于进一步评估，烦请说明以下两点：\n1. 拟去除现场巡检的具体原因；\n2. 针对服务范围缩减的相应补偿方案（例如价格调整、替代服务内容或其他安排）。\n\n在收到上述说明之前，续约方案中的商务条件与服务范围仍需继续核对，我们暂不作确认。\n\n下一步，请您回复上述信息，我们收到后将进行内部评估并反馈；如您希望先以电话沟通，也请告知您方便的时间。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R241",
+    "case_id": "S19",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 办公室网络维护",
+      "body": "您好，\n\n感谢您的通知。我们已了解，明晚20:00至21:00将进行办公室网络维护并断网。\n\n谢谢。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R242",
+    "case_id": "S25",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：一年期续约报价",
+      "body": "您好，\n\n感谢您发来续约方案。我们已收到“续约一年、总价5万元”的报价内容；关于该方案，想先确认一点：是否包含现场支持？\n\n待您回复后，我们会进一步核对相关条款，再与您沟通后续安排。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R243",
+    "case_id": "S21",
+    "output": "感谢您协助查找培训资料。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R244",
+    "case_id": "S04",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 维保续约与付款",
+      "body": "测试客户，您好：\n\n感谢您的来信。关于本次维保续约，我们已确认续约期限为一年、合同总额为6万元，与您所述一致。\n\n关于付款方式，我们想与您确认：是否可以将款项分两期支付？如可以，烦请告知贵方对两期付款的比例安排、付款时间节点及开票要求，我们将据此配合办理相关手续。\n\n如有任何疑问，欢迎随时联系。期待您的回复，谢谢！\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R245",
+    "case_id": "S11",
+    "output": "感谢续签方案。以下两项需要贵方补充说明：\n1. 数据迁移费用；\n2. 现场培训费用。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R246",
+    "case_id": "S20",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 资料排版",
+      "body": "您好：\n\n邮件及附件已收到。我们会检查更新后的排版稿，检查完成后会再回复您。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R247",
+    "case_id": "S20",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 资料排版",
+      "body": "您好，\n\n收到您更新后的排版稿。我们会检查排版，检查完成后回复您。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R248",
+    "case_id": "S12",
+    "output": "关于续约事宜，我们目前还无法确认，想先请您提供安全服务清单及对应报价，以便我们进一步了解，谢谢。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R249",
+    "case_id": "S22",
+    "output": "续约资料附件已收到。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R250",
+    "case_id": "S30",
+    "output": "我方同意续约一年，7万元报价已确认，请发送正式合同。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R251",
+    "case_id": "S08",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：托管服务续约",
+      "body": "您好，\n\n感谢您就托管服务续约事宜的来信。\n\n关于续约期限，我方目前只考虑一年的方案，暂不考虑两年的续约安排，敬请理解。\n\n关于迁移支持，我们已注意到您的说明是需要单独确认的事项。我们正在就此进行核实，确认后会给您明确答复，在此之前暂不作任何承诺。\n\n如您方便，也请告知一年期方案下贵方关注的具体事项，以便我们一并跟进。\n\n谢谢！\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R252",
+    "case_id": "S24",
+    "output": "祝你假期愉快，一路平安！",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R253",
+    "case_id": "S20",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 资料排版",
+      "body": "您好，\n\n感谢您发来更新后的排版稿。我们会检查排版，检查完成后回复您。\n\n如有其他需要说明的事项，欢迎随时告知。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R254",
+    "case_id": "S01",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 澄海维护续约",
+      "body": "您好：\n\n感谢您关于澄海维护服务续约的提醒。我们已注意到当前维护服务将于12月15日到期。\n\n关于续约，我方目前尚未作出决定。为便于内部评估，请提供下一年的服务清单和报价。\n\n收到上述材料后，我们将尽快完成内部评估，并就后续安排与您进一步沟通。如材料需要特定格式或有其他需我方说明的事项，也请一并告知。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R255",
+    "case_id": "S18",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续约会议照片",
+      "body": "您好，\n\n照片已收到，谢谢！\n\n祝好"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R256",
+    "case_id": "S13",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 交付材料",
+      "body": "收到，谢谢。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R257",
+    "case_id": "S07",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续约折扣申请",
+      "body": "您好，\n\n感谢您就年度支持服务续约及折扣事宜的来信。\n\n一、已确认的事项\n- 年度支持服务报价为10万元；\n- 折扣目前尚未完成审批。\n\n二、折扣申请\n我们希望就本次续约申请优惠，但具体折扣幅度及其他条款仍需以审批结果为准，现阶段暂无法确认，也不构成任何承诺。\n\n三、下一步\n烦请在折扣审批完成后回复本邮件告知结果；收到后我们会再与您确认后续续约安排。在折扣审批完成并双方确认前，续约事项暂不视为已确定。\n\n如需我们先补充其他信息，请随时告知。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R258",
+    "case_id": "S16",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 发票资料",
+      "body": "测试客户，您好：\n\n感谢您的来信。关于开票信息事宜，为便于我们准确准备相关资料，烦请您先提供需要填写的字段清单（例如需要填写哪些项目及对应说明）。\n\n收到清单后，我们将按清单内容准备并回复。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R259",
+    "case_id": "S28",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 续签截止日期",
+      "body": "您好，\n\n感谢您的来信。我们已注意到合同截止日期为2026年12月20日，并正在核对下一年度的服务计划。\n\n在核对服务计划前，想先向您确认一项信息：下一年度您希望的支持时段是哪一段（例如工作日的具体时间范围或非工作时段需求）？该时段目前尚未确认，待您回复后我们再据此核对服务计划的相应安排。\n\n下一步：请您回复所需的下一年度支持时段，我们据此继续核对服务计划，并与您同步需要进一步确认的事项。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R260",
+    "case_id": "S09",
+    "output": "我方谨此表示，愿意就续约事宜进行商讨；具体的服务范围目前尚待双方核对确认。烦请贵方提供完整的服务清单，以便我方进一步核实并推进后续沟通。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R261",
+    "case_id": "S24",
+    "output": "祝假期愉快，一路平安！",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R262",
+    "case_id": "S25",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 一年期续约报价",
+      "body": "您好，\n\n感谢您发来续约报价。已记录您提出的续约期限为一年、总价5万元；续约事宜我们尚未确认，需要内部进一步核对。\n\n需要向您确认：该报价是否包含现场支持？\n\n下一步，我们会在完成内部核对后另行回复您；在收到您对现场支持的确认前，暂不作出任何续约承诺。\n\n谢谢！"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R263",
+    "case_id": "S03",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：远辰合同到期",
+      "body": "您好，\n\n感谢您来信告知远辰合同将于2026年12月31日到期的情况。\n\n我们愿意就续签事宜与您进一步沟通。烦请将修订后的合同发送给我们，以便我们审阅并推进后续工作。\n\n本次暂不安排会议，如后续有需要，我们再另行沟通。\n\n期待您的回复。\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R264",
+    "case_id": "S10",
+    "output": "您好，我们同意续约一年，合同总额为3万元。付款日期目前尚未确定，待后续进一步确认。烦请您发送合同草案，谢谢。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R265",
+    "case_id": "S13",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 交付材料",
+      "body": "您好，\n\n已收到，谢谢。\n\n此致"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R266",
+    "case_id": "S16",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：发票资料",
+      "body": "您好，\n\n感谢您的来信。关于开票信息事宜，为确保我们提交的内容完整、准确，烦请您先提供需要填写的字段清单（例如开票信息表或所需项目的具体条目）。\n\n收到清单后，我们将按要求填写并尽快回复您。\n\n顺祝商祺"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R267",
+    "case_id": "S04",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "Re: 维保续约与付款—付款方式咨询",
+      "body": "尊敬的测试客户：\n\n感谢您的邮件。我们已就续约期限一年及总额6万元达成一致。关于付款方式，想向您确认是否可以分为两期付款？如可以，请告知分期安排及相关要求，我们将据此办理。\n\n谢谢！\n\n此致\n敬礼"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R268",
+    "case_id": "S09",
+    "output": "我方愿就续约事宜进行商谈，具体服务范围尚待核实。烦请提供完整服务清单。",
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R269",
+    "case_id": "S05",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：续签联系人确认",
+      "body": "您好，\n\n感谢来信。关于下一年度签约联系人和服务范围，回复如下：\n\n1. 签约联系人：刘宁。\n2. 服务范围：目前仍在评估中，尚无法确认。烦请贵方列出可选服务项目或服务范围，以便我们进一步评估。\n\n下一步，收到可选服务清单后，我们将结合评估结果再与您沟通后续安排。\n\n谢谢。"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  },
+  {
+    "review_id": "R270",
+    "case_id": "S13",
+    "output": {
+      "to": [
+        "client@example.com"
+      ],
+      "cc": [],
+      "subject": "回复：交付材料",
+      "body": "您好，\n\n邮件及附件已收到，谢谢。\n\n祝好"
+    },
+    "status": "generated",
+    "checks_passed": null,
+    "critical_fact_error": null,
+    "notes": null
+  }
+]

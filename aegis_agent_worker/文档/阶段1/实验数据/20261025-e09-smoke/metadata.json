@@ -1,0 +1,21 @@
+{
+  "experiment": "E09",
+  "status": "calls_finished_pending_review",
+  "schema": "aegis_e09_e2a63e722d044dd18bbf4115124a0bc0",
+  "started_at": "2026-10-25T08:15:33.639411+00:00",
+  "model": "deepseek-flash",
+  "provider": "deepseek",
+  "endpoint_host": "api.deepseek.com",
+  "dataset_sha256": "fc698fa7702eac57af8bd002dd23ab6636e1ccbe1f9430b412b3a5409dcf8da2",
+  "request_limit": 7,
+  "commit": "6361f68855e9488e3cb1413a27712915accbb478",
+  "source_sha256": "5a6b8902044250d3b12f7826df5f3558034942349160d9f56731ce120f5d28c6",
+  "annotation": "author rubric; outputs pending blinded review",
+  "full_schema_migration": false,
+  "storage": "minimal support tables + actual migration022; actual repositories; no RLS isolation claim",
+  "guide_sha256": "ac6ace363f3c15301dfb59598d54e176265f468c8b441e9813db776211988c8a",
+  "policy_version": "harness-v1-skills-v1",
+  "requests": 4,
+  "schema_cleaned": true,
+  "finished_at": "2026-10-25T08:15:42.725168+00:00"
+}

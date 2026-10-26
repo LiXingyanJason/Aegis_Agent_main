@@ -1,0 +1,32 @@
+2026-10-25 16:26:33,599 INFO __main__ 启动 Calendar MCP Server：http://127.0.0.1:57599/mcp
+INFO:     Started server process [18328]
+INFO:     Waiting for application startup.
+2026-10-25 16:26:33,648 INFO mcp.server.streamable_http_manager StreamableHTTP session manager started
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:57599 (Press CTRL+C to quit)
+INFO:     127.0.0.1:57621 - "GET /mcp HTTP/1.1" 200 OK
+2026-10-25 16:26:34,206 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57698 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:26:49,235 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57700 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:26:49,240 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57702 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:26:49,246 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57704 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:26:49,271 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57725 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:26:55,262 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57727 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:26:55,273 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57729 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:26:55,293 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57731 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:26:55,307 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57738 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:26:56,684 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57740 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:26:56,701 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57742 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:26:56,706 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57744 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:26:56,711 INFO mcp.server.streamable_http Terminating session: None

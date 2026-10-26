@@ -1,0 +1,24 @@
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 001_initial_schema, 建立 Aegis PA 当前业务 Schema、触发器与 RLS 策略。
+INFO  [alembic.runtime.migration] Running upgrade 001_initial_schema -> 002_msg_client_id_uq, 修复 assistant/system/tool 消息的 client_message_id 唯一约束。
+INFO  [alembic.runtime.migration] Running upgrade 002_msg_client_id_uq -> 003_mail_background_runs, 支持不归属聊天会话的邮件后台任务。
+INFO  [alembic.runtime.migration] Running upgrade 003_mail_background_runs -> 004_todo_plan_management, 为 Aegis 站内待办计划增加完成状态。
+INFO  [alembic.runtime.migration] Running upgrade 004_todo_plan_management -> 005_mail_send_runs, 支持受确认控制的邮件发送任务。
+INFO  [alembic.runtime.migration] Running upgrade 005_mail_send_runs -> 006_memory_source_run, 记录用户确认记忆的来源任务。
+INFO  [alembic.runtime.migration] Running upgrade 006_memory_source_run -> 007_conversation_artifacts, 保存 Agent 生成的短期对话卡片与业务对象引用。
+INFO  [alembic.runtime.migration] Running upgrade 007_conversation_artifacts -> 008_agent_harness, 任务预算、用户补充请求和草稿修改任务。
+INFO  [alembic.runtime.migration] Running upgrade 008_agent_harness -> 009_model_usage_audit, 逐次模型调用用量及安全用途标签；旧记录保持未知值。
+INFO  [alembic.runtime.migration] Running upgrade 009_model_usage_audit -> 010_knowledge_schema, 知识文档、版本、片段及索引任务；权限来自文档归属而非内容标签。
+INFO  [alembic.runtime.migration] Running upgrade 010_knowledge_schema -> 011_embedding_governance, Embedding 专属预算与逐次审计，支持真实 run 或索引 job，不伪装聊天任务。
+INFO  [alembic.runtime.migration] Running upgrade 011_embedding_governance -> 012_knowledge_indexing, 本地源文件引用、幂等导入与可恢复索引；不建设多版本更新。
+INFO  [alembic.runtime.migration] Running upgrade 012_knowledge_indexing -> 013_knowledge_lifecycle, 上传、索引和启用分离；已有资料保留索引，但默认禁用，须所有者显式启用。
+INFO  [alembic.runtime.migration] Running upgrade 013_knowledge_lifecycle -> 014_mail_workbench_flags, 为今日工作台保存用户显式标记的邮件关注状态。
+INFO  [alembic.runtime.migration] Running upgrade 014_mail_workbench_flags -> 015_knowledge_version_binding, 共享版本索引绑定；支持所有者软删除，删除后仍禁止内容读取。
+INFO  [alembic.runtime.migration] Running upgrade 015_knowledge_version_binding -> 016_knowledge_category_default, 停用资料分类时保留历史列，并给新导入提供数据库兼容默认值。
+INFO  [alembic.runtime.migration] Running upgrade 016_knowledge_category_default -> 017_memory_manual_lifecycle, 手动长期摘要/实体生命周期；旧记录显式映射，追加无正文审计。
+INFO  [alembic.runtime.migration] Running upgrade 017_memory_manual_lifecycle -> 018_memory_call_usage, 逐次模型用途的记忆审计；不回填虚假的历史attempt或Token。
+INFO  [alembic.runtime.migration] Running upgrade 018_memory_call_usage -> 019_calendar_memory_preferences, 日历结构化软偏好和逐步骤用途；不自动新增或确认任何用户记忆。
+INFO  [alembic.runtime.migration] Running upgrade 019_calendar_memory_preferences -> 020_memory_selection_revoke, 排名安全诊断及旧审计正文清理；无时间衰减、不修改记忆正文。
+INFO  [alembic.runtime.migration] Running upgrade 020_memory_selection_revoke -> 021_structured_input_choices, 补充问题结构化单选与版本绑定快照；旧问题保持文本输入。
+INFO  [alembic.runtime.migration] Running upgrade 021_structured_input_choices -> 022_skills, Personal Skill drafts, immutable releases and per-call references.

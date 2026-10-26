@@ -96,6 +96,10 @@ scripts/summarize_resume_experiments.py可统计逐轮/逐题一致性、按题�
 
 本轮证据已归档于文档/阶段1/实验数据/20261022-routing，不依赖evaluation-results中的临时文件。新的RAG、记忆和Schema消融仍为设计，不把既有单测当成召回率或成本提升。
 
+## E07/E08/E09（2026-10-25）
+
+实测和限制见 [报告28](../../文档/阶段1/28-协作-Harness-Skill实验报告-E07-E09-2026-10-25.md)。真实实验脚本需隔离环境与模型外发授权；summarize_cooperation_e2e.py 是纯离线核验。新增 test_e08_boundary_matrix.py（48 项）与 test_e08_mcp_response_loss.py（4 项）；前者使用存储替身，后者调用本地 MCP Server 并模拟适配器回执丢失，不等同生产网络故障恢复。E09 独立内容盲评未完成。
+
 ## E04真实Hybrid消融（2026-10-22）
 
 后续已单独授权并完成E04：[预注册方案、结果与限制](../../文档/阶段1/25-Hybrid检索消融实验-E04-2026-10-22.md)。scripts/evaluate_hybrid_retrieval.py使用冻结虚构语料、真实PostgreSQL SQL/阿里云Embedding治理/Qdrant/RRF，仅建隔离schema/collection；不可未经授权运行。无聊天模型、真实业务资料或原始Embedding响应入报告。

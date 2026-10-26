@@ -1,0 +1,24 @@
+[
+  {
+    "external_event_id": "e07-busy-1",
+    "title": "已有内部会议",
+    "start_at": "2026-11-02T09:00:00+08:00",
+    "end_at": "2026-11-02T10:00:00+08:00",
+    "attendees": [
+      "experiment@example.com"
+    ]
+  },
+  {
+    "external_event_id": "mock-event-5727b831-1764-5e14-b31b-4920b557acea",
+    "idempotency_key": "calendar:f41a6661-8a24-47f6-b221-efe424de918c:1",
+    "title": "澄海01服务续约会议",
+    "start_at": "2026-11-02T02:00:00+00:00",
+    "end_at": "2026-11-02T02:30:00+00:00",
+    "attendees": [
+      "contact1@example.com",
+      "reviewer1@example.com"
+    ],
+    "description": "依据已核验邮件《澄海01服务续约会议》的时间要求生成站内会议草稿，会议时区为北京时间，最终写入需人工确认。",
+    "location": null
+  }
+]

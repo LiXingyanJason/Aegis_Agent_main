@@ -1,0 +1,20 @@
+{
+  "experiment": "E07",
+  "database": "aegis_e07_d702a6b8f78c421fbc49b7050af2738e",
+  "queue": "aegis:experiment:aegis_e07_d702a6b8f78c421fbc49b7050af2738e",
+  "ports": [
+    57015,
+    57016
+  ],
+  "requests": 0,
+  "request_limit": 20,
+  "status": "probe_interrupted_before_model",
+  "oidc": "fixed fictional identity override",
+  "dataset_sha256": "96c0d8c2f49e8f959113b5d636846fa884fa112fea5057b66ada152e35b63d51",
+  "source_sha256": "5a6b8902044250d3b12f7826df5f3558034942349160d9f56731ce120f5d28c6",
+  "model": "deepseek-flash",
+  "clock": "absolute fixture dates; system clock not frozen",
+  "planned_cases": 1,
+  "planned_repeats": 1,
+  "database_cleaned": true
+}

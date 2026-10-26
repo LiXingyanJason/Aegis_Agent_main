@@ -10,3 +10,4 @@ Calendar_mcp_server/.env
 Calendar_mcp_server/**/__pycache__/
 Calendar_mcp_server/.pytest_cache/
 /data/knowledge-sources/
+/简历/

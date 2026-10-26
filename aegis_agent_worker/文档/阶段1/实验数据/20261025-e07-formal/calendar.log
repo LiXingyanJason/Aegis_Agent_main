@@ -1,0 +1,1544 @@
+2026-10-25 16:28:06,923 INFO __main__ 启动 Calendar MCP Server：http://127.0.0.1:64163/mcp
+INFO:     Started server process [23112]
+INFO:     Waiting for application startup.
+2026-10-25 16:28:06,968 INFO mcp.server.streamable_http_manager StreamableHTTP session manager started
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:64163 (Press CTRL+C to quit)
+INFO:     127.0.0.1:64185 - "GET /mcp HTTP/1.1" 200 OK
+2026-10-25 16:28:07,275 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64252 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:28:20,063 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64254 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:28:20,095 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64256 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:28:20,099 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64258 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:28:20,127 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64278 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:28:26,051 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64280 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:28:26,055 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64282 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:28:26,059 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64284 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:28:26,062 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64289 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:28:27,209 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64291 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:28:27,213 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64293 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:28:27,219 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64295 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:28:27,224 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64357 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:28:41,348 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64359 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:28:41,353 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64361 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:28:41,358 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64363 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:28:41,365 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64378 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:28:46,975 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64380 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:28:46,980 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64382 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:28:46,984 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64384 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:28:46,988 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64390 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:28:48,079 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64392 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:28:48,085 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64394 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:28:48,091 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64396 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:28:48,098 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64468 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:04,233 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64470 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:29:04,237 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64472 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:04,240 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64474 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:04,245 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64493 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:10,990 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64495 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:29:11,009 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64498 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:11,056 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64502 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:11,069 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64511 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:12,643 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64513 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:29:12,649 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64515 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:12,654 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64517 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:12,658 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64586 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:25,838 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64588 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:29:25,861 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64590 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:25,867 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64592 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:25,870 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64608 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:31,583 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64610 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:29:31,587 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64612 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:31,615 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64614 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:31,620 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64620 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:33,119 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64622 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:29:33,123 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64624 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:33,128 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64626 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:33,135 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64686 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:46,620 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64688 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:29:46,626 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64690 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:46,652 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64692 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:46,656 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64717 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:54,167 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64719 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:29:54,171 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64721 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:54,182 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64723 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:54,192 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64729 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:56,153 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64731 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:29:56,157 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64733 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:56,162 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64735 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:29:56,168 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62057 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:30:10,390 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62064 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:30:10,434 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62066 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:30:11,338 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62068 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:30:11,378 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62089 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:30:18,100 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62091 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:30:18,119 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62093 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:30:18,123 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62095 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:30:18,127 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62106 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:30:20,449 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62108 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:30:20,453 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62110 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:30:20,459 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62112 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:30:20,465 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62411 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:30:49,160 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62413 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:30:49,165 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62415 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:30:49,169 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62417 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:30:49,173 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62442 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:30:55,933 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62444 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:30:55,990 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62446 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:30:56,010 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62448 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:30:56,021 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62457 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:30:57,482 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62459 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:30:57,486 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62461 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:30:57,492 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62463 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:30:57,496 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62592 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:31:37,596 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62594 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:31:37,600 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62596 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:31:37,627 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62598 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:31:37,633 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62619 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:31:50,111 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62621 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:31:50,119 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62623 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:31:50,123 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62625 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:31:50,128 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62632 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:31:51,467 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62634 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:31:51,472 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62636 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:31:51,477 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62638 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:31:51,484 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62754 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:32:23,821 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62756 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:32:23,825 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62758 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:32:23,831 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62760 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:32:23,837 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62780 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:32:35,452 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62782 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:32:35,473 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62784 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:32:35,476 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62786 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:32:35,480 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62795 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:32:36,809 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62797 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:32:36,815 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62799 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:32:36,820 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62801 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:32:36,823 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62903 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:32:54,048 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62903 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:32:54,049 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62904 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:32:54,054 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62904 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:32:54,057 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62871 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:32:59,709 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62871 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:32:59,712 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62873 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:32:59,719 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62873 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:32:59,723 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65455 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:33:03,375 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65455 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:33:03,378 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65456 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:33:03,385 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65456 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:33:03,389 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:54380 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:33:25,271 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:54380 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:33:25,274 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53022 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:33:25,280 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53022 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:33:25,283 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58200 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:33:34,984 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58200 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:33:34,987 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58201 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:33:34,994 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58201 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:33:34,998 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64979 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:33:36,965 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64979 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:33:36,967 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64980 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:33:36,973 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64980 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:33:36,978 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57671 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:33:51,402 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57671 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:33:51,403 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57672 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:33:51,408 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57672 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:33:51,410 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51253 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:03,524 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51253 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:34:03,528 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51254 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:03,532 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51254 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:03,536 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62562 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:19,574 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62562 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:34:19,575 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62563 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:19,603 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62563 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:19,607 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61172 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:26,941 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61172 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:34:26,944 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61173 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:26,949 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61173 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:26,953 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63226 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:28,474 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63226 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:34:28,477 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63227 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:28,483 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63227 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:28,487 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53211 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:46,527 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53211 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:34:46,529 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53212 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:46,534 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53212 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:46,537 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53226 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:51,650 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53226 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:34:51,654 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53227 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:51,659 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53227 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:51,663 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58492 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:53,234 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58492 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:34:53,237 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58493 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:53,245 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58493 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:34:53,250 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56840 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:35:07,716 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56840 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:35:07,719 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56841 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:35:07,723 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56841 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:35:07,726 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57621 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:35:17,356 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57621 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:35:17,359 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57622 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:35:17,364 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57622 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:35:17,368 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57625 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:35:18,641 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57625 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:35:18,644 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57626 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:35:18,650 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57626 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:35:18,654 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64595 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:35:37,017 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64595 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:35:37,019 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64596 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:35:37,023 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64596 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:35:37,026 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62928 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:35:43,829 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62928 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:35:43,832 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62929 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:35:43,837 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62929 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:35:43,842 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60617 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:36:04,797 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60617 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:36:04,800 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60618 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:36:04,805 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60618 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:36:04,809 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56028 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:36:10,580 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56028 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:36:10,581 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56029 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:36:10,585 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56029 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:36:10,586 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63588 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:36:28,656 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63588 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:36:28,658 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63589 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:36:28,659 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63589 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:36:28,663 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58225 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:36:33,398 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58225 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:36:33,401 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58226 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:36:33,404 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58226 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:36:33,406 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:54574 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:37:06,408 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:54574 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:37:06,411 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:54575 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:37:06,415 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:54575 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:37:06,419 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50742 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:37:38,174 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50742 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:37:38,180 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50743 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:37:38,184 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50743 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:37:38,187 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64239 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:37:47,102 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64239 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:37:47,104 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64240 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:37:47,107 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64240 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:37:47,108 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56785 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:38:08,799 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56785 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:38:08,800 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56786 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:38:08,805 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56786 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:38:08,808 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53422 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:38:15,101 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53422 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:38:15,104 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53423 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:38:15,109 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53423 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:38:15,113 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53425 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:38:16,457 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53425 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:38:16,458 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53426 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:38:16,464 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53426 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:38:16,468 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61587 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:38:34,350 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61587 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:38:34,354 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61588 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:38:34,358 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61588 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:38:34,362 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50472 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:38:43,731 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50472 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:38:43,736 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50473 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:38:43,741 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50473 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:38:43,746 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50477 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:38:45,214 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50477 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:38:45,217 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50478 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:38:45,228 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50478 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:38:45,232 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58893 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:39:18,196 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58893 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:39:18,199 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58894 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:39:18,203 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58894 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:39:18,207 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50068 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:39:24,583 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50068 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:39:24,585 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50069 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:39:24,590 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50069 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:39:24,594 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64412 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:39:42,758 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64412 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:39:42,765 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64413 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:39:42,776 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64413 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:39:42,801 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64852 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:39:47,827 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64852 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:39:47,829 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64853 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:39:47,833 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64853 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:39:47,836 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53070 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:05,650 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53070 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:40:05,653 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53071 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:05,656 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53071 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:05,659 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64028 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:12,850 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64028 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:40:12,900 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64029 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:12,907 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64029 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:12,912 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55384 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:16,885 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55384 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:40:16,887 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55385 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:16,893 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55385 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:16,897 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55884 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:30,993 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55884 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:40:30,997 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55885 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:31,001 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55885 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:31,006 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55896 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:35,641 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55896 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:40:35,644 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55897 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:35,647 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55897 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:35,650 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52685 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:37,296 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52685 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:40:37,301 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52686 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:37,310 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52686 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:37,315 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59473 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:53,325 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59473 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:40:53,328 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59474 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:53,333 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59474 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:40:53,336 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55564 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:01,778 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55564 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:41:01,780 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55565 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:01,785 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55565 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:01,789 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57006 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:03,381 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57006 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:41:03,383 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57007 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:03,396 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57007 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:03,399 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57099 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:16,749 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57099 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:41:16,757 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57100 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:16,765 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57100 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:16,770 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52422 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:31,557 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52422 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:41:31,560 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52423 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:31,566 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52423 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:31,569 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52426 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:33,641 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52426 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:41:33,643 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52427 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:33,647 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52427 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:33,651 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49673 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:47,257 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49673 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:41:47,259 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49674 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:47,263 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49674 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:47,267 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51099 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:55,821 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51099 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:41:55,824 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51100 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:55,829 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51100 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:55,833 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57557 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:58,492 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57557 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:41:58,494 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57558 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:58,501 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57558 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:41:58,504 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51426 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:42:13,751 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51426 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:42:13,754 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51427 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:42:13,759 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51427 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:42:13,764 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51433 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:42:19,161 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51433 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:42:19,162 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51434 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:42:19,167 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51434 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:42:19,170 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51632 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:42:20,580 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51632 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:42:20,583 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51633 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:42:20,593 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51633 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:42:20,599 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50320 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:42:41,520 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50320 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:42:41,524 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50321 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:42:41,528 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50321 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:42:41,532 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51798 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:42:47,345 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51798 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:42:47,348 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51799 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:42:47,352 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51799 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:42:47,355 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51801 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:42:48,841 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51801 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:42:48,843 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51802 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:42:48,846 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51802 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:42:48,849 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52413 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:43:16,224 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52413 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:43:16,228 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52414 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:43:16,231 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52414 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:43:16,234 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52420 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:43:20,419 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52420 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:43:20,426 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52421 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:43:20,434 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52421 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:43:20,438 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52430 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:43:21,826 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52430 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:43:21,827 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52431 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:43:21,833 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52431 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:43:21,836 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62566 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:43:53,908 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62566 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:43:53,910 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62567 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:43:53,915 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62567 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:43:53,918 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62580 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:44:01,689 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62580 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:44:01,692 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62581 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:44:01,696 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62581 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:44:01,699 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62583 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:44:02,857 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62583 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:44:02,860 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62584 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:44:02,867 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62584 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:44:02,871 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62369 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:44:24,064 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62369 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:44:24,068 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62370 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:44:24,079 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62370 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:44:24,083 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65425 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:44:40,755 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65425 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:44:40,760 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65426 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:44:40,762 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65426 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:44:40,767 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65430 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:44:43,303 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65430 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:44:43,305 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65431 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:44:43,311 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65431 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:44:43,315 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55638 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:45:03,650 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55638 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:45:03,651 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55639 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:45:03,658 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55639 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:45:03,662 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63908 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:45:11,034 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63908 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:45:11,037 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63909 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:45:11,043 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63909 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:45:11,047 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63911 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:45:13,087 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63911 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:45:13,097 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63912 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:45:13,231 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63912 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:45:13,932 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64330 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:45:34,866 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64330 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:45:34,868 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64331 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:45:34,874 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64331 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:45:34,878 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62156 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:45:43,658 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62156 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:45:43,661 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62157 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:45:43,666 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62157 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:45:43,669 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55971 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:45:45,454 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55971 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:45:45,455 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55972 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:45:45,458 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55972 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:45:45,461 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50180 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:01,650 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50180 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:46:01,653 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50181 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:01,658 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50181 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:01,662 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56186 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:07,174 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56186 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:46:07,176 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56187 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:07,180 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56187 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:07,187 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50399 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:21,830 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50399 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:46:21,832 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50400 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:21,835 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50400 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:21,839 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56367 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:30,356 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56367 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:46:30,358 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56368 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:30,363 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56368 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:30,366 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56371 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:31,894 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56371 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:46:31,895 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56372 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:31,899 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56372 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:31,902 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65255 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:46,371 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65255 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:46:46,374 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65256 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:46,381 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65256 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:46,385 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65261 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:50,740 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65261 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:46:50,743 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65262 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:50,749 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65262 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:50,751 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65266 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:52,261 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65266 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:46:52,269 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65267 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:52,280 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65267 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:46:52,283 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59789 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:47:45,582 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59789 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:47:45,585 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59790 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:47:45,590 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59790 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:47:45,593 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64326 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:47:49,998 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64326 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:47:50,001 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64327 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:47:50,006 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64327 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:47:50,008 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49981 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:48:03,002 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49981 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:48:03,007 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49982 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:48:03,012 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49982 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:48:03,015 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50857 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:48:13,666 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50857 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:48:13,670 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50858 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:48:13,673 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50858 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:48:14,009 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62533 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:48:30,479 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62533 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:48:30,482 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62534 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:48:30,487 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62534 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:48:30,491 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57163 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:48:40,452 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57163 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:48:40,455 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57164 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:48:40,459 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57164 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:48:40,462 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62657 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:49:00,723 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62657 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:49:00,726 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62658 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:49:00,732 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62658 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:49:00,736 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59458 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:49:17,931 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59458 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:49:17,932 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59459 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:49:17,937 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59459 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:49:17,940 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58196 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:49:39,890 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58196 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:49:39,891 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58197 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:49:39,918 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58197 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:49:39,922 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56724 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:50:11,313 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56724 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:50:11,318 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56725 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:50:11,323 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56725 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:50:11,328 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55400 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:50:17,119 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55400 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:50:17,121 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55401 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:50:17,123 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55401 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:50:17,125 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55405 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:50:18,830 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55405 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:50:18,831 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55406 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:50:18,858 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55406 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:50:18,862 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51392 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:50:36,633 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51392 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:50:36,635 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51393 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:50:36,639 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51393 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:50:36,642 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51495 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:50:45,036 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51495 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:50:45,041 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51496 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:50:45,063 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51496 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:50:45,068 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51499 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:50:46,510 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51499 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:50:46,514 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51500 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:50:46,523 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51500 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:50:46,528 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57573 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:51:03,992 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57573 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:51:03,995 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57574 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:51:03,998 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57574 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:51:04,001 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57583 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:51:09,161 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57583 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:51:09,164 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57584 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:51:09,168 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57584 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:51:09,170 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57586 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:51:10,393 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57586 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:51:10,397 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57588 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:51:10,407 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57588 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:51:10,412 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56053 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:51:39,034 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56053 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:51:39,037 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56054 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:51:39,042 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56054 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:51:39,044 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62766 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:51:44,161 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62766 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:51:44,842 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62768 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:51:44,861 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62768 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:51:44,888 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55812 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:52:00,413 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55812 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:52:00,417 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55813 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:52:00,425 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55813 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:52:00,430 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56603 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:52:06,708 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56603 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:52:06,710 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56604 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:52:06,712 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56604 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:52:06,714 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64637 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:52:23,963 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64637 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:52:23,965 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64638 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:52:23,968 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64638 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:52:23,971 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60230 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:52:33,886 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60230 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:52:33,890 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60231 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:52:33,895 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60231 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:52:33,899 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60236 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:52:35,388 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60236 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:52:35,390 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60237 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:52:35,394 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60237 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:52:35,398 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53761 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:08,909 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53761 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:53:08,911 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53762 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:08,913 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53762 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:08,915 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53775 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:14,827 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53775 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:53:14,893 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53776 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:14,898 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53776 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:14,901 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53781 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:16,397 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53781 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:53:16,401 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53782 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:16,411 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53782 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:16,414 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49297 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:28,646 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49297 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:53:28,648 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49298 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:28,652 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49298 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:28,818 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49310 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:35,511 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49310 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:53:35,512 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49311 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:35,515 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49311 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:35,518 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:54787 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:38,859 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:54787 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:53:38,861 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:54788 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:38,865 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:54788 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:38,869 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52410 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:52,234 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52410 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:53:52,236 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52411 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:52,241 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52411 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:53:52,244 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63643 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:54:00,795 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63643 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:54:00,798 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63644 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:54:00,803 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63644 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:54:00,808 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63648 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:54:03,313 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63648 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:54:03,314 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63649 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:54:03,317 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:63649 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:54:03,322 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52179 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:54:19,276 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52179 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:54:19,279 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52180 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:54:19,283 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52180 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:54:19,286 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52422 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:54:27,759 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52422 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:54:27,762 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52423 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:54:27,768 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52423 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:54:27,771 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65477 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:54:30,181 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65477 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:54:30,184 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65478 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:54:30,193 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65478 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:54:30,198 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50593 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:55:07,422 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50593 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:55:07,424 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50594 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:55:07,428 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50594 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:55:07,433 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56508 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:55:11,752 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56508 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:55:11,753 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56509 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:55:11,758 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:56509 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:55:11,761 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52320 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:55:14,803 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52320 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:55:14,806 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52321 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:55:14,814 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:52321 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:55:14,818 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58746 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:55:31,166 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58746 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:55:31,168 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58747 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:55:31,172 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58747 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:55:31,175 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60732 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:55:39,024 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60732 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:55:39,027 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60733 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:55:39,031 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60733 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:55:39,034 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60738 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:55:42,600 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60738 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:55:42,602 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60739 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:55:42,608 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60739 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:55:42,611 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57756 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:56:03,651 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57756 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:56:03,653 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57757 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:56:03,656 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:57757 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:56:03,659 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59804 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:56:15,107 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59804 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:56:15,117 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59805 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:56:15,156 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59805 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:56:15,176 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62344 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:56:18,303 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62344 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:56:18,304 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62345 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:56:18,311 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62345 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:56:18,314 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51114 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:56:47,052 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51114 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:56:47,053 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51115 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:56:47,077 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51115 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:56:47,080 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51122 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:56:52,298 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51122 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:56:52,301 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51123 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:56:52,305 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51123 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:56:52,308 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65500 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:57:19,199 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65500 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:57:19,202 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65501 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:57:19,210 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65501 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:57:19,213 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64071 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:57:27,139 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64071 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:57:27,142 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64072 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:57:27,145 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64072 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:57:27,149 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59929 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:57:28,273 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59929 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:57:28,277 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59930 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:57:28,283 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59930 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:57:28,287 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51282 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:57:48,628 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51282 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:57:48,630 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51283 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:57:48,633 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51283 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:57:48,634 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61193 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:57:53,981 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61193 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:57:53,985 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61194 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:57:53,989 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61194 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:57:53,992 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61196 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:57:55,137 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61196 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:57:55,139 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61197 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:57:55,150 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61197 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:57:55,153 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65192 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:58:10,092 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65192 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:58:10,095 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65193 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:58:10,100 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65193 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:58:10,102 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61913 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:58:15,965 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61913 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:58:15,967 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50413 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:58:15,975 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50413 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:58:15,978 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50922 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:58:32,694 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50922 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:58:32,696 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50923 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:58:32,700 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50923 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:58:32,703 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50931 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:58:40,073 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50931 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:58:40,076 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50932 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:58:40,078 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50932 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:58:40,080 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50935 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:58:41,167 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50935 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:58:41,171 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50936 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:58:41,176 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:50936 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:58:41,180 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59202 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:03,255 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59202 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:59:03,260 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59203 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:03,263 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:59203 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:03,267 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53814 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:14,432 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53814 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:59:14,436 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53815 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:14,440 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53815 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:14,443 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64103 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:16,272 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64103 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:59:16,275 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64104 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:16,281 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64104 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:16,286 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:54231 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:28,803 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:54231 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:59:28,805 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:54232 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:28,808 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:54232 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:28,809 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62751 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:34,480 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62751 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:59:34,482 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62752 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:34,487 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62752 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:34,489 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62756 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:35,797 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62756 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:59:35,800 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62757 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:35,806 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62757 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:35,810 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65170 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:48,146 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65170 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:59:48,147 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65171 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:48,151 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65171 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:48,154 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62074 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:53,527 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62074 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 16:59:53,532 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62075 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:53,538 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:62075 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 16:59:53,541 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64707 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:00:10,967 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64707 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 17:00:10,973 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64708 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:00:10,976 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:64708 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:00:10,980 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65363 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:00:17,470 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65363 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 17:00:17,474 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65364 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:00:17,477 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65364 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:00:17,482 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53805 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:00:32,334 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53805 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 17:00:32,338 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53806 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:00:32,344 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53806 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:00:32,347 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53813 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:00:39,002 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53813 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 17:00:39,005 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53817 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:00:39,008 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:53817 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:00:39,012 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:54169 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:01:04,232 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:54169 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 17:01:04,233 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:54170 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:01:04,236 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:54170 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:01:04,238 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55301 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:01:35,412 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55301 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 17:01:35,417 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55302 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:01:35,421 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:55302 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:01:35,425 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58681 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:01:44,571 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58681 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 17:01:44,578 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58682 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:01:44,582 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58682 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:01:44,587 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58686 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:01:46,639 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58686 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 17:01:46,641 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58687 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:01:46,652 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:58687 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:01:46,655 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61346 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:02:02,054 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61346 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 17:02:02,057 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61347 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:02:02,062 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61347 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:02:02,066 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49698 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:02:07,347 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49698 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 17:02:07,350 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49699 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:02:07,382 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49699 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:02:07,385 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49703 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:02:09,617 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49703 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 17:02:09,618 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49704 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:02:09,621 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:49704 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:02:09,623 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51862 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:02:27,065 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51862 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 17:02:27,065 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51863 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:02:27,083 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:51863 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:02:27,086 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65346 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:02:35,579 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65346 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 17:02:35,582 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65347 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:02:35,587 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65347 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:02:35,591 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65351 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:02:37,193 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65351 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 17:02:37,195 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65352 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:02:37,199 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:65352 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:02:37,200 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61770 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:03:05,099 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61770 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 17:03:05,102 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61771 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:03:05,107 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61771 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:03:05,111 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61785 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:03:12,220 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61785 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 17:03:12,223 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61786 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:03:12,229 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:61786 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:03:12,232 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60182 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:03:31,029 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60182 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 17:03:31,045 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60183 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:03:31,072 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60183 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:03:31,205 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60196 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:03:36,953 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60196 - "POST /mcp HTTP/1.1" 202 Accepted
+2026-10-25 17:03:36,957 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60197 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:03:36,962 INFO mcp.server.streamable_http Terminating session: None
+INFO:     127.0.0.1:60197 - "POST /mcp HTTP/1.1" 200 OK
+2026-10-25 17:03:36,965 INFO mcp.server.streamable_http Terminating session: None

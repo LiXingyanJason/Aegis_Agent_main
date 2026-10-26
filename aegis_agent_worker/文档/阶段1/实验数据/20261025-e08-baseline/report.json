@@ -1,0 +1,510 @@
+{
+  "experiment": "E08-existing-regression-baseline",
+  "started_at": "2026-10-25T08:11:34.153862+00:00",
+  "live_model_requests": 0,
+  "storage": "test doubles",
+  "preregistered_48_case_matrix_complete": false,
+  "sql_atomicity_verified": false,
+  "full_api_e2e_verified": false,
+  "layers_not_run": [
+    "isolated PostgreSQL/Redis",
+    "MCP response-loss injection"
+  ],
+  "groups": [
+    {
+      "group": "budget_and_repair",
+      "file": "tests/agent/test_harness_react_revision.py",
+      "file_sha256": "ec994732a4e758140779a12a819f1e81492936c143dff9cfa6e3cb86c5ce4bc6",
+      "returncode": 0,
+      "cases": [
+        {
+          "node": "tests.agent.test_harness_react_revision::test_budget_survives_resume_and_blocks_calls_before_execution",
+          "status": "passed",
+          "duration_seconds": 0.005
+        },
+        {
+          "node": "tests.agent.test_harness_react_revision::test_json_repair_cannot_bypass_persisted_model_budget",
+          "status": "passed",
+          "duration_seconds": 0.009
+        },
+        {
+          "node": "tests.agent.test_harness_react_revision::test_gateway_rejects_reserved_and_unknown_arguments_before_connection_lookup",
+          "status": "passed",
+          "duration_seconds": 0.002
+        },
+        {
+          "node": "tests.agent.test_harness_react_revision::test_collection_interrupt_and_resume_keep_question_and_round_budget",
+          "status": "passed",
+          "duration_seconds": 0.021
+        },
+        {
+          "node": "tests.agent.test_harness_react_revision::test_collection_unknown_reference_and_loop_limit_stop_execution",
+          "status": "passed",
+          "duration_seconds": 0.011
+        },
+        {
+          "node": "tests.agent.test_harness_react_revision::test_revision_conflict_does_not_write_other_fields_or_complete_run",
+          "status": "passed",
+          "duration_seconds": 0.002
+        },
+        {
+          "node": "tests.agent.test_harness_react_revision::test_input_queue_protocol_and_content_contracts",
+          "status": "passed",
+          "duration_seconds": 0.0
+        },
+        {
+          "node": "tests.agent.test_harness_react_revision::test_changed_evidence_after_user_answer_blocks_draft",
+          "status": "passed",
+          "duration_seconds": 0.002
+        },
+        {
+          "node": "tests.agent.test_harness_react_revision::test_reply_workflow_collects_history_calendar_and_user_price_then_saves",
+          "status": "passed",
+          "duration_seconds": 0.036
+        }
+      ]
+    },
+    {
+      "group": "timeouts_and_audit",
+      "file": "tests/agent/test_harness_layers.py",
+      "file_sha256": "f8e850bb99bb617b68b6d02d0c7f331f5ca6c8cf34b0d253919c955b16b84c1f",
+      "returncode": 0,
+      "cases": [
+        {
+          "node": "tests.agent.test_harness_layers::test_repository_injection_records_failure_and_clears_context",
+          "status": "passed",
+          "duration_seconds": 0.043
+        },
+        {
+          "node": "tests.agent.test_harness_layers::test_timeout_is_audited_and_model_work_is_cancelled",
+          "status": "passed",
+          "duration_seconds": 0.016
+        },
+        {
+          "node": "tests.agent.test_harness_layers::test_guarded_client_limits_input_output_and_passes_risk_flags",
+          "status": "passed",
+          "duration_seconds": 0.002
+        },
+        {
+          "node": "tests.agent.test_harness_layers::test_policy_rejects_unknown_attempt_kind",
+          "status": "passed",
+          "duration_seconds": 0.0
+        }
+      ]
+    },
+    {
+      "group": "cooperation_governance",
+      "file": "tests/agent/test_cooperation_governance.py",
+      "file_sha256": "2ac1224a225d1303f0103c53a381aa9a3f48c45afe6196c2571889ce3213c586",
+      "returncode": 0,
+      "cases": [
+        {
+          "node": "tests.agent.test_cooperation_governance::test_delegation_checks_remaining_without_creating_a_new_account_or_call[model_calls]",
+          "status": "passed",
+          "duration_seconds": 0.024
+        },
+        {
+          "node": "tests.agent.test_cooperation_governance::test_delegation_checks_remaining_without_creating_a_new_account_or_call[tool_calls]",
+          "status": "passed",
+          "duration_seconds": 0.031
+        },
+        {
+          "node": "tests.agent.test_cooperation_governance::test_delegation_checks_remaining_without_creating_a_new_account_or_call[active_ms]",
+          "status": "passed",
+          "duration_seconds": 0.016
+        },
+        {
+          "node": "tests.agent.test_cooperation_governance::test_preflight_is_read_only_but_actual_reservation_rechecks_cancellation",
+          "status": "passed",
+          "duration_seconds": 0.002
+        },
+        {
+          "node": "tests.agent.test_cooperation_governance::test_non_running_task_cannot_make_new_calls[completed]",
+          "status": "passed",
+          "duration_seconds": 0.014
+        },
+        {
+          "node": "tests.agent.test_cooperation_governance::test_non_running_task_cannot_make_new_calls[failed]",
+          "status": "passed",
+          "duration_seconds": 0.002
+        },
+        {
+          "node": "tests.agent.test_cooperation_governance::test_non_running_task_cannot_make_new_calls[waiting_input]",
+          "status": "passed",
+          "duration_seconds": 0.002
+        },
+        {
+          "node": "tests.agent.test_cooperation_governance::test_non_running_task_cannot_make_new_calls[waiting_confirmation]",
+          "status": "passed",
+          "duration_seconds": 0.002
+        },
+        {
+          "node": "tests.agent.test_cooperation_governance::test_attempt_audit_preserves_failure_class_without_raw_message[failure0-LLM_UNAVAILABLE]",
+          "status": "passed",
+          "duration_seconds": 0.003
+        },
+        {
+          "node": "tests.agent.test_cooperation_governance::test_attempt_audit_preserves_failure_class_without_raw_message[failure1-EXECUTION_TIMEOUT]",
+          "status": "passed",
+          "duration_seconds": 0.002
+        },
+        {
+          "node": "tests.agent.test_cooperation_governance::test_attempt_audit_preserves_failure_class_without_raw_message[failure2-EXECUTION_CANCELLED]",
+          "status": "passed",
+          "duration_seconds": 0.002
+        },
+        {
+          "node": "tests.agent.test_cooperation_governance::test_attempt_audit_preserves_failure_class_without_raw_message[failure3-MAIL_CONNECTION_REQUIRED]",
+          "status": "passed",
+          "duration_seconds": 0.016
+        },
+        {
+          "node": "tests.agent.test_cooperation_governance::test_summary_rewording_does_not_bypass_no_progress_limit",
+          "status": "passed",
+          "duration_seconds": 0.035
+        },
+        {
+          "node": "tests.agent.test_cooperation_governance::test_authority_and_cancelled_failure_sql_are_guarded_before_external_execution",
+          "status": "passed",
+          "duration_seconds": 0.027
+        },
+        {
+          "node": "tests.agent.test_cooperation_governance::test_cancellation_after_last_model_cannot_save_reply_or_completed_event",
+          "status": "passed",
+          "duration_seconds": 0.03
+        },
+        {
+          "node": "tests.agent.test_cooperation_governance::test_final_write_error_preserves_code_in_existing_orchestrator_tool_error_path",
+          "status": "passed",
+          "duration_seconds": 0.0
+        },
+        {
+          "node": "tests.agent.test_cooperation_governance::test_gateway_read_retries_are_bounded_and_writes_or_timeouts_never_retry[False-False-2]",
+          "status": "passed",
+          "duration_seconds": 0.247
+        },
+        {
+          "node": "tests.agent.test_cooperation_governance::test_gateway_read_retries_are_bounded_and_writes_or_timeouts_never_retry[True-False-1]",
+          "status": "passed",
+          "duration_seconds": 0.004
+        },
+        {
+          "node": "tests.agent.test_cooperation_governance::test_gateway_read_retries_are_bounded_and_writes_or_timeouts_never_retry[False-True-1]",
+          "status": "passed",
+          "duration_seconds": 0.002
+        },
+        {
+          "node": "tests.agent.test_cooperation_governance::test_orchestrator_reports_cancelled_without_fail_overwrite_or_model",
+          "status": "passed",
+          "duration_seconds": 0.111
+        }
+      ]
+    },
+    {
+      "group": "policy_pinning",
+      "file": "tests/agent/test_policy_provider.py",
+      "file_sha256": "8fb5bb43d1ff2d785e307e6c01d6a9ee750e095c1b3a7eb70a3b52ec03230dfc",
+      "returncode": 0,
+      "cases": [
+        {
+          "node": "tests.agent.test_policy_provider::test_invalid_policy_is_rejected_before_startup[<lambda>0]",
+          "status": "passed",
+          "duration_seconds": 0.001
+        },
+        {
+          "node": "tests.agent.test_policy_provider::test_invalid_policy_is_rejected_before_startup[<lambda>1]",
+          "status": "passed",
+          "duration_seconds": 0.0
+        },
+        {
+          "node": "tests.agent.test_policy_provider::test_invalid_policy_is_rejected_before_startup[<lambda>2]",
+          "status": "passed",
+          "duration_seconds": 0.0
+        },
+        {
+          "node": "tests.agent.test_policy_provider::test_invalid_policy_is_rejected_before_startup[<lambda>3]",
+          "status": "passed",
+          "duration_seconds": 0.0
+        },
+        {
+          "node": "tests.agent.test_policy_provider::test_invalid_policy_is_rejected_before_startup[<lambda>4]",
+          "status": "passed",
+          "duration_seconds": 0.0
+        },
+        {
+          "node": "tests.agent.test_policy_provider::test_invalid_policy_is_rejected_before_startup[<lambda>5]",
+          "status": "passed",
+          "duration_seconds": 0.0
+        },
+        {
+          "node": "tests.agent.test_policy_provider::test_invalid_policy_is_rejected_before_startup[<lambda>6]",
+          "status": "passed",
+          "duration_seconds": 0.0
+        },
+        {
+          "node": "tests.agent.test_policy_provider::test_invalid_policy_is_rejected_before_startup[<lambda>7]",
+          "status": "passed",
+          "duration_seconds": 0.0
+        },
+        {
+          "node": "tests.agent.test_policy_provider::test_profiles_are_immutable_and_duplicate_versions_rejected",
+          "status": "passed",
+          "duration_seconds": 0.0
+        },
+        {
+          "node": "tests.agent.test_policy_provider::test_changed_default_does_not_reset_old_run_or_change_local_policy",
+          "status": "passed",
+          "duration_seconds": 0.005
+        },
+        {
+          "node": "tests.agent.test_policy_provider::test_missing_or_conflicting_pinned_version_fails_before_call",
+          "status": "passed",
+          "duration_seconds": 0.026
+        },
+        {
+          "node": "tests.agent.test_policy_provider::test_main_local_reads_and_prompt_remaining_use_same_policy",
+          "status": "passed",
+          "duration_seconds": 0.027
+        },
+        {
+          "node": "tests.agent.test_policy_provider::test_local_round_limit_blocks_next_model_request",
+          "status": "passed",
+          "duration_seconds": 0.018
+        },
+        {
+          "node": "tests.agent.test_policy_provider::test_output_policy_can_disable_repair_for_main_and_mail",
+          "status": "passed",
+          "duration_seconds": 0.023
+        },
+        {
+          "node": "tests.agent.test_policy_provider::test_read_retry_setting_and_global_attempt_count_are_consistent",
+          "status": "passed",
+          "duration_seconds": 0.04
+        },
+        {
+          "node": "tests.agent.test_policy_provider::test_card_single_result_limit_applies_to_get_and_list",
+          "status": "passed",
+          "duration_seconds": 0.938
+        },
+        {
+          "node": "tests.agent.test_policy_provider::test_mail_checkpoint_resume_keeps_old_local_round_limit",
+          "status": "passed",
+          "duration_seconds": 0.033
+        }
+      ]
+    },
+    {
+      "group": "approval_and_write",
+      "file": "tests/service/test_calendar_confirmation_service.py",
+      "file_sha256": "cbb21c5d9be6dabdd3550dfa5c0240b430533d33d20d536635b0d38d8bcbcc34",
+      "returncode": 0,
+      "cases": [
+        {
+          "node": "tests.service.test_calendar_confirmation_service::test_extract_free_time_candidates_assigns_stable_ids",
+          "status": "passed",
+          "duration_seconds": 0.001
+        },
+        {
+          "node": "tests.service.test_calendar_confirmation_service::test_extract_free_time_candidates_rejects_missing_tool_summary",
+          "status": "passed",
+          "duration_seconds": 0.0
+        },
+        {
+          "node": "tests.service.test_calendar_confirmation_service::test_meeting_interval_uses_requested_duration_not_entire_free_slot",
+          "status": "passed",
+          "duration_seconds": 0.0
+        },
+        {
+          "node": "tests.service.test_calendar_confirmation_service::test_meeting_interval_rejects_short_candidate",
+          "status": "passed",
+          "duration_seconds": 0.0
+        }
+      ]
+    },
+    {
+      "group": "skill_lifecycle",
+      "file": "tests/agent/test_skills.py",
+      "file_sha256": "c75fe2ffeeec17312aaf63faddc37765c213c4c525117f0d0b70f3e77dc3ad77",
+      "returncode": 0,
+      "cases": [
+        {
+          "node": "tests.agent.test_skills::test_read_then_inject_and_resume_same_version_with_per_call_audit",
+          "status": "passed",
+          "duration_seconds": 0.008
+        },
+        {
+          "node": "tests.agent.test_skills::test_disallowed_purpose_never_selects_or_reads[main_routing]",
+          "status": "passed",
+          "duration_seconds": 0.003
+        },
+        {
+          "node": "tests.agent.test_skills::test_disallowed_purpose_never_selects_or_reads[mail_extraction]",
+          "status": "passed",
+          "duration_seconds": 0.035
+        },
+        {
+          "node": "tests.agent.test_skills::test_disallowed_purpose_never_selects_or_reads[mail_collection]",
+          "status": "passed",
+          "duration_seconds": 0.003
+        },
+        {
+          "node": "tests.agent.test_skills::test_disallowed_purpose_never_selects_or_reads[knowledge_answer]",
+          "status": "passed",
+          "duration_seconds": 0.003
+        },
+        {
+          "node": "tests.agent.test_skills::test_disallowed_purpose_never_selects_or_reads[calendar_planning]",
+          "status": "passed",
+          "duration_seconds": 0.012
+        },
+        {
+          "node": "tests.agent.test_skills::test_disallowed_purpose_never_selects_or_reads[cooperation_routing]",
+          "status": "passed",
+          "duration_seconds": 0.003
+        },
+        {
+          "node": "tests.agent.test_skills::test_disallowed_purpose_never_selects_or_reads[skill_selection]",
+          "status": "passed",
+          "duration_seconds": 0.003
+        },
+        {
+          "node": "tests.agent.test_skills::test_invalid_or_none_selection_never_reads[plain text]",
+          "status": "passed",
+          "duration_seconds": 0.006
+        },
+        {
+          "node": "tests.agent.test_skills::test_invalid_or_none_selection_never_reads[{}]",
+          "status": "passed",
+          "duration_seconds": 0.02
+        },
+        {
+          "node": "tests.agent.test_skills::test_invalid_or_none_selection_never_reads[{\"skill_id\":null}]",
+          "status": "passed",
+          "duration_seconds": 0.003
+        },
+        {
+          "node": "tests.agent.test_skills::test_invalid_or_none_selection_never_reads[{\"skill_id\": \"1d21b28e-9be7-484e-926a-af0f8fb7b61a\"}]",
+          "status": "passed",
+          "duration_seconds": 0.003
+        },
+        {
+          "node": "tests.agent.test_skills::test_revocation_and_tampered_version_stop_before_next_model_call[disabled]",
+          "status": "passed",
+          "duration_seconds": 0.004
+        },
+        {
+          "node": "tests.agent.test_skills::test_revocation_and_tampered_version_stop_before_next_model_call[hash]",
+          "status": "passed",
+          "duration_seconds": 0.004
+        },
+        {
+          "node": "tests.agent.test_skills::test_budget_failure_not_retried_as_format_and_does_not_read",
+          "status": "passed",
+          "duration_seconds": 0.003
+        },
+        {
+          "node": "tests.agent.test_skills::test_no_catalogue_and_old_policy_add_no_model_calls",
+          "status": "passed",
+          "duration_seconds": 0.004
+        },
+        {
+          "node": "tests.agent.test_skills::test_gateway_rejects_paths_and_second_read",
+          "status": "passed",
+          "duration_seconds": 0.006
+        },
+        {
+          "node": "tests.agent.test_skills::test_mail_repair_reuses_guide_but_audits_both_model_attempts",
+          "status": "passed",
+          "duration_seconds": 0.018
+        },
+        {
+          "node": "tests.agent.test_skills::test_content_size_unknown_purpose_and_extra_authority_are_rejected",
+          "status": "passed",
+          "duration_seconds": 0.0
+        },
+        {
+          "node": "tests.agent.test_skills::test_selection_summary_keeps_instruction_before_long_mail",
+          "status": "passed",
+          "duration_seconds": 0.0
+        }
+      ]
+    },
+    {
+      "group": "input_choices",
+      "file": "tests/agent/test_input_choices.py",
+      "file_sha256": "bd106f830b2266b51688abd61079d8f61fd11cad2046197bd59662f675200674",
+      "returncode": 0,
+      "cases": [
+        {
+          "node": "tests.agent.test_input_choices::test_invalid_choice_snapshots_rejected_before_database[single_choice-options0]",
+          "status": "passed",
+          "duration_seconds": 0.001
+        },
+        {
+          "node": "tests.agent.test_input_choices::test_invalid_choice_snapshots_rejected_before_database[text-options1]",
+          "status": "passed",
+          "duration_seconds": 0.001
+        },
+        {
+          "node": "tests.agent.test_input_choices::test_invalid_choice_snapshots_rejected_before_database[single_choice-options2]",
+          "status": "passed",
+          "duration_seconds": 0.001
+        },
+        {
+          "node": "tests.agent.test_input_choices::test_invalid_choice_snapshots_rejected_before_database[single_choice-options3]",
+          "status": "passed",
+          "duration_seconds": 0.0
+        },
+        {
+          "node": "tests.agent.test_input_choices::test_new_choice_question_rejects_free_text_or_forged_id_without_body_read[answer0]",
+          "status": "passed",
+          "duration_seconds": 0.037
+        },
+        {
+          "node": "tests.agent.test_input_choices::test_new_choice_question_rejects_free_text_or_forged_id_without_body_read[answer1]",
+          "status": "passed",
+          "duration_seconds": 0.052
+        },
+        {
+          "node": "tests.agent.test_input_choices::test_prepare_persists_private_snapshot_reuses_only_identical_and_returns_public_options",
+          "status": "passed",
+          "duration_seconds": 0.016
+        },
+        {
+          "node": "tests.agent.test_input_choices::test_old_text_question_checkpoint_still_resolves_exact_ordinal",
+          "status": "passed",
+          "duration_seconds": 0.002
+        },
+        {
+          "node": "tests.agent.test_input_choices::test_choice_ready_event_is_public_and_claim_returns_only_selected_id_once",
+          "status": "passed",
+          "duration_seconds": 0.002
+        },
+        {
+          "node": "tests.agent.test_input_choices::test_claim_rejects_altered_private_mapping_instead_of_trusting_id_alone",
+          "status": "passed",
+          "duration_seconds": 0.002
+        },
+        {
+          "node": "tests.agent.test_input_choices::test_model_cannot_replace_explicitly_selected_mail_by_reading_or_searching_another[next_action0]",
+          "status": "passed",
+          "duration_seconds": 0.056
+        },
+        {
+          "node": "tests.agent.test_input_choices::test_model_cannot_replace_explicitly_selected_mail_by_reading_or_searching_another[next_action1]",
+          "status": "passed",
+          "duration_seconds": 0.034
+        }
+      ]
+    }
+  ],
+  "commit": "6361f68855e9488e3cb1413a27712915accbb478",
+  "source_sha256": "ce93a928a853b3ebfaee7d9f7e4a374da2e1b03d01f9245f51a17cda22efade6",
+  "counts": {
+    "passed": 86,
+    "failure": 0,
+    "error": 0,
+    "skipped": 0
+  },
+  "finished_at": "2026-10-25T08:12:04.787325+00:00"
+}
