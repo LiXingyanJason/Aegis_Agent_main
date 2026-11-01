@@ -117,5 +117,87 @@
     ],
     "description": "根据续约邮件的时间要求安排本次会议，会议时长50分钟，时区为北京时间（Asia/Shanghai）。请参会人确认所提议时段是否合适。",
     "location": null
+  },
+  {
+    "external_event_id": "mock-event-07e7ff45-f15a-50d4-9d7b-d3b9a0320ff0",
+    "idempotency_key": "calendar:a547a825-794d-4e7c-93b7-3414c45d58ba:1",
+    "title": "远山项目续约评估",
+    "start_at": "2026-10-30T06:00:00+00:00",
+    "end_at": "2026-10-30T06:45:00+00:00",
+    "attendees": [
+      "xuan@yuanshan.example.com"
+    ],
+    "description": "围绕远山项目续约进行沟通与评估，会议时长45分钟。最终写入需人工确认。",
+    "location": null
+  },
+  {
+    "external_event_id": "mock-seed-20261102-standup-20261028",
+    "title": "联调｜研发站会",
+    "start_at": "2026-11-02T09:00:00+08:00",
+    "end_at": "2026-11-02T09:30:00+08:00",
+    "attendees": [
+      "jason@example.com"
+    ],
+    "description": "虚构联调占用，仅表示当前用户的日历。"
+  },
+  {
+    "external_event_id": "mock-seed-20261102-review-20261028",
+    "title": "联调｜预算评审",
+    "start_at": "2026-11-02T10:30:00+08:00",
+    "end_at": "2026-11-02T11:00:00+08:00",
+    "attendees": [
+      "jason@example.com"
+    ],
+    "description": "虚构联调占用，仅表示当前用户的日历。"
+  },
+  {
+    "external_event_id": "mock-seed-20261103-training-20261028",
+    "title": "联调｜内部培训（整段占用）",
+    "start_at": "2026-11-03T14:00:00+08:00",
+    "end_at": "2026-11-03T16:00:00+08:00",
+    "attendees": [
+      "jason@example.com"
+    ],
+    "description": "虚构联调占用，仅表示当前用户的日历。"
+  },
+  {
+    "external_event_id": "mock-seed-20261104-sync-20261028",
+    "title": "联调｜产品同步",
+    "start_at": "2026-11-04T09:00:00+08:00",
+    "end_at": "2026-11-04T10:00:00+08:00",
+    "attendees": [
+      "jason@example.com"
+    ],
+    "description": "虚构联调占用，仅表示当前用户的日历。"
+  },
+  {
+    "external_event_id": "mock-seed-20261105-standup-20261028",
+    "title": "联调｜UTC换算冲突",
+    "start_at": "2026-11-05T01:00:00+00:00",
+    "end_at": "2026-11-05T01:30:00+00:00",
+    "attendees": [
+      "jason@example.com"
+    ],
+    "description": "虚构联调占用，仅表示当前用户的日历。"
+  },
+  {
+    "external_event_id": "mock-seed-20261106-demo-20261028",
+    "title": "联调｜演示准备",
+    "start_at": "2026-11-06T14:00:00+08:00",
+    "end_at": "2026-11-06T14:30:00+08:00",
+    "attendees": [
+      "jason@example.com"
+    ],
+    "description": "虚构联调占用，仅表示当前用户的日历。"
+  },
+  {
+    "external_event_id": "mock-seed-20261106-review-20261028",
+    "title": "联调｜上线评审",
+    "start_at": "2026-11-06T15:30:00+08:00",
+    "end_at": "2026-11-06T16:00:00+08:00",
+    "attendees": [
+      "jason@example.com"
+    ],
+    "description": "虚构联调占用，仅表示当前用户的日历。"
   }
 ]

@@ -93,5 +93,95 @@
     "list_preview": "续约会议预计45分钟，日期和可用时间范围尚待确认。",
     "body_text": "Jason，您好：\n\n我们计划讨论远山项目续约，主题为“远山项目续约评估”，会议时长45分钟，参会人为 xuan@yuanshan.example.com。\n\n会议日期以及可用时间范围还没有确定，需要向用户补充询问。合同到期日为2026-11-30，此日期仅是合同期限，不是会议日期。请勿使用合同到期日自动安排会议。\n\n许安\n（虚构测试邮件）",
     "attachments": []
+  },
+  {
+    "provider_message_id": "mock-mail-20261028-e",
+    "provider_thread_id": "mock-thread-20261028-e",
+    "sender_name": "许晴",
+    "sender_email": "xuqing@chenghai.example.com",
+    "recipients": [
+      "jason@example.com"
+    ],
+    "subject": "联调E｜澄海续约会议",
+    "received_at": "2026-10-28T00:00:00+00:00",
+    "source_version": "mock-v1",
+    "list_preview": "澄海续约会议，时间窗口已确定，预计45分钟。",
+    "body_text": "Jason，您好：\n\n请安排“澄海续约会议”，时间范围为2026-11-02 09:00 至 12:00（北京时间 Asia/Shanghai）。会议时长45分钟。参会人为xuqing@chenghai.example.com、liangzhou@chenghai.example.com。\n请先提供会议草稿供核对，具体时段尚未获得所有参会人的确认。\n\n许晴\n（虚构联调邮件）",
+    "attachments": []
+  },
+  {
+    "provider_message_id": "mock-mail-20261028-f",
+    "provider_thread_id": "mock-thread-20261028-f",
+    "sender_name": "陈默",
+    "sender_email": "chenmo@yunling.example.com",
+    "recipients": [
+      "jason@example.com"
+    ],
+    "subject": "联调F｜云岭续约会议",
+    "received_at": "2026-10-28T00:05:00+00:00",
+    "source_version": "mock-v1",
+    "list_preview": "云岭续约会议，时间窗口已确定，预计60分钟。",
+    "body_text": "Jason，您好：\n\n请安排“云岭续约会议”，时间范围为2026-11-03 14:00 至 16:00（北京时间 Asia/Shanghai）。会议时长60分钟。参会人为chenmo@yunling.example.com、yiran@yunling.example.com。\n请先提供会议草稿供核对，具体时段尚未获得所有参会人的确认。\n\n陈默\n（虚构联调邮件）",
+    "attachments": []
+  },
+  {
+    "provider_message_id": "mock-mail-20261028-g",
+    "provider_thread_id": "mock-thread-20261028-g",
+    "sender_name": "唐悦",
+    "sender_email": "tangyue@qinglan.example.com",
+    "recipients": [
+      "jason@example.com"
+    ],
+    "subject": "联调G｜青岚续约会议",
+    "received_at": "2026-10-28T00:10:00+00:00",
+    "source_version": "mock-v1",
+    "list_preview": "青岚续约会议，时间窗口已确定，时长待商议。",
+    "body_text": "Jason，您好：\n\n请安排“青岚续约会议”，时间范围为2026-11-04 09:00 至 12:00（北京时间 Asia/Shanghai）。会议时长尚未确定，请先与我商议。参会人为tangyue@qinglan.example.com。\n请先提供会议草稿供核对，具体时段尚未获得所有参会人的确认。\n\n唐悦\n（虚构联调邮件）",
+    "attachments": []
+  },
+  {
+    "provider_message_id": "mock-mail-20261028-h",
+    "provider_thread_id": "mock-thread-20261028-h",
+    "sender_name": "周宁",
+    "sender_email": "zhouning@haixing.example.com",
+    "recipients": [
+      "jason@example.com"
+    ],
+    "subject": "联调H｜海星续约会议",
+    "received_at": "2026-10-28T00:15:00+00:00",
+    "source_version": "mock-v1",
+    "list_preview": "海星续约会议，时间窗口已确定，预计30分钟。",
+    "body_text": "Jason，您好：\n\n请安排“海星续约会议”，时间范围为2026-11-05 01:00 至 03:00（UTC，即北京时间09:00至11:00）。会议时长30分钟。参会人为zhouning@haixing.example.com、luchen@haixing.example.com。\n请先提供会议草稿供核对，具体时段尚未获得所有参会人的确认。\n\n周宁\n（虚构联调邮件）",
+    "attachments": []
+  },
+  {
+    "provider_message_id": "mock-mail-20261028-i",
+    "provider_thread_id": "mock-thread-20261028-i",
+    "sender_name": "许晴",
+    "sender_email": "xuqing@chenghai.example.com",
+    "recipients": [
+      "jason@example.com"
+    ],
+    "subject": "联调I｜澄海续约技术会议",
+    "received_at": "2026-10-28T00:20:00+00:00",
+    "source_version": "mock-v1",
+    "list_preview": "澄海续约技术会议，时间窗口已确定，预计60分钟。",
+    "body_text": "Jason，您好：\n\n请安排“澄海续约技术会议”，时间范围为2026-11-06 14:00 至 17:00（北京时间 Asia/Shanghai）。会议时长60分钟。参会人为tech@chenghai.example.com。\n本次是技术会议，与11月2日的商务续约会议不同，请不要沿用那封邮件的参会人和时长。\n请先提供会议草稿供核对，具体时段尚未获得所有参会人的确认。\n\n许晴\n（虚构联调邮件）",
+    "attachments": []
+  },
+  {
+    "provider_message_id": "mock-mail-20261028-j",
+    "provider_thread_id": "mock-thread-20261028-j",
+    "sender_name": "宋遥",
+    "sender_email": "songyao@beichen.example.com",
+    "recipients": [
+      "jason@example.com"
+    ],
+    "subject": "联调J｜北辰续约报价待确认",
+    "received_at": "2026-10-28T00:25:00+00:00",
+    "source_version": "mock-v1",
+    "list_preview": "报价为每年8万元，折扣和是否续约尚待确认；未约定会议。",
+    "body_text": "Jason，您好：\n\n北辰服务的新报价是人民币80,000元/年，合同到期日为2026-11-30。是否续约、是否申请折扣以及签约联系人尚未确定，请回复你方意见。\n本邮件没有约定会议，也没有确认任何折扣或续约承诺。\n\n宋遥\n（虚构联调邮件）",
+    "attachments": []
   }
 ]

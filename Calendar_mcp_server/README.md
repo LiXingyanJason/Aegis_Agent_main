@@ -89,6 +89,8 @@ CALENDAR_MCP_TIMEOUT_SECONDS=20
 
 ## 测试
 
+2026-10-28 追加了 2026-11-02 至 11-06 的 7 条忙碌日程，与邮件联调 E–J 配套；测试问法和初始空闲预期见 [联调样例](../Email_mcp_server/data/联调样例-20261028.md)。已有事件保留，批准新会议后可用时段会改变。
+
 ```powershell
 D:\anaconda\envs\Aegis\python.exe -m pytest -q
 ```
