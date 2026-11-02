@@ -10,7 +10,7 @@ class QdrantSearch:
     def __init__(self, settings, client=None):
         self._settings, self._client = settings, client
 
-    async def search(self, context, versions, vector, profile, limit):
+    async def search(self, context, versions, vector, profile, limit,*,chunk_ids=None):
         s = self._settings
         if not s.qdrant_enabled or not s.qdrant_url or not s.qdrant_api_key:
             raise VectorIndexError('QDRANT_NOT_CONFIGURED', '向量查询需要Qdrant读取配置')
@@ -22,6 +22,11 @@ class QdrantSearch:
             raise VectorIndexError('QDRANT_QUERY_INVALID', '查询向量维度或数值非法')
         must = [{'key':'tenant_id','match':{'value':str(context.tenant_id)}},
                 {'key':'version_id','match':{'any':[str(value) for value in versions]}}]
+        if chunk_ids is not None:
+            if not chunk_ids:return []
+            if len(chunk_ids)>4096 or any(not isinstance(i,UUID) for i in chunk_ids):
+                raise VectorIndexError('QDRANT_FILTER_INVALID','代次过滤范围无效')
+            must.append({'has_id':[str(i) for i in chunk_ids]})
         for key, value in (('model_provider',profile.provider),('model',profile.model),
                            ('model_version',profile.version),('dimensions',profile.dimensions)):
             must.append({'key':key,'match':{'value':value}})
@@ -58,3 +63,11 @@ class QdrantSearch:
         finally:
             if own:
                 await http.aclose()
+
+
+class GenerationQdrantSearch(QdrantSearch):
+    def __init__(self,settings,repository,client=None):
+        super().__init__(settings,client);self.repository=repository
+    async def search(self,context,versions,vector,profile,limit):
+        ids=self.repository.filter_ids(context) if self.repository.enabled else None
+        return await super().search(context,versions,vector,profile,limit,chunk_ids=ids)

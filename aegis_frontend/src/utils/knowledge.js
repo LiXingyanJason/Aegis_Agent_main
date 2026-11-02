@@ -8,14 +8,23 @@ export function citationParts(text, sources = []) {
 }
 
 export function unavailableKnowledgeArtifacts(artifacts, availability = 'unavailable') {
-  return artifacts.map((artifact) => artifact.artifact_type === 'knowledge_sources'
-    ? { ...artifact, payload: { sources: [], availability, has_conflict: artifact.payload?.has_conflict === true } }
+  return artifacts.map((artifact) => ['knowledge_sources', 'knowledge_sources_v2'].includes(artifact.artifact_type)
+    ? { ...artifact, payload: { schema_version: artifact.payload?.schema_version, sources: [], availability, has_conflict: artifact.payload?.has_conflict === true } }
     : artifact)
 }
 
 export function sameSourceSnapshot(source, current) {
   const fields = ['document_id', 'version_id', 'chunk_id', 'content_hash', 'title', 'version_label', 'section', 'start_offset', 'end_offset', 'excerpt']
-  return Boolean(source && current && fields.every((field) => source[field] === current[field]))
+  if (!source || !current || !fields.every((field) => source[field] === current[field])) return false
+  return !source.generation_id || source.generation_id === current.generation_id
+}
+
+export function samePartSnapshot(source, part, current) {
+  return Boolean(source && part && current
+    && source.document_id === current.document_id
+    && source.version_id === current.version_id
+    && source.generation_id === current.generation_id
+    && ['chunk_id', 'content_hash', 'start_offset', 'end_offset', 'excerpt'].every((field) => part[field] === current[field]))
 }
 
 // 上传只发送服务端当前允许的元数据，不能再带入旧类别字段。
@@ -57,6 +66,7 @@ const knowledgeErrors = {
   EMBEDDING_BUDGET_EXCEEDED: '知识查询预算已用尽。',
   QDRANT_UNAVAILABLE: '向量检索服务暂不可用，请稍后重试。',
   QDRANT_TIMEOUT: '向量检索超时，请稍后重试。',
+  RERANK_DOCUMENT_EXTERNAL_BLOCKED: '外部重排未获资料授权。请检查相关资料的“允许外部模型重排”开关；授权后重新提交查询。',
 }
 
 export function knowledgeSearchError(tool) {

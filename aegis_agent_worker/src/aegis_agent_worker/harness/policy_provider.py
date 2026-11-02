@@ -10,10 +10,14 @@ from aegis_agent_worker.harness.policies.memory import MemoryContextPolicy
 from aegis_agent_worker.harness.policies.session_memory import SessionMemoryPolicy
 from aegis_agent_worker.harness.policies.cooperation import CooperationPolicy, MailMeetingPolicy, CalendarTeamPolicy
 from aegis_agent_worker.harness.policies.skills import SkillPolicy
+from aegis_agent_worker.harness.policies.rerank import RerankPolicy
+from aegis_agent_worker.retrieval.generation_policy import GenerationRetrievalPolicy
 
 
 @dataclass(frozen=True)
 class PolicyBundle:
+    generations: GenerationRetrievalPolicy = field(default_factory=GenerationRetrievalPolicy)
+    rerank: RerankPolicy = field(default_factory=RerankPolicy)
     skills: SkillPolicy = field(default_factory=SkillPolicy)
     execution: TaskExecutionPolicy = field(default_factory=TaskExecutionPolicy)
     main_context: MainContextPolicy = field(default_factory=MainContextPolicy)
@@ -25,7 +29,7 @@ class PolicyBundle:
     mail_meeting: MailMeetingPolicy = field(default_factory=MailMeetingPolicy)
     calendar_team: CalendarTeamPolicy = field(default_factory=CalendarTeamPolicy)
     def __post_init__(self):
-        for name, kind in (("skills", SkillPolicy), ("execution", TaskExecutionPolicy), ("main_context", MainContextPolicy),
+        for name, kind in (("generations",GenerationRetrievalPolicy),("rerank",RerankPolicy),("skills", SkillPolicy), ("execution", TaskExecutionPolicy), ("main_context", MainContextPolicy),
                            ("mail_collection", MailCollectionPolicy), ("output", OutputPolicy),
                            ("memory", MemoryContextPolicy), ("session_memory", SessionMemoryPolicy),
                            ("cooperation", CooperationPolicy), ("mail_meeting", MailMeetingPolicy),
@@ -120,6 +124,15 @@ def with_skills(profile):
         tool_scopes=tuple((kind,tools|frozenset({'skills.read'}) if kind in
             {'conversation','mail_reply_draft','mail_draft_revision'} else tools)
             for kind,tools in profile.execution.tool_scopes)))
+
+
+def with_rerank(profile,*,fallback=False):
+    return replace(profile,rerank=RerankPolicy(enabled=True,allow_fallback=fallback),execution=replace(profile.execution,
+        version=profile.version+('-rr1f' if fallback else '-rr1'),max_reranks=2))
+
+
+def with_generations(profile):
+    return replace(profile,generations=GenerationRetrievalPolicy(enabled=True),execution=replace(profile.execution,version=profile.version+'-g1'))
 
 
 class PolicyProvider:

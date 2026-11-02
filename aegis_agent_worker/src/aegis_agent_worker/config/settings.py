@@ -41,6 +41,21 @@ class Settings(BaseSettings):
     skills_enabled: bool = False  # Apply 022_skills before enabling for new runs.
     cooperation_enabled: bool = False  # 8.4完整双专家团队；开启前部署同版Worker并保留恢复依赖
     knowledge_query_enabled: bool = False  # 6.4真实检索显式开启；不将Mock能力提供给主Agent
+    knowledge_generations_enabled: bool = False  # 025 migration + compatible API/Worker required
+    rerank_enabled: bool = False
+    rerank_api_url: AnyHttpUrl | None = None  # full DashScope text-rerank URL, not /compatible-mode/v1
+    rerank_api_key: SecretStr | None = None
+    rerank_model: str = 'qwen3.7-text-rerank'
+    rerank_external_allowed: bool = False
+    rerank_fallback_allowed: bool = False
+
+    @model_validator(mode='after')
+    def validate_rerank(self):
+        if self.rerank_enabled and (self.rerank_model not in ('qwen3.7-text-rerank','qwen3-rerank') or not self.rerank_api_url
+            or self.rerank_api_url.scheme!='https' or self.rerank_api_url.username or self.rerank_api_url.password
+            or not self.rerank_api_key or not self.rerank_api_key.get_secret_value().strip()):
+            raise ValueError('Rerank requires explicit HTTPS endpoint/key and a supported Qwen text-rerank model')
+        return self
     knowledge_lexical_fallback_allowed: bool = False  # 显式允许Qdrant服务故障时仅全文检索；不绕过Embedding治理
     knowledge_index_queue_name: str = "aegis:knowledge-index-jobs"
     knowledge_storage_root: str = str(Path(__file__).resolve().parents[4]/"data"/"knowledge-sources")

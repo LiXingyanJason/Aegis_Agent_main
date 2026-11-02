@@ -24,6 +24,7 @@ class KnowledgeDocumentVO(BaseModel):
     enabled: bool
     is_sensitive: bool
     external_embedding_allowed: bool
+    external_rerank_allowed: bool = False
     can_manage: bool
     created_at: datetime
 
@@ -62,3 +63,5 @@ class KnowledgeIndexJobVO(BaseModel):
     processed_chunks: int
     error_code: str | None
     updated_at: datetime
+    index_strategy: str | None = None
+    generation_id: UUID | None = None

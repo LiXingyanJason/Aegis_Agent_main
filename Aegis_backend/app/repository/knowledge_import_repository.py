@@ -41,7 +41,7 @@ class KnowledgeImportRepository:
 
     async def list_documents(self, session, user, limit, offset=0):
         return (await session.execute(text("""SELECT d.id AS document_id,d.title,d.visibility,d.created_at,
-          v.id AS version_id,j.id AS job_id,d.enabled,d.is_sensitive,d.external_embedding_allowed,
+          v.id AS version_id,j.id AS job_id,d.enabled,d.is_sensitive,d.external_embedding_allowed,d.external_rerank_allowed,
           (d.user_id=:user) AS can_manage,
           CASE WHEN v.status='ready' THEN 'ready' WHEN j.id IS NULL THEN
             CASE WHEN v.status IN ('failed','indexing','retired') THEN CASE WHEN v.status='indexing' THEN 'running' WHEN v.status='retired' THEN 'unavailable' ELSE v.status END ELSE 'not_indexed' END
@@ -53,25 +53,27 @@ class KnowledgeImportRepository:
           WHERE d.tenant_id=:tenant AND (d.user_id=:user OR d.visibility='tenant') AND d.deleted_at IS NULL
           ORDER BY d.created_at DESC,d.id LIMIT :limit OFFSET :offset"""),dict(tenant=user.tenant_id,user=user.id,limit=limit,offset=offset))).mappings().all()
 
-    async def job(self, session, user, job_id):
-        return (await session.execute(text("""SELECT j.id AS job_id,j.document_id,j.version_id,j.status,j.attempt_count,
-          j.total_chunks,j.processed_chunks,j.error_code,j.updated_at FROM knowledge_index_jobs j
+    async def job(self, session, user, job_id,include_generation=True):
+        extra=',j.index_config,j.generation_id' if include_generation else ''
+        return (await session.execute(text(f"""SELECT j.id AS job_id,j.document_id,j.version_id,j.status,j.attempt_count,
+          j.total_chunks,j.processed_chunks,j.error_code,j.updated_at{extra} FROM knowledge_index_jobs j
           JOIN knowledge_documents d ON d.id=j.document_id AND d.tenant_id=j.tenant_id
           WHERE j.id=:id AND j.tenant_id=:tenant AND j.user_id=:user AND d.user_id=:user AND d.deleted_at IS NULL"""),
           dict(id=job_id,tenant=user.tenant_id,user=user.id))).mappings().first()
 
-    async def owned_source(self, session, user, document_id):
+    async def owned_source(self, session, user, document_id,include_generation=True):
         # 启动/启用以文档行锁串行化；共享读者无权执行这些操作。
-        return (await session.execute(text("""SELECT d.id AS document_id,d.enabled,d.is_sensitive,
+        extra=',d.title,j.index_config,j.generation_id' if include_generation else ''
+        return (await session.execute(text(f"""SELECT d.id AS document_id,d.enabled,d.is_sensitive,
           d.external_embedding_allowed,d.current_version_id,v.id AS version_id,v.status AS version_status,
           v.embedding_provider,v.embedding_model,v.embedding_model_version,v.embedding_dimensions,
-          j.id AS job_id,j.status AS job_status,j.total_chunks,j.processed_chunks
+          j.id AS job_id,j.status AS job_status,j.total_chunks,j.processed_chunks{extra}
           FROM knowledge_documents d JOIN knowledge_document_versions v ON v.document_id=d.id AND v.tenant_id=d.tenant_id AND v.version_no=1
           LEFT JOIN knowledge_index_jobs j ON j.version_id=v.id AND j.tenant_id=d.tenant_id
           WHERE d.id=:id AND d.tenant_id=:tenant AND d.user_id=:user AND d.deleted_at IS NULL FOR UPDATE OF d"""),
           dict(id=document_id,tenant=user.tenant_id,user=user.id))).mappings().first()
 
-    async def create_index_job(self, session, user, source, profile):
+    async def create_index_job(self, session, user, source, profile,index_config=None):
         await session.execute(text("""UPDATE knowledge_documents SET external_embedding_allowed=true,updated_at=now()
           WHERE id=:id AND tenant_id=:tenant AND user_id=:user AND deleted_at IS NULL"""),
           dict(id=source['document_id'],tenant=user.tenant_id,user=user.id))
@@ -79,9 +81,12 @@ class KnowledgeImportRepository:
           embedding_model=:model,embedding_model_version=:model_version,embedding_dimensions=:dimensions
           WHERE id=:id AND tenant_id=:tenant"""),dict(id=source['version_id'],tenant=user.tenant_id,**profile))
         job=uuid4()
-        await session.execute(text("""INSERT INTO knowledge_index_jobs(id,tenant_id,user_id,document_id,version_id)
-          VALUES(:id,:tenant,:user,:doc,:version)"""),dict(id=job,tenant=user.tenant_id,user=user.id,
-          doc=source['document_id'],version=source['version_id']))
+        extra=',index_config' if index_config is not None else ''
+        value=',CAST(:config AS jsonb)' if index_config is not None else ''
+        import json
+        await session.execute(text(f"""INSERT INTO knowledge_index_jobs(id,tenant_id,user_id,document_id,version_id{extra})
+          VALUES(:id,:tenant,:user,:doc,:version{value})"""),dict(id=job,tenant=user.tenant_id,user=user.id,
+          doc=source['document_id'],version=source['version_id'],config=json.dumps(index_config)))
         return dict(document_id=source['document_id'],version_id=source['version_id'],job_id=job,status='queued',
                     index_status='queued',enabled=source['enabled'],idempotent_replay=False)
 
@@ -89,6 +94,12 @@ class KnowledgeImportRepository:
         await session.execute(text("""UPDATE knowledge_documents SET enabled=:enabled,updated_at=now()
           WHERE id=:id AND tenant_id=:tenant AND user_id=:user AND deleted_at IS NULL"""),
           dict(enabled=enabled,id=document_id,tenant=user.tenant_id,user=user.id))
+
+    async def generation_published(self,session,user,source):
+        row=(await session.execute(text('''SELECT generation_id FROM knowledge_generation_publications
+          WHERE tenant_id=:tenant AND user_id=:user AND document_id=:doc AND version_id=:version AND generation_id=:generation'''),
+          dict(tenant=user.tenant_id,user=user.id,doc=source['document_id'],version=source['version_id'],generation=source.get('generation_id')))).first()
+        return bool(row)
 
     async def retry(self, session, user, job_id, maximum=3):
         # 不新建job，也不清空Embedding累计预算；超过治理额度依然失败。

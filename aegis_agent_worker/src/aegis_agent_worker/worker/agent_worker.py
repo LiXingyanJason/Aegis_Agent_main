@@ -74,7 +74,8 @@ async def run_worker() -> None:
         async with AsyncPostgresSaver.from_conn_string(settings.database_psycopg_url) as checkpointer:
             await checkpointer.setup() # 建立checkpointer数据库表，我们通过run_id关联每一个checkpointer
             policies = create_worker_policy_provider(knowledge_enabled=settings.knowledge_query_enabled,
-                cooperation_enabled=settings.cooperation_enabled,skills_enabled=settings.skills_enabled)
+                cooperation_enabled=settings.cooperation_enabled,skills_enabled=settings.skills_enabled,rerank_enabled=settings.rerank_enabled,
+                rerank_fallback_allowed=settings.rerank_fallback_allowed,generations_enabled=settings.knowledge_generations_enabled)
             harness = HarnessExecutor(database, policy_provider=policies)
             from aegis_agent_worker.repository.skill_repository import SkillRepository
             from aegis_agent_worker.service.skills.skill_context_service import SkillContextService
@@ -90,8 +91,16 @@ async def run_worker() -> None:
             input_requests=InputRequestService(database,runs,events)
             memory_context = MemoryContextService(database)
             cards = CardContextService(database, policy_provider=policies)
-            knowledge_retrieval = HybridRetrievalService(settings,KnowledgeRetrievalRepository(database),
-                create_embedding_executor(settings,database),QdrantSearch(settings)) if settings.knowledge_query_enabled else None
+            from aegis_agent_worker.rerank.client import RerankClient
+            from aegis_agent_worker.rerank.executor import GovernedReranker
+            reranker=GovernedReranker(settings,harness,RerankClient(settings))
+            from aegis_agent_worker.repository.generation_retrieval_repository import GenerationRetrievalRepository
+            from aegis_agent_worker.vector.qdrant_search import GenerationQdrantSearch
+            from aegis_agent_worker.service.knowledge.generation_context_service import GenerationContextService
+            generation_retrieval=GenerationRetrievalRepository(database)
+            knowledge_retrieval = HybridRetrievalService(settings,generation_retrieval,
+                create_embedding_executor(settings,database),GenerationQdrantSearch(settings,generation_retrieval),
+                reranker=reranker,context_expansion=GenerationContextService(generation_retrieval)) if settings.knowledge_query_enabled else None
             tools = create_default_tool_gateway(settings,harness=harness,card_context=cards,
                 knowledge_retrieval=knowledge_retrieval,skill_context=skills)
             skills.gateway=tools

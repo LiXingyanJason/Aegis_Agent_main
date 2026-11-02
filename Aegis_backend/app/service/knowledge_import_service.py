@@ -68,7 +68,8 @@ class KnowledgeImportService:
         return source['job_status']
 
     async def start_index(self,session,user,document_id,param):
-        source=await self._repository.owned_source(session,user,document_id)
+        automatic=getattr(self._settings,'knowledge_index_strategy','paragraph-v1')=='structure-v1'
+        source=await self._repository.owned_source(session,user,document_id,**({'include_generation':True} if automatic else {}))
         if source is None:
             raise KnowledgeImportError('KNOWLEDGE_DOCUMENT_NOT_FOUND','资料不存在或无权操作',404)
         if source['is_sensitive'] or not param.external_embedding_allowed:
@@ -89,21 +90,33 @@ class KnowledgeImportService:
         prior=(source['embedding_provider'],source['embedding_model'],source['embedding_model_version'],source['embedding_dimensions'])
         if any(value is not None for value in prior) and prior!=(profile['provider'],profile['model'],profile['model_version'],profile['dimensions']):
             raise KnowledgeImportError('EMBEDDING_PROFILE_MISMATCH','旧内容记录已绑定其他模型空间',409)
+        if automatic:
+            config=dict(strategy='structure-v1',source_title=source['title'],generation=dict(version='shadow-structure-v1',
+                parser_version='structure-v1',size=700,overlap=80,title_enhancement=self._settings.knowledge_index_title_enhancement))
+            return await self._repository.create_index_job(session,user,source,profile,index_config=config)
         return await self._repository.create_index_job(session,user,source,profile)
 
     async def activate(self,session,user,document_id,enabled):
-        source=await self._repository.owned_source(session,user,document_id)
+        automatic=getattr(self._settings,'knowledge_index_strategy','paragraph-v1')=='structure-v1'
+        source=await self._repository.owned_source(session,user,document_id,**({'include_generation':True} if automatic else {}))
         if source is None:
             raise KnowledgeImportError('KNOWLEDGE_DOCUMENT_NOT_FOUND','资料不存在或无权操作',404)
         if enabled and (self.index_status(source)!='ready' or source['current_version_id']!=source['version_id']
             or not source['total_chunks'] or source['total_chunks']!=source['processed_chunks']
             or source['is_sensitive'] or not source['external_embedding_allowed']):
             raise KnowledgeImportError('KNOWLEDGE_DOCUMENT_NOT_READY','仅索引完成且仍获授权的非敏感资料可以启用',409)
+        if enabled and source.get('index_config') is not None and not await self._repository.generation_published(session,user,source):
+            raise KnowledgeImportError('KNOWLEDGE_GENERATION_NOT_PUBLISHED','结构索引已构建但尚未明确发布，请先确认发布代次',409)
         await self._repository.activation(session,user,document_id,enabled)
         return dict(document_id=document_id,enabled=enabled,index_status=self.index_status(source))
 
     async def job(self,session,user,job_id):
-        return await self._repository.job(session,user,job_id)
+        automatic=getattr(self._settings,'knowledge_index_strategy','paragraph-v1')=='structure-v1'
+        row=await self._repository.job(session,user,job_id,**({'include_generation':True} if automatic else {}))
+        if row and 'index_config' in row:
+            row=dict(row)
+            row['index_strategy']=(row.pop('index_config',None) or {}).get('strategy','paragraph-v1')
+        return row
 
     async def retry(self,session,user,job_id):
         return await self._repository.retry(session,user,job_id,getattr(self._settings,'knowledge_index_max_claims',3))

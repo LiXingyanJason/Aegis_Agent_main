@@ -81,6 +81,7 @@ class HarnessExecutor:
                 session, run, kind=kind, maximum=maximum, policy_version=self.policy.version,
                 elapsed_ms=round(runtime.elapsed_seconds * 1000),
                 time_limit_ms=self.policy.active_seconds * 1000,
+                **({'total_model_maximum':self.policy.max_models} if kind=='rerank' else {}),
             )
             if active_ms is None:
                 # 区分取消/状态变化与预算不足；原子占用SQL本身也检查running，防止预检后取消。

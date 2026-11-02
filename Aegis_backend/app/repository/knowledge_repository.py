@@ -3,6 +3,12 @@ from sqlalchemy import text
 
 
 class KnowledgeRepository:
+    async def set_rerank_permission(self,session,user,document_id,allowed):
+        result=await session.execute(text('''UPDATE knowledge_documents SET external_rerank_allowed=:allowed,updated_at=now()
+          WHERE id=:id AND tenant_id=:tenant AND user_id=:user AND deleted_at IS NULL RETURNING id'''),
+          dict(id=document_id,tenant=user.tenant_id,user=user.id,allowed=allowed))
+        return result.first() is not None
+
     async def get_document(self, session, *, tenant_id, user_id, document_id):
         result = await session.execute(text("""SELECT id,title,visibility,user_id,current_version_id,
             is_sensitive,external_embedding_allowed FROM knowledge_documents

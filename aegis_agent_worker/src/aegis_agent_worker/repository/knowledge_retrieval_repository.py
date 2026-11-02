@@ -54,3 +54,11 @@ class KnowledgeRetrievalRepository:
             """ + JOINS + " WHERE " + VISIBLE + """ AND c.tenant_id=:tenant AND c.indexed_at IS NOT NULL
             AND v.id=ANY(CAST(:versions AS uuid[])) AND c.id=ANY(CAST(:ids AS uuid[]))""", versions=versions, ids=ids)
         return [RetrievedEvidence(source_no=1, **dict(row)) for row in rows]
+
+    async def rerank_authorized(self,context,evidence):
+        if not evidence: return False
+        rows=await self._rows(context,'''SELECT c.id AS chunk_id,c.version_id,c.content_hash
+          '''+JOINS+' WHERE '+VISIBLE+''' AND d.external_rerank_allowed AND c.tenant_id=:tenant
+          AND c.indexed_at IS NOT NULL AND c.id=ANY(CAST(:ids AS uuid[]))''',ids=[e.chunk_id for e in evidence])
+        return {(r['chunk_id'],r['version_id'],r['content_hash']) for r in rows}=={
+            (e.chunk_id,e.version_id,e.content_hash) for e in evidence}

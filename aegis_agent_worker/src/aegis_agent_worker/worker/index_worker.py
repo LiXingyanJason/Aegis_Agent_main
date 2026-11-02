@@ -32,8 +32,14 @@ async def run_worker():
     database=Database(s)
     redis=create_redis_client(s) # 负责传递待消费的任务消息
     repository=KnowledgeIndexRepository(database) # 负责数据库任务记录
+    from aegis_agent_worker.repository.generation_build_repository import GenerationBuildRepository
+    from aegis_agent_worker.service.knowledge.generation_index_service import GenerationIndexService
+    generation_repository=GenerationBuildRepository(database)
+    embedding=create_embedding_executor(s,database)
+    vector=QdrantVectorIndex(s)
+    generation_service=GenerationIndexService(s,generation_repository,embedding,vector)
     service=KnowledgeIndexService(s,repository,LocalDocumentStorage(s.knowledge_storage_root,s.knowledge_max_source_bytes),
-        create_embedding_executor(s,database),QdrantVectorIndex(s)) # 执行索引、向量化
+        embedding,vector,generation_builder=generation_service) # 执行索引、向量化
     # LocalDocumentStorage(...)：读取受控目录中的源文件
     # create_embedding_executor(...)：生成向量，并处理相应的执行治理
     # QdrantVectorIndex(s)：将向量写入 Qdrant
@@ -52,6 +58,10 @@ async def run_worker():
                     except Exception:
                         log_event(logger,logging.WARNING,'index_dispatch_deferred')
                 next_scan=monotonic()+s.knowledge_index_recovery_seconds # 设置下一次扫描时间
+                if s.knowledge_generations_enabled:
+                    for generation in await generation_repository.queued():
+                        result=await generation_service.execute(generation)
+                        log_event(logger,logging.INFO,'generation_index_finished',generation_id=generation['generation_id'],**result)
             # 从 Redis List 头部取一条任务。队列为空时最多等待 5 秒
             item = await redis.blpop(s.knowledge_index_queue_name,timeout=5)
             if item is None: continue

@@ -5,7 +5,7 @@ from sqlalchemy import text
 class KnowledgeDocumentRepository:
     async def detail(self,session,user,document_id):
         row=(await session.execute(text("""SELECT d.id AS document_id,d.title,d.visibility,d.enabled,
-          d.is_sensitive,d.external_embedding_allowed,(d.user_id=:user) AS can_manage,d.created_at,
+          d.is_sensitive,d.external_embedding_allowed,d.external_rerank_allowed,(d.user_id=:user) AS can_manage,d.created_at,
           v.id AS version_id,v.version_label,j.id AS job_id,
           CASE WHEN v.status='ready' THEN 'ready' WHEN j.status='succeeded' THEN 'unavailable' WHEN j.id IS NOT NULL THEN j.status
             WHEN v.status='indexing' THEN 'running' WHEN v.status='retired' THEN 'unavailable'

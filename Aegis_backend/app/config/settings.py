@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     knowledge_storage_root: str = str(Path(__file__).resolve().parents[3]/"data"/"knowledge-sources")
     knowledge_max_source_bytes: int = Field(default=262144, ge=1024, le=1048576)
     knowledge_index_max_claims: int = Field(default=3,ge=1,le=10)
+    knowledge_index_strategy: str = Field(default='paragraph-v1',pattern=r'^(paragraph-v1|structure-v1)$')
+    knowledge_index_title_enhancement: bool = False
     # API仅保存模型空间元数据，不接收或调用Embedding密钥。
     embedding_provider: str | None = None
     embedding_model: str | None = None

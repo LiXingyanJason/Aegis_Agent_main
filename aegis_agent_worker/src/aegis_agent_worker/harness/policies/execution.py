@@ -10,6 +10,7 @@ class TaskExecutionPolicy:
     version: str = "harness-v1"
     max_models: int = 10  # 单次 run 最多允许的模型调用次数
     max_tools: int = 6  # 单次 run 最多允许的工具调用次数
+    max_reranks: int = 0  # Dedicated subtype; also consumes max_models cumulatively.
     active_seconds: int = 120  # 单次 run 累计活跃执行时长上限（秒）
     max_input_chars: int = 48000  # 输入字符上限
     max_output_chars: int = 80000  # 输出字符上限
@@ -24,6 +25,8 @@ class TaskExecutionPolicy:
     )
 
     def __post_init__(self):
+        if type(self.max_reranks) is not int or not 0<=self.max_reranks<=4:
+            raise ValueError('Invalid rerank call limit')
         positive_limits(self, ("max_models", "max_tools", "active_seconds", "max_input_chars",
                               "max_output_chars", "model_timeout_seconds", "tool_timeout_seconds"))
         if not isinstance(self.version, str) or not self.version or len(self.version) > 64:
@@ -46,8 +49,10 @@ class TaskExecutionPolicy:
             return self.max_models
         if kind == "tool":
             return self.max_tools
+        if kind == 'rerank':
+            return self.max_reranks
         raise ValueError("未知执行调用类型")
 
     def call_timeout(self, kind: str) -> int:
         self.call_limit(kind)
-        return self.model_timeout_seconds if kind == "model" else self.tool_timeout_seconds
+        return self.model_timeout_seconds if kind in {'model','rerank'} else self.tool_timeout_seconds

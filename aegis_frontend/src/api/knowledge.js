@@ -34,6 +34,18 @@ export async function getKnowledgeIndexJob(jobId) {
   return response.data.data
 }
 
+export async function getKnowledgeIndexPublication(documentId) {
+  return (await http.get(`/knowledge/documents/${encodeURIComponent(documentId)}/index-publication`)).data.data
+}
+
+export async function publishKnowledgeIndex(documentId, payload) {
+  return (await http.post(`/knowledge/documents/${encodeURIComponent(documentId)}/index-publication`, payload)).data.data
+}
+
+export async function setKnowledgeRerankPermission(documentId, allowed) {
+  return (await http.patch(`/knowledge/documents/${encodeURIComponent(documentId)}/rerank-permission`, { allowed })).data.data
+}
+
 export async function retryKnowledgeIndex(jobId) {
   const response = await http.post(`/knowledge/index-jobs/${jobId}/retry`)
   return response.data.data
@@ -57,6 +69,9 @@ export async function setKnowledgeVisibility(documentId, visibility) {
 }
 
 export async function getKnowledgeSource(source, signal) {
-  const path = `/knowledge/documents/${encodeURIComponent(source.document_id)}/versions/${encodeURIComponent(source.version_id)}/chunks/${encodeURIComponent(source.chunk_id)}`
+  const base = `/knowledge/documents/${encodeURIComponent(source.document_id)}/versions/${encodeURIComponent(source.version_id)}`
+  const path = source.generation_id
+    ? `${base}/generations/${encodeURIComponent(source.generation_id)}/chunks/${encodeURIComponent(source.chunk_id)}`
+    : `${base}/chunks/${encodeURIComponent(source.chunk_id)}`
   return (await http.get(path, { params: { content_hash: source.content_hash }, signal })).data.data
 }

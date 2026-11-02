@@ -8,6 +8,19 @@ class EmbeddingRepository:
         params = dict(id=subject.id, tenant=subject.tenant_id, user=subject.user_id)
         if subject.kind == "run":
             sql = "SELECT id FROM agent_runs WHERE id=:id AND tenant_id=:tenant AND user_id=:user AND status='running'"
+        elif subject.kind=='generation':
+            from aegis_agent_worker.indexing.generation_sql import GENERATION_SOURCE_STATE
+            sql='''SELECT b.generation_id FROM knowledge_generation_builds b
+              JOIN knowledge_index_generations g ON g.id=b.generation_id AND g.tenant_id=b.tenant_id
+              JOIN knowledge_documents d ON d.id=b.document_id AND d.tenant_id=b.tenant_id
+              JOIN knowledge_document_versions v ON v.id=b.version_id AND v.document_id=d.id AND v.tenant_id=d.tenant_id
+              WHERE b.generation_id=:id AND b.tenant_id=:tenant AND b.user_id=:user AND d.user_id=:user
+                AND b.status='running' AND b.lease_expires_at>now() AND g.status='validated'
+                AND d.deleted_at IS NULL AND NOT d.is_sensitive AND d.external_embedding_allowed
+                AND '''+GENERATION_SOURCE_STATE+''' AND g.source_hash=v.content_hash
+                AND v.embedding_provider=:provider AND v.embedding_model=:model
+                AND v.embedding_model_version=:version AND v.embedding_dimensions=:dimensions'''
+            params.update(provider=profile.provider,model=profile.model,version=profile.version,dimensions=profile.dimensions)
         else:
             sql = """SELECT j.id FROM knowledge_index_jobs j
               JOIN knowledge_documents d ON d.id=j.document_id AND d.tenant_id=j.tenant_id
@@ -22,15 +35,17 @@ class EmbeddingRepository:
             raise HarnessError("EMBEDDING_SUBJECT_DENIED", "任务不可访问、模型不匹配或资料未获外发授权")
 
     async def ensure_budget(self, session, subject, profile, default_version):
-        await session.execute(text("""INSERT INTO embedding_execution_budgets
-          (tenant_id,user_id,run_id,index_job_id,policy_version,model_provider,model_name,model_version,dimensions)
-          VALUES(:tenant,:user,:run,:job,:policy,:provider,:model,:version,:dimensions) ON CONFLICT DO NOTHING"""),
+        extra=',generation_id' if subject.kind=='generation' else ''
+        value=',:generation' if subject.kind=='generation' else ''
+        await session.execute(text(f"""INSERT INTO embedding_execution_budgets
+          (tenant_id,user_id,run_id,index_job_id,policy_version,model_provider,model_name,model_version,dimensions{extra})
+          VALUES(:tenant,:user,:run,:job,:policy,:provider,:model,:version,:dimensions{value}) ON CONFLICT DO NOTHING"""),
           dict(tenant=subject.tenant_id, user=subject.user_id,
                run=subject.id if subject.kind == "run" else None, job=subject.id if subject.kind == "job" else None,
                policy=default_version, provider=profile.provider, model=profile.model,
-               version=profile.version, dimensions=profile.dimensions))
+               version=profile.version, dimensions=profile.dimensions,generation=subject.id if subject.kind=='generation' else None))
         # 列名仅来自代码，恢复任务固定原策略和模型，不能重置预算或混用向量空间。
-        field = "run_id" if subject.kind == "run" else "index_job_id"
+        field = {'run':'run_id','job':'index_job_id','generation':'generation_id'}[subject.kind]
         row = (await session.execute(text(f"""SELECT * FROM embedding_execution_budgets
           WHERE {field}=:id AND tenant_id=:tenant AND user_id=:user FOR UPDATE"""),
           dict(id=subject.id, tenant=subject.tenant_id, user=subject.user_id))).mappings().one()

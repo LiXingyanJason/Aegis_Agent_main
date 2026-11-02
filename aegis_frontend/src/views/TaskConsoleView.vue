@@ -191,7 +191,7 @@ function artifactsForMessage(message) {
   if (!message.run_id) return []
   return (conversations.artifactsByRun[message.run_id] ?? [])
     .filter((artifact) => {
-      if (!['calendar_events', 'calendar_free_time', 'mail_candidates', 'knowledge_sources'].includes(artifact.artifact_type)) return false
+      if (!['calendar_events', 'calendar_free_time', 'mail_candidates', 'knowledge_sources', 'knowledge_sources_v2'].includes(artifact.artifact_type)) return false
       if (artifact.assistant_message_id) return artifact.assistant_message_id === message.message_id
       return message.role === 'user'
     })
@@ -203,7 +203,7 @@ function artifactTitle(artifact) {
 
 function messageParts(message) {
   const sources = message.role === 'assistant' ? artifactsForMessage(message)
-    .filter((artifact) => artifact.artifact_type === 'knowledge_sources')
+    .filter((artifact) => ['knowledge_sources', 'knowledge_sources_v2'].includes(artifact.artifact_type))
     .flatMap((artifact) => artifact.payload?.sources ?? []) : []
   return citationParts(message.content, sources)
 }
@@ -222,7 +222,7 @@ function refreshVisibleKnowledge() {
   const id = activeConversation.value?.conversation_id
   if (!id) return
   for (const [runId, artifacts] of Object.entries(conversations.artifactsByRun)) {
-    if (artifacts.some((artifact) => artifact.artifact_type === 'knowledge_sources')) void refreshArtifactsForRun(runId, id)
+    if (artifacts.some((artifact) => ['knowledge_sources', 'knowledge_sources_v2'].includes(artifact.artifact_type))) void refreshArtifactsForRun(runId, id)
   }
 }
 
@@ -609,7 +609,7 @@ onBeforeUnmount(() => { stopRunTracking() })
                 >
                   <div class="avatar">A</div>
                   <MailCandidateCard v-if="artifact.artifact_type === 'mail_candidates'" :artifact="artifact" @input-required="inputPanelKey += 1" />
-                  <KnowledgeSourceCard v-else-if="artifact.artifact_type === 'knowledge_sources'" :artifact="artifact" :error="conversations.artifactErrors[item.run_id] || ''" @open-source="openSource($event, item.run_id)" @refresh="refreshArtifactsForRun(item.run_id, activeConversation?.conversation_id)" />
+                  <KnowledgeSourceCard v-else-if="['knowledge_sources', 'knowledge_sources_v2'].includes(artifact.artifact_type)" :artifact="artifact" :error="conversations.artifactErrors[item.run_id] || ''" @open-source="openSource($event, item.run_id)" @refresh="refreshArtifactsForRun(item.run_id, activeConversation?.conversation_id)" />
                   <div v-else class="artifact-card">
                     <div class="artifact-heading">
                       <b>{{ artifactTitle(artifact) }}</b>
@@ -625,7 +625,7 @@ onBeforeUnmount(() => { stopRunTracking() })
                     <p v-if="!artifactItems(artifact).length" class="muted">暂无可展示的脱敏结果。</p>
                   </div>
                 </div>
-                <p v-if="item.role === 'assistant' && conversations.artifactErrors[item.run_id] && !artifactsForMessage(item).some((artifact) => artifact.artifact_type === 'knowledge_sources')" role="alert" class="muted">展示结果暂不可用，未使用旧缓存。<button type="button" class="knowledge-citation" @click="refreshArtifactsForRun(item.run_id, activeConversation?.conversation_id)">重新读取卡片</button></p>
+                <p v-if="item.role === 'assistant' && conversations.artifactErrors[item.run_id] && !artifactsForMessage(item).some((artifact) => ['knowledge_sources', 'knowledge_sources_v2'].includes(artifact.artifact_type))" role="alert" class="muted">展示结果暂不可用，未使用旧缓存。<button type="button" class="knowledge-citation" @click="refreshArtifactsForRun(item.run_id, activeConversation?.conversation_id)">重新读取卡片</button></p>
                 <template v-if="item.role === 'user' && meetingRunForMessage(item) && meetingPreview(meetingRunForMessage(item))">
                   <div v-for="run in [meetingRunForMessage(item)]" :key="'meeting-plan-' + run.run_id" class="message meeting-plan-message">
                     <div class="avatar">A</div>

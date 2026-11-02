@@ -5,6 +5,7 @@ from uuid import UUID
 from pydantic import Field
 from .contracts import Contract, SourceScope
 from .structural import parse_structure, StructuralPolicy
+from .chunker import search_tokens
 
 
 def digest(value):
@@ -39,7 +40,8 @@ def build_manifest(document_id: UUID,version_id: UUID,generation_id: UUID,raw: b
             relations=[r.model_dump() for r in parsed.relations[c.chunk_id]],
             retrieval_text=enhanced.text if enhanced else c.content,
             retrieval_hash=enhanced.input_hash if enhanced else c.content_hash)
+        item['search_tokens']=search_tokens(item['retrieval_text'])
         chunks.append(item)
-    body=dict(scope=scope.model_dump(mode='json'),source_hash=sha256(raw).hexdigest(),
+    body=dict(scope=scope.model_dump(mode='json'),source_hash=sha256(raw).hexdigest(),source_title=title,
         canonical_hash=sha256(source.encode()).hexdigest(),config=config.model_dump(),chunks=chunks)
     return dict(**body,manifest_hash=digest(body))

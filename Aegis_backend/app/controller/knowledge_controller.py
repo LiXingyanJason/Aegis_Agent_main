@@ -12,8 +12,29 @@ from app.param.knowledge_param import KnowledgeVisibilityParam
 from app.vo.knowledge_vo import KnowledgeDocumentDetailVO,KnowledgeChunkVO
 from app.service.knowledge_document_service import KnowledgeDocumentService
 from app.service.knowledge_service import KnowledgeService
+from app.param.rerank_param import RerankPermissionParam
+from app.service.rerank_permission_service import RerankPermissionService
+from app.param.generation_publication_param import GenerationPublicationParam
+from app.service.generation_publication_service import GenerationPublicationService
 
 router = APIRouter(prefix='/knowledge',tags=['knowledge'])
+
+
+@router.get('/documents/{document_id}/index-publication')
+async def generation_publication_status(document_id:UUID,current_user:CurrentUser=Depends(get_current_user),session=Depends(get_tenant_session)):
+    return success(await GenerationPublicationService().status(session,current_user.user,document_id))
+
+
+@router.post('/documents/{document_id}/index-publication')
+async def generation_publication(document_id:UUID,param:GenerationPublicationParam,
+    current_user:CurrentUser=Depends(get_current_user),session=Depends(get_tenant_session)):
+    return success(await GenerationPublicationService().publish(session,current_user.user,document_id,param))
+
+
+@router.patch('/documents/{document_id}/rerank-permission')
+async def rerank_permission(document_id:UUID,param:RerankPermissionParam,
+    current_user:CurrentUser=Depends(get_current_user),session=Depends(get_tenant_session)):
+    return success(await RerankPermissionService().change(session,current_user.user,document_id,param.allowed))
 
 
 def service(request: Request):
@@ -133,6 +154,15 @@ async def get_index_job(job_id:UUID,current_user:CurrentUser=Depends(get_current
     if item is None:
         raise HTTPException(404,detail='索引任务不存在或无权访问')
     return success(KnowledgeIndexJobVO(**item))
+
+
+@router.get('/documents/{document_id}/versions/{version_id}/generations/{generation_id}/chunks/{chunk_id}')
+async def generation_source_detail(document_id:UUID,version_id:UUID,generation_id:UUID,chunk_id:UUID,response:Response,
+    content_hash:str=Query(...,pattern=r'^[a-f0-9]{64}$'),current_user:CurrentUser=Depends(get_current_user),session=Depends(get_tenant_session)):
+    item=await KnowledgeDocumentService().generation_source(session,current_user.user,document_id,version_id,generation_id,chunk_id,content_hash)
+    if item is None:raise HTTPException(404,detail={'code':'KNOWLEDGE_SOURCE_UNAVAILABLE'},headers={'Cache-Control':'no-store'})
+    response.headers['Cache-Control']='no-store'
+    return success(item)
 
 
 @router.post('/index-jobs/{job_id}/retry',status_code=202)

@@ -104,7 +104,7 @@ class ConversationService:
             run_id=run_id,
         )
         return [await self._knowledge_artifacts.refresh(session,local_user,item)
-                if item['artifact_type']=='knowledge_sources' else item for item in artifacts]
+                if item['artifact_type'] in {'knowledge_sources','knowledge_sources_v2'} else item for item in artifacts]
 
     async def send_message(
         self,

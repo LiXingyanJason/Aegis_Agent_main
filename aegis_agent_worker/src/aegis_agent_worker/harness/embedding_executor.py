@@ -19,13 +19,13 @@ class EmbeddingSubject:
     user_id: UUID
 
     def __post_init__(self):
-        if self.kind not in {"run", "job"} or any(not isinstance(value, UUID)
+        if self.kind not in {"run", "job",'generation'} or any(not isinstance(value, UUID)
             for value in (self.id, self.tenant_id, self.user_id)):
             raise HarnessError("EMBEDDING_CONTEXT_REQUIRED", "需要真实任务或索引任务身份")
 
     @property
     def purpose(self):
-        return "knowledge_index" if self.kind == "job" else "knowledge_query"
+        return "knowledge_query" if self.kind == 'run' else 'knowledge_index'
 
 
 class EmbeddingExecutor:

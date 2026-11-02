@@ -4,7 +4,7 @@ import { createServer } from 'vite'
 import { h } from 'vue'
 import { renderToString } from '@vue/server-renderer'
 import { createPinia, setActivePinia } from 'pinia'
-import { citationParts, unavailableKnowledgeArtifacts, sameSourceSnapshot, knowledgeRetrievalSummary, knowledgeSearchError, knowledgeImportMetadata } from '../src/utils/knowledge.js'
+import { citationParts, unavailableKnowledgeArtifacts, samePartSnapshot, sameSourceSnapshot, knowledgeRetrievalSummary, knowledgeSearchError, knowledgeImportMetadata } from '../src/utils/knowledge.js'
 
 let server
 let Card
@@ -58,6 +58,7 @@ test('Hybrid 检索只展示证据数量和降级原因，不将 RRF 诊断分�
   assert.equal(knowledgeRetrievalSummary({ evidence_count: 0, retrieval: { reason: 'no_accessible_documents' } }).reason,
     '当前没有可检索的已授权资料。')
   assert.match(knowledgeSearchError({ error_code: 'KNOWLEDGE_SCOPE_TOO_LARGE' }), /缩小范围/)
+  assert.match(knowledgeSearchError({ error_code: 'RERANK_DOCUMENT_EXTERNAL_BLOCKED' }), /重排/)
 })
 
 test('刷新失败只清除知识来源缓存，不改变其他卡片或原对象', () => {
@@ -73,6 +74,21 @@ test('来源详情不得替换旧引用的标题、版本、位置或正文', ()
   for (const changed of [{ title: '新标题' }, { content_hash: 'b'.repeat(64) }, { excerpt: '新正文' }, { version_id: 'other' }, { start_offset: 99 }]) {
     assert.equal(sameSourceSnapshot(source, { ...source, ...changed }), false)
   }
+})
+
+test('v2 扩展片段分别核验，失效时清空整张来源卡片', async () => {
+  const part = { chunk_id: 'part', content_hash: 'b'.repeat(64), start_offset: 20, end_offset: 35, excerpt: '<例外>', origin: 'adjacent', trigger_chunk_id: 'test' }
+  const v2 = { ...source, generation_id: 'generation', parts: [part], context_incomplete: true }
+  const currentPart = { ...part, document_id: v2.document_id, version_id: v2.version_id, generation_id: v2.generation_id }
+  assert.equal(sameSourceSnapshot(v2, { ...v2, generation_id: 'other' }), false)
+  assert.equal(samePartSnapshot(v2, part, currentPart), true)
+  assert.equal(samePartSnapshot(v2, part, { ...currentPart, excerpt: 'changed' }), false)
+  const cleared = unavailableKnowledgeArtifacts([{ artifact_type: 'knowledge_sources_v2', payload: { schema_version: 2, sources: [v2] } }])
+  assert.deepEqual(cleared[0].payload.sources, [])
+  assert.equal(cleared[0].payload.schema_version, 2)
+  const html = await renderToString(h(Card, { artifact: { artifact_type: 'knowledge_sources_v2', payload: { schema_version: 2, sources: [v2], availability: 'available' } } }))
+  assert.ok(html.includes('&lt;例外&gt;') && html.includes('扩展内容不完整'))
+  assert.ok(!html.includes('<例外>'))
 })
 
 test('来源卡片转义标题和摘录，并保留版本、位置与历史编号', async () => {

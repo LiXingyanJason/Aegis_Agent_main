@@ -1,4 +1,4 @@
-"""Development-only operator CLI. Shadow metadata only; no production publication."""
+"""Development operator CLI: shadow preparation and explicitly gated runtime publication."""
 import argparse
 import asyncio
 import json
@@ -13,7 +13,7 @@ from aegis_agent_worker.storage.local_document_storage import LocalDocumentStora
 
 def arguments():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('action',choices=['prepare','validate','select','rollback','show'])
+    p.add_argument('action',choices=['prepare','validate','select','rollback','show','enqueue','retry-build','publish','rollback-production','build-status'])
     for key in ('tenant','user','document','version'): p.add_argument('--'+key,type=UUID,required=True)
     p.add_argument('--generation',type=UUID)
     p.add_argument('--request-id')
@@ -22,17 +22,18 @@ def arguments():
     p.add_argument('--revision',type=int)
     p.add_argument('--title-enhancement',action='store_true')
     p.add_argument('--allow-development-shadow-write',action='store_true')
+    p.add_argument('--allow-production-publication',action='store_true')
     return p.parse_args()
 
 
 async def execute(args):
     settings=get_settings()
     if settings.app_env!='development': raise ValueError('Shadow CLI permits development environment only')
-    if args.action!='show' and not args.allow_development_shadow_write:
+    if args.action not in {'show','build-status'} and not args.allow_development_shadow_write:
         raise ValueError('Explicit development shadow write opt-in required')
-    if args.action in {'validate','select','show'} and args.generation is None:
+    if args.action in {'validate','select','show','enqueue','retry-build','publish','build-status'} and args.generation is None:
         raise ValueError('generation required')
-    if args.action in {'select','rollback'} and args.revision is None:
+    if args.action in {'select','rollback','publish','rollback-production'} and args.revision is None:
         raise ValueError('expected revision required')
     user=SimpleNamespace(id=args.user,tenant_id=args.tenant)
     database=Database(settings);svc=ShadowGenerationService()
@@ -55,13 +56,28 @@ async def execute(args):
                     await svc.validate(session,user,args.document,args.version,args.generation,
                         args.manifest_hash,args.validation_reference)
                     result=dict(generation_id=args.generation,status='validated',production_published=False)
+                elif args.action=='build-status':
+                    await svc.repo.snapshot(session,user,args.document,args.version,args.generation)
+                    row=(await session.execute(text('''SELECT status,attempts,error_code,lease_expires_at FROM knowledge_generation_builds
+                      WHERE generation_id=:id AND tenant_id=:tenant AND user_id=:user'''),dict(id=args.generation,tenant=args.tenant,user=args.user))).mappings().first()
+                    result=dict(row) if row else dict(status='not_queued')
+                elif args.action in {'enqueue','retry-build','publish','rollback-production'}:
+                    from aegis_agent_worker.service.knowledge.generation_release_service import GenerationReleaseService
+                    release=GenerationReleaseService()
+                    if args.action in {'enqueue','retry-build'}:
+                        result=await release.enqueue(session,user,args.document,args.version,args.generation,retry=args.action=='retry-build')
+                    else:
+                        if not args.allow_production_publication or not settings.knowledge_generations_enabled:
+                            raise ValueError('Publication requires explicit approval and generation feature flag')
+                        result=await release.publish(session,user,args.document,args.version,args.generation,args.revision,
+                            args.validation_reference,rollback=args.action=='rollback-production')
                 elif args.action in {'select','rollback'}:
                     result=await svc.select(session,user,args.document,args.version,args.generation,args.revision,
                         rollback=args.action=='rollback')
                 else:
                     snapshot=await svc.repo.snapshot(session,user,args.document,args.version,args.generation)
                     result={k:snapshot[k] for k in ('manifest_hash','status')}
-        print(json.dumps(dict(**result,mode='shadow_only'),ensure_ascii=False,default=str))
+        print(json.dumps(dict(**result,mode='publication' if args.action in {'publish','rollback-production'} else 'shadow_only'),ensure_ascii=False,default=str))
     finally:
         await database.dispose()
 

@@ -5,11 +5,14 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getKnowledgeIndexJob,
+  getKnowledgeIndexPublication,
   importKnowledgeText,
   listKnowledgeDocuments,
   retryKnowledgeIndex,
   setKnowledgeActivation,
   startKnowledgeIndex,
+  publishKnowledgeIndex,
+  setKnowledgeRerankPermission,
   uploadKnowledgeFile,
   getKnowledgeDocument, deleteKnowledgeDocument, setKnowledgeVisibility,
 } from '../api/knowledge'
@@ -34,6 +37,12 @@ const detailOpen = ref(false)
 const detailError = ref('')
 let detailRequest = 0
 const jobs = ref({})
+const publications = ref({})
+const rerankPermissions = ref({})
+const publicationDialog = ref(false)
+const publicationDocument = ref(null)
+const publicationReview = ref('')
+const publicationAction = ref('publish')
 const loading = ref(false)
 const uploading = ref(false)
 const busyDocumentId = ref(null)
@@ -76,6 +85,16 @@ function formatTime(value) {
 
 function errorMessage(cause, fallback) {
   const detail = cause?.response?.data?.detail
+  const codes = {
+    GENERATION_REVISION_CONFLICT: '发布状态已变化，请刷新后核对，不会自动覆盖。',
+    GENERATION_NOT_READY: '索引代次尚未完成或校验未通过，暂不能发布。',
+    GENERATION_NOT_PREVIOUS: '目标不是可回滚的历史代次。',
+    SHADOW_SOURCE_UNAVAILABLE: '资料来源已失效，不能发布。',
+    GENERATION_PUBLICATION_REJECTED: '本次发布被拒绝，请刷新状态并核对。',
+    KNOWLEDGE_GENERATION_NOT_PUBLISHED: '结构索引尚未明确发布，请先核对并发布代次。',
+    RERANK_DOCUMENT_EXTERNAL_BLOCKED: '知识查询被重排外发授权阻止。请检查相关资料的“允许外部模型重排”开关，调整后重新提交查询。',
+  }
+  if (codes[detail?.code]) return codes[detail.code]
   if (typeof detail === 'string') return detail
   if (detail && typeof detail.message === 'string') return detail.message
   if (cause?.response?.status === 404) return '资料或任务不存在，或你没有操作权限。'
@@ -101,6 +120,9 @@ async function loadDocuments({ silent = false } = {}) {
     const items = await listKnowledgeDocuments(100, offset.value)
     if (!mounted) return
     documents.value = Array.isArray(items) ? items : []
+    rerankPermissions.value = Object.fromEntries(documents.value
+      .filter((item) => item.can_manage && typeof item.external_rerank_allowed === 'boolean')
+      .map((item) => [item.document_id, item.external_rerank_allowed]))
     const activeIds = new Set(documents.value.map((item) => item.job_id).filter(Boolean))
     jobs.value = Object.fromEntries(Object.entries(jobs.value).filter(([id]) => activeIds.has(id)))
     // 失败任务的错误码与进行中任务的片段数只由独立job接口提供。
@@ -148,7 +170,10 @@ async function pollJobs() {
         if (mounted) jobErrors.value = { ...jobErrors.value, [item.job_id]: errorMessage(cause, '索引任务状态暂不可用。') }
       }
     }))
-    if (hasTerminal && mounted) await loadDocuments({ silent: true })
+    if (hasTerminal && mounted) {
+      await loadDocuments({ silent: true })
+      await Promise.all(active.filter((item) => jobs.value[item.job_id]?.status === 'succeeded').map((item) => loadPublication(item)))
+    }
   } finally {
     pollInFlight = false
   }
@@ -220,7 +245,7 @@ async function confirmIndex(document) {
   setActionError(document.document_id)
   try {
     const result = await startKnowledgeIndex(document.document_id)
-    ElMessage.success(result.idempotent_replay ? '已复用现有索引任务。' : '索引任务已提交；完成后仍需手动启用资料。')
+    ElMessage.success(result.idempotent_replay ? '已复用现有索引任务。' : '索引任务已提交；结构索引完成后仍需核对发布，再单独启用资料。')
     await loadDocuments({ silent: true })
   } catch (cause) {
     setActionError(document.document_id, errorMessage(cause, '建立索引失败。'))
@@ -244,10 +269,83 @@ async function retryIndex(document) {
   }
 }
 
+async function loadPublication(document) {
+  if (!document.can_manage) return null
+  try {
+    const result = await getKnowledgeIndexPublication(document.document_id)
+    publications.value = { ...publications.value, [document.document_id]: result }
+    setActionError(document.document_id)
+    return result
+  } catch (cause) {
+    setActionError(document.document_id, errorMessage(cause, '读取索引发布状态失败。'))
+    return null
+  }
+}
+
+async function openPublication(document) {
+  publicationDocument.value = document
+  publicationReview.value = ''
+  publicationAction.value = 'publish'
+  const status = await loadPublication(document)
+  if (status) publicationDialog.value = true
+}
+
+async function submitPublication() {
+  const document = publicationDocument.value
+  const status = publications.value[document?.document_id]
+  const review = publicationReview.value.trim()
+  if (!document || !status || !review || review.length > 200) return
+  const rollback = publicationAction.value === 'rollback'
+  if (!rollback && (status.generation_status !== 'ready' || !status.built_generation_id)) return
+  busyDocumentId.value = document.document_id
+  try {
+    await publishKnowledgeIndex(document.document_id, {
+      version_id: status.version_id,
+      generation_id: rollback ? null : status.built_generation_id,
+      expected_revision: status.revision,
+      review_reference: review,
+      rollback,
+    })
+    publicationDialog.value = false
+    await loadPublication(document)
+    ElMessage.success(rollback ? '已回滚至旧索引入口；资料启用状态未改变。' : '索引代次已发布；资料仍需单独启用。')
+  } catch (cause) {
+    setActionError(document.document_id, errorMessage(cause, '修改发布状态失败。'))
+    publicationDialog.value = false
+  } finally { busyDocumentId.value = null }
+}
+
+async function changeRerankPermission(document, allowed) {
+  if (!document.can_manage || busyDocumentId.value) return
+  if (allowed) {
+    try {
+      await ElMessageBox.confirm('开启后，查询问题及命中的资料片段可能发送至外部重排模型，用于优化检索排序。此授权独立于向量索引授权，可随时关闭。', '允许外部模型重排', {
+        confirmButtonText: '确认开启', cancelButtonText: '取消', type: 'warning',
+      })
+    } catch { return }
+  }
+  busyDocumentId.value = document.document_id
+  setActionError(document.document_id)
+  try {
+    const result = await setKnowledgeRerankPermission(document.document_id, allowed)
+    rerankPermissions.value = { ...rerankPermissions.value, [document.document_id]: result.external_rerank_allowed }
+    ElMessage.success(result.external_rerank_allowed ? '重排授权已开启，无需重新索引；请重新提交知识查询。' : '重排授权已关闭；已发送的请求无法撤回。')
+  } catch (cause) { setActionError(document.document_id, errorMessage(cause, '修改重排许可失败。')) }
+  finally { busyDocumentId.value = null }
+}
+
 async function toggleEnabled(document) {
   busyDocumentId.value = document.document_id
   setActionError(document.document_id)
   try {
+    if (!document.enabled) {
+      const status = await loadPublication(document)
+      if (!status) return
+      if (status.built_generation_id && !status.published_generation_id) {
+        setActionError(document.document_id, '结构索引已构建但尚未发布，请先核对并发布代次。')
+        return
+      }
+    }
     const result = await setKnowledgeActivation(document.document_id, !document.enabled)
     documents.value = documents.value.map((item) => item.document_id === document.document_id
       ? { ...item, enabled: result.enabled, index_status: result.index_status } : item)
@@ -271,7 +369,12 @@ async function showDetail(document) {
   detailOpen.value = true
   try {
     const result = await getKnowledgeDocument(document.document_id)
-    if (request === detailRequest && detailOpen.value) documentDetail.value = result
+    if (request === detailRequest && detailOpen.value) {
+      documentDetail.value = result
+      if (document.can_manage && typeof result.external_rerank_allowed === 'boolean') {
+        rerankPermissions.value = { ...rerankPermissions.value, [document.document_id]: result.external_rerank_allowed }
+      }
+    }
   } catch (cause) {
     if (request === detailRequest) detailError.value = errorMessage(cause, '资料详情暂不可用。')
   }
@@ -322,6 +425,21 @@ onUnmounted(() => {
 
 <template>
   <main class="workspace">
+    <el-dialog v-model="publicationDialog" title="核对索引发布状态" width="min(600px, 94vw)">
+      <template v-if="publicationDocument && publications[publicationDocument.document_id]">
+        <p>资料：{{ publicationDocument.title }}</p>
+        <p>构建代次：{{ publications[publicationDocument.document_id].built_generation_id || '尚无' }} · 状态：{{ publications[publicationDocument.document_id].generation_status || '尚未构建' }}</p>
+        <p>当前发布：{{ publications[publicationDocument.document_id].published_generation_id || '旧索引入口／未发布' }} · 发布修订：{{ publications[publicationDocument.document_id].revision }}</p>
+        <p class="muted">索引完成不等于已发布或已启用；发布不会修改资料启用状态。</p>
+        <el-radio-group v-model="publicationAction">
+          <el-radio value="publish" :disabled="publications[publicationDocument.document_id].generation_status !== 'ready' || !publications[publicationDocument.document_id].built_generation_id">发布已构建代次</el-radio>
+          <el-radio value="rollback" :disabled="!publications[publicationDocument.document_id].published_generation_id">明确回滚到旧段落入口</el-radio>
+        </el-radio-group>
+        <p v-if="publicationAction === 'rollback'" class="knowledge-job-error">若不存在旧片段，回滚后不会凭空生成旧索引；服务端将校验可回滚性。</p>
+        <el-input v-model="publicationReview" type="textarea" :rows="3" maxlength="200" show-word-limit placeholder="填写已核对的审查记录或依据（必填）" aria-label="发布审查记录" />
+      </template>
+      <template #footer><el-button @click="publicationDialog = false">取消</el-button><el-button type="primary" :disabled="!publicationReview.trim() || publicationAction === 'publish' && publications[publicationDocument?.document_id]?.generation_status !== 'ready'" :loading="busyDocumentId === publicationDocument?.document_id" @click="submitPublication">{{ publicationAction === 'rollback' ? '确认回滚' : '确认发布' }}</el-button></template>
+    </el-dialog>
     <el-dialog v-model="detailOpen" title="资料详情" @close="detailRequest += 1; documentDetail = null">
       <p v-if="detailError" role="alert">{{ detailError }}</p>
       <template v-else-if="documentDetail">
@@ -352,7 +470,7 @@ onUnmounted(() => {
         <span class="badge read">资料管理</span>
       </header>
 
-      <el-alert class="knowledge-notice" title="上传、建立索引、启用是三个独立步骤" description="上传仅保存资料，不会自动向外部发送内容。建立索引需再次确认外发；索引完成后仍需手动启用。知识检索能力是否开放由服务端配置决定。" type="info" :closable="false" show-icon />
+      <el-alert class="knowledge-notice" title="上传、索引、发布、启用是独立步骤" description="上传仅保存资料；建立索引需再次确认外发。结构索引完成后需核对发布，再单独启用。是否使用结构索引由服务端策略决定。" type="info" :closable="false" show-icon />
 
       <div class="knowledge-layout">
         <section class="card knowledge-import" aria-label="导入资料">
@@ -443,6 +561,13 @@ onUnmounted(() => {
               </div>
               <p v-if="document.index_status === 'failed' && jobs[document.job_id]?.error_code" class="knowledge-job-error">失败原因：{{ jobs[document.job_id].error_code }}</p>
               <p v-if="document.job_id && jobErrors[document.job_id]" class="knowledge-job-error">{{ jobErrors[document.job_id] }}</p>
+              <p v-if="jobs[document.job_id]?.index_strategy" class="knowledge-job-progress">索引策略：{{ jobs[document.job_id].index_strategy === 'structure-v1' ? '结构索引' : '段落索引' }}{{ jobs[document.job_id].generation_id ? ' · 代次 ' + jobs[document.job_id].generation_id : '' }}</p>
+              <p v-if="publications[document.document_id]" class="knowledge-publication-state">发布状态：{{ publications[document.document_id].published_generation_id ? '结构代次已发布' : publications[document.document_id].built_generation_id ? '待核对发布' : '旧索引入口／未构建' }} · 修订 {{ publications[document.document_id].revision }}</p>
+              <div v-if="document.can_manage" class="knowledge-rerank-control">
+                <span>允许外部模型重排</span>
+                <el-switch :model-value="rerankPermissions[document.document_id] === true" :loading="busyDocumentId === document.document_id" :disabled="busyDocumentId !== null" :aria-label="'允许外部模型重排：' + document.title" @change="changeRerankPermission(document, $event)" />
+                <small>{{ Object.hasOwn(rerankPermissions, document.document_id) ? (rerankPermissions[document.document_id] ? '已授权' : '已关闭') : '当前状态未由列表接口提供；开关显示为关闭，操作后以接口结果为准' }}</small>
+              </div>
               <p v-if="actionErrors[document.document_id]" class="knowledge-job-error">{{ actionErrors[document.document_id] }}</p>
               <div class="knowledge-document-bottom">
                 <el-button size="small" @click="showDetail(document)">详情</el-button>
@@ -451,6 +576,7 @@ onUnmounted(() => {
                   <el-button v-if="document.index_status === 'failed' && document.job_id" size="small" :loading="busyDocumentId === document.document_id" @click="retryIndex(document)">重试索引</el-button>
                   <el-button v-else size="small" :disabled="document.index_status !== 'not_indexed' || document.is_sensitive || busyDocumentId === document.document_id" :loading="busyDocumentId === document.document_id" @click="confirmIndex(document)">{{ document.index_status === 'ready' ? '已向量化' : ['queued', 'running'].includes(document.index_status) ? '索引中' : '建立索引' }}</el-button>
                   <el-button size="small" :type="document.enabled ? 'danger' : 'primary'" plain :disabled="(!document.enabled && (document.index_status !== 'ready' || document.is_sensitive)) || busyDocumentId === document.document_id" :loading="busyDocumentId === document.document_id" @click="toggleEnabled(document)">{{ document.enabled ? '禁用资料' : '启用资料' }}</el-button>
+                  <el-button size="small" :disabled="document.index_status !== 'ready' || busyDocumentId === document.document_id" @click="openPublication(document)">核对发布状态</el-button>
                   <el-button size="small" :disabled="busyDocumentId === document.document_id" @click="shareDocument(document)">{{ document.visibility === 'tenant' ? '收回共享' : '共享' }}</el-button>
                   <el-button size="small" type="danger" plain :disabled="busyDocumentId === document.document_id" @click="removeDocument(document)">删除</el-button>
                 </div>
@@ -513,6 +639,8 @@ onUnmounted(() => {
 .knowledge-status.sensitive { background: #fff0f7; color: #a22d68; }
 .knowledge-job-progress { display: grid; gap: 6px; margin: 12px 0 0 45px; color: #526176; font-size: 11px; }
 .knowledge-job-progress .el-progress { max-width: 300px; }
+.knowledge-rerank-control { display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:12px 0 0 45px;color:#344054;font-size:12px; }
+.knowledge-rerank-control small { color:#667085;line-height:1.4; }
 .knowledge-job-error { margin: 10px 0 0 45px !important; color: #b42318 !important; }
 .knowledge-document-bottom { align-items: center; margin: 12px 0 0 45px; }
 .knowledge-shared-notice { color: #667085; font-size: 11px; }

@@ -38,23 +38,27 @@ class ExecutionRepository:
 
     async def reserve_call(
         self, session: AsyncSession, run: ClaimedRun, *, kind: str,
-        maximum: int, policy_version: str, elapsed_ms: int, time_limit_ms: int,
+        maximum: int, policy_version: str, elapsed_ms: int, time_limit_ms: int, total_model_maximum: int | None = None,
     ) -> int | None:
         """原子占用预算，返回已累计活跃毫秒；条件不满足时返回None。"""
         # 动态列名只来自代码白名单，不能由模型或请求提供SQL片段。
-        fields = {"model": "model_calls", "tool": "tool_calls"}
+        fields = {"model": "model_calls", "tool": "tool_calls",'rerank':'rerank_calls'}
         if kind not in fields:
             raise ValueError("未知执行调用类型")
         field = fields[kind]
+        extra_set=',model_calls=model_calls+1' if kind=='rerank' else ''
+        extra_where=' AND model_calls<:total_model_maximum' if kind=='rerank' else ''
+        if kind=='rerank' and (type(total_model_maximum) is not int or total_model_maximum<1):
+            raise ValueError('rerank needs cumulative model limit')
         result = await session.execute(text(f"""
-            UPDATE run_execution_budgets SET {field}={field}+1
+            UPDATE run_execution_budgets SET {field}={field}+1{extra_set}
             WHERE run_id=:id AND tenant_id=:tenant AND {field}<:maximum
               AND policy_version=:policy AND active_ms+:elapsed<:time_limit
-              AND user_id=:user AND EXISTS(SELECT 1 FROM agent_runs ar
+              {extra_where} AND user_id=:user AND EXISTS(SELECT 1 FROM agent_runs ar
                 WHERE ar.id=:id AND ar.tenant_id=:tenant AND ar.user_id=:user AND ar.status='running')
             RETURNING active_ms
         """), dict(id=run.id, tenant=run.tenant_id, maximum=maximum, policy=policy_version,
-                   elapsed=elapsed_ms, time_limit=time_limit_ms,user=run.user_id))
+                   elapsed=elapsed_ms, time_limit=time_limit_ms,user=run.user_id,total_model_maximum=total_model_maximum))
         row = result.mappings().first()
         return row["active_ms"] if row is not None else None
 
@@ -77,16 +81,19 @@ class ExecutionRepository:
         memory_count: int | None = None, memory_policy_version: str | None = None,
         memory_selection_reason: str | None = None,
         memory_selection_details: dict | None = None,
+        rerank_metadata: dict | None = None,
     ) -> None:
-        await session.execute(text("""
+        extra=',rerank_metadata=CAST(:rerank_metadata AS jsonb)' if rerank_metadata is not None else ''
+        await session.execute(text(f"""
             UPDATE run_execution_attempts
             SET status=:status,error_code=:code,finished_at=now(),purpose=:purpose,
                 model_provider=:provider,model_name=:model,prompt_tokens=:prompt,
                 completion_tokens=:completion,total_tokens=:total,
                 memory_count=:memory_count,memory_policy_version=:memory_policy,
-                memory_selection_reason=:memory_reason,memory_selection_details=CAST(:memory_details AS jsonb) WHERE id=:id
+                memory_selection_reason=:memory_reason,memory_selection_details=CAST(:memory_details AS jsonb){extra} WHERE id=:id
         """), dict(status=status, code=error_code, id=attempt_id, purpose=purpose,
                    provider=model_provider, model=model_name, prompt=prompt_tokens,
                    completion=completion_tokens, total=total_tokens,memory_count=memory_count,
                    memory_policy=memory_policy_version,memory_reason=memory_selection_reason,
-                   memory_details=json.dumps(memory_selection_details) if memory_selection_details is not None else None))
+                   memory_details=json.dumps(memory_selection_details) if memory_selection_details is not None else None,
+                   rerank_metadata=json.dumps(rerank_metadata) if rerank_metadata is not None else None))

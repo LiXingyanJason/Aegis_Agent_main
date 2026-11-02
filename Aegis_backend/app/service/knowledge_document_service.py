@@ -14,3 +14,9 @@ class KnowledgeDocumentService:
 
     async def source(self,session,user,document_id,version_id,chunk_id,content_hash):
         return await self._repository.chunk(session,user,document_id,version_id,chunk_id,content_hash)
+
+    async def generation_source(self,session,user,document_id,version_id,generation_id,chunk_id,content_hash):
+        from app.repository.knowledge_source_repository import KnowledgeSourceRepository
+        rows=await KnowledgeSourceRepository().load_visible_v2(session,user,[chunk_id])
+        return next((dict(r) for r in rows if (r['document_id'],r['version_id'],r['generation_id'],r['content_hash'])==
+            (document_id,version_id,generation_id,content_hash)),None)

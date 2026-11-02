@@ -8,8 +8,9 @@ from aegis_agent_worker.indexing.chunker import chunk_text,PARSER_VERSION
 
 
 class KnowledgeIndexService:
-    def __init__(self,settings,repository,storage,embedding,index):
+    def __init__(self,settings,repository,storage,embedding,index,generation_builder=None):
         self._settings,self._repository,self._storage,self._embedding,self._index=settings,repository,storage,embedding,index
+        self._generation_builder=generation_builder
 
     async def execute(self,message):
         token = uuid4() # 生成本次领取专用的随机租约令牌
@@ -40,6 +41,12 @@ class KnowledgeIndexService:
             if not raw or len(raw)>s.knowledge_max_source_bytes or (job.get('source_bytes') is not None and len(raw)!=job['source_bytes']):
                 raise HarnessError('KNOWLEDGE_SOURCE_INVALID','源文件大小不一致或超限')
             try:
+                raw.decode('utf-8-sig')
+                if job.get('index_config') is not None:
+                    from aegis_agent_worker.service.knowledge.automatic_generation_index_service import AutomaticGenerationIndexService
+                    if self._generation_builder is None:
+                        raise HarnessError('KNOWLEDGE_GENERATION_WORKER_UNAVAILABLE','当前索引消费者未装配结构代次能力')
+                    return await AutomaticGenerationIndexService(s,self._repository,self._generation_builder,self._index,profile).execute(message,token,job,raw)
                 chunks=chunk_text(raw.decode('utf-8-sig'),job['version_id']) # 将 UTF-8 原文解析并切成多个片段。
             except (ValueError,UnicodeError):
                 raise HarnessError('KNOWLEDGE_PARSE_FAILED','源文件解析或切块失败') from None

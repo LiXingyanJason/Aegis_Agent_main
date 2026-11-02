@@ -1,5 +1,6 @@
 """知识来源卡片快照校验；主后端不依赖Worker包。"""
 from uuid import UUID
+from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
@@ -34,4 +35,37 @@ class KnowledgeSourceSnapshotPayload(BaseModel):
         if (len({item.chunk_id for item in self.sources})!=len(self.sources)
             or len({item.source_no for item in self.sources})!=len(self.sources)):
             raise ValueError('来源引用重复')
+        return self
+
+
+class KnowledgeSourcePart(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    chunk_id: UUID
+    start_offset: int = Field(strict=True,ge=0)
+    end_offset: int = Field(strict=True,gt=0)
+    excerpt: str = Field(min_length=1,max_length=800)
+    content_hash: str = Field(pattern=r'^[a-f0-9]{64}$')
+    origin: Literal['same_clause','adjacent','related']
+    trigger_chunk_id: UUID
+
+
+class KnowledgeSourceV2(KnowledgeSourceSnapshot):
+    generation_id: UUID | None = None
+    parts: list[KnowledgeSourcePart] = Field(default_factory=list,max_length=2)
+    context_incomplete: bool = False
+
+
+class KnowledgeSourcesV2Payload(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    schema_version: Literal[2]
+    sources: list[KnowledgeSourceV2] = Field(min_length=1,max_length=5)
+    has_conflict: bool = Field(default=False,strict=True)
+
+    @model_validator(mode='after')
+    def distinct(self):
+        if len({s.chunk_id for s in self.sources})!=len(self.sources) or len({s.source_no for s in self.sources})!=len(self.sources):
+            raise ValueError('来源引用重复')
+        for source in self.sources:
+            if source.parts and (source.generation_id is None or any(p.trigger_chunk_id!=source.chunk_id for p in source.parts)):
+                raise ValueError('复合来源代次或触发关系错误')
         return self

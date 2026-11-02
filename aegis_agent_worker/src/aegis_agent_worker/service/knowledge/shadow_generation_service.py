@@ -23,7 +23,7 @@ class ShadowGenerationService:
         if sha256(raw).hexdigest()!=source['source_hash']:
             raise HarnessError('SHADOW_SOURCE_CHANGED','源文件与登记hash不一致')
         request_hash=digest(dict(document_id=str(document_id),version_id=str(version_id),
-            source_hash=source['source_hash'],config=config.model_dump()))
+            source_hash=source['source_hash'],source_title=source['title'] if config.title_enhancement else None,config=config.model_dump()))
         existing=await self.repo.existing(session,user,request_id)
         if existing:
             if existing['request_hash']!=request_hash:

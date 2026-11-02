@@ -3,7 +3,7 @@ import re
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, field_validator, model_validator, model_serializer
 from aegis_agent_worker.agent.contracts.common import ConversationArtifact, ensure_json_object_size
 from aegis_agent_worker.tool.contracts import ToolInvocation
 
@@ -36,6 +36,24 @@ class KnowledgeQueryPlan(BaseModel):
         return ToolInvocation("knowledge.search", self.model_dump(mode="json"))
 
 
+class EvidencePart(BaseModel):
+    model_config=ConfigDict(extra='forbid',frozen=True)
+    chunk_id: UUID
+    start_offset: int = Field(strict=True,ge=0)
+    end_offset: int = Field(strict=True,gt=0)
+    excerpt: str = Field(min_length=1,max_length=800)
+    content_hash: str = Field(pattern=r'^[a-f0-9]{64}$')
+    origin: Literal['same_clause','adjacent','related']
+    trigger_chunk_id: UUID
+
+    @model_validator(mode='after')
+    def integrity(self):
+        from hashlib import sha256
+        if self.end_offset-self.start_offset!=len(self.excerpt) or sha256(self.excerpt.encode()).hexdigest()!=self.content_hash:
+            raise ValueError('复合来源原文范围或hash错误')
+        return self
+
+
 class RetrievedEvidence(BaseModel):
     """有界安全片段，不携带全文、向量、租户／用户ACL或可执行URL。"""
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -50,11 +68,24 @@ class RetrievedEvidence(BaseModel):
     end_offset: int = Field(strict=True, gt=0)
     excerpt: str = Field(min_length=1, max_length=800)
     content_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    generation_id: UUID | None = None
+    parts: list[EvidencePart] = Field(default_factory=list,max_length=2)
+    context_incomplete: bool = False
+
+    @model_serializer(mode='wrap')
+    def serialize(self,handler):
+        result=handler(self)
+        for key in ('generation_id','parts','context_incomplete'):
+            if key not in self.model_fields_set:result.pop(key,None)
+        return result
 
     @model_validator(mode="after")
     def validate_position(self):
         if self.end_offset <= self.start_offset or not self.excerpt.strip():
             raise ValueError("证据位置或摘录无效")
+        if self.parts and (self.generation_id is None or len({p.chunk_id for p in self.parts})!=len(self.parts)
+            or any(p.trigger_chunk_id!=self.chunk_id or p.chunk_id==self.chunk_id for p in self.parts)):
+            raise ValueError('复合来源必须属于确定代次及触发块')
         return self
 
 
@@ -64,6 +95,15 @@ class RetrievalRanking(BaseModel):
     lexical_rank: int | None = Field(default=None, ge=1, le=50)
     vector_rank: int | None = Field(default=None, ge=1, le=50)
     rrf_score: float = Field(ge=0, allow_inf_nan=False)
+    rrf_rank: int | None = Field(default=None,ge=1,le=100)
+    rerank_score: float | None = Field(default=None,ge=0,le=1,allow_inf_nan=False)
+
+    @model_serializer(mode='wrap')
+    def serialize(self,handler):
+        result=handler(self)
+        for key in ('rrf_rank','rerank_score'):
+            if key not in self.model_fields_set: result.pop(key,None)
+        return result
 
 
 class RetrievalMetadata(BaseModel):
@@ -74,6 +114,16 @@ class RetrievalMetadata(BaseModel):
     degraded: bool = False
     reason: Literal["no_accessible_documents", "no_matches", "sources_unavailable", "vector_unavailable", "result_limit"] | None = None
     rankings: list[RetrievalRanking] = Field(default_factory=list, max_length=5)
+    rerank_applied: bool = False
+    rerank_policy_version: str | None = Field(default=None,max_length=64)
+    rerank_reason: str | None = Field(default=None,max_length=64)
+
+    @model_serializer(mode='wrap')
+    def serialize(self,handler):
+        result=handler(self)
+        for key in ('rerank_applied','rerank_policy_version','rerank_reason'):
+            if key not in self.model_fields_set: result.pop(key,None)
+        return result
 
 
 class KnowledgeSearchResult(BaseModel):
@@ -138,4 +188,8 @@ class KnowledgeSourceArtifact(BaseModel):
     payload: KnowledgeSourcesPayload
 
     def to_artifact(self):
-        return ConversationArtifact.model_validate(self.model_dump(mode="json"))
+        data=self.model_dump(mode='json')
+        if any(e.generation_id is not None for e in self.payload.sources):
+            data['artifact_type']='knowledge_sources_v2'
+            data['payload']['schema_version']=2
+        return ConversationArtifact.model_validate(data)

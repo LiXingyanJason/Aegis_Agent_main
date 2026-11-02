@@ -58,7 +58,7 @@ def database():
         async def execute(statement,params=None):
             query=re.sub(r'(?<!:):(\w+)',lambda m:'%('+m[1]+')s',str(statement))
             cur=conn.execute(query,params or {});rows=cur.fetchall() if cur.description else []
-            return SimpleNamespace(mappings=lambda:SimpleNamespace(first=lambda:rows[0] if rows else None,all=lambda:rows),first=lambda:rows[0] if rows else None)
+            return SimpleNamespace(mappings=lambda:SimpleNamespace(first=lambda:rows[0] if rows else None,one=lambda:rows[0],all=lambda:rows),first=lambda:rows[0] if rows else None,scalar_one=lambda:next(iter(rows[0].values())))
         yield conn,SimpleNamespace(execute=execute),user,doc,ver,raw,identity
     finally:
         conn.rollback()

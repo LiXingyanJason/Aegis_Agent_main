@@ -15,9 +15,11 @@ from aegis_agent_worker.vector.contracts import VectorIndexError
 
 
 class HybridRetrievalService:
-    def __init__(self, settings, repository, embedding, vector, policy=None):
+    def __init__(self, settings, repository, embedding, vector, policy=None,reranker=None,context_expansion=None):
         self._settings, self._repository = settings, repository
         self._embedding, self._vector = embedding, vector
+        self._reranker=reranker
+        self._context_expansion=context_expansion
         self._policy = policy or RetrievalPolicy(allow_lexical_fallback=settings.knowledge_lexical_fallback_allowed)
 
     async def search(self, context, plan):
@@ -84,6 +86,31 @@ class HybridRetrievalService:
         ranking = fuse(lexical,vector_hits,p.rrf_k)
         # 把关键词检索 lexical 和向量检索 vector_hits 的排名用 RRF 融合。
         fresh = {item.chunk_id:item for item in await self._repository.load(context,versions,[item[0] for item in ranking])}
+        original_ranks={item[0]:index for index,item in enumerate(ranking,1)}
+        rerank_scores={}
+        if self._reranker is not None and self._reranker.enabled:
+            from aegis_agent_worker.rerank.client import RerankError
+            rp=self._reranker.policy
+            candidates=[fresh[cid] for cid,_,_ in ranking if cid in fresh][:rp.max_candidates]
+            metadata.update(rerank_applied=False,rerank_reason='no_candidates',rerank_policy_version=rp.version)
+            if candidates:
+                try:
+                    scored=await self._reranker.rank(context,plan.query,candidates,
+                        lambda:self._repository.rerank_authorized(context,candidates))
+                    rerank_scores={candidates[i].chunk_id:score for i,score in scored}
+                    by_id={row[0]:row for row in ranking}
+                    ranking=[by_id[candidates[i].chunk_id] for i,_ in scored]
+                    metadata.update(rerank_applied=True,rerank_reason=None)
+                except RerankError as error:
+                    allowed={'RERANK_UNAVAILABLE','RERANK_TIMEOUT','RERANK_RATE_LIMITED','RERANK_RESPONSE_INVALID'}
+                    if not rp.allow_fallback or error.code not in allowed:
+                        raise ToolError(error.code,str(error)) from None
+                    metadata['rerank_reason']=error.code
+                # Budget/permission/cancel errors never enter fallback.
+                # Reload even on fallback: the outbound period can revoke sources.
+                fresh={e.chunk_id:e for e in await self._repository.load(context,versions,[row[0] for row in ranking])}
+                candidates_by_id={e.chunk_id:e for e in candidates}
+                fresh={cid:e for cid,e in fresh.items() if cid not in candidates_by_id or e==candidates_by_id[cid]}
         # 把所有融合候选的 ID 交回 PostgreSQL，按当前用户权限、有效版本和索引状态重新读取。
         evidence=[]
         for chunk_id, score, ranks in ranking:
@@ -93,7 +120,9 @@ class HybridRetrievalService:
                 break
             evidence.append(fresh[chunk_id].model_copy(update={'source_no':len(evidence)+1}))
             metadata['rankings'].append(dict(chunk_id=chunk_id,rrf_score=score,
-                lexical_rank=ranks.get('lexical'),vector_rank=ranks.get('vector')))
+                lexical_rank=ranks.get('lexical'),vector_rank=ranks.get('vector'),
+                **(dict(rrf_rank=original_ranks[chunk_id],rerank_score=rerank_scores.get(chunk_id))
+                   if 'rerank_applied' in metadata else {})))
         if not evidence and metadata['reason'] is None:
             metadata['reason']='sources_unavailable' if ranking else 'no_matches'
         # 同时遵守结构化State总字节限制。只删除末位证据，绝不截断/篡改原文或hash。
@@ -103,4 +132,6 @@ class HybridRetrievalService:
             metadata['rankings'].pop()
         if not evidence and ranking and metadata['reason'] is None:
             metadata['reason']='result_limit'
+        if self._context_expansion is not None:
+            evidence=await self._context_expansion.augment(context,evidence,metadata)
         return KnowledgeSearchResult(evidence=evidence,retrieval=metadata)
