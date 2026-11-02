@@ -1,0 +1,33 @@
+{
+  "version": "chunking-phase2-v1",
+  "provenance": "虚构资料与构造标签，未经独立人工盲审；不是生产质量评测集",
+  "documents": [
+    {"id":"travel","split":"dev","title":"青岚差旅政策","segments":["# 青岚差旅政策\n## 国内出差\n### 第三条 预算审批\n单次预计费用超过人民币5000元，应加签部门负责人。",{"repeat":18,"text":"执行说明：申请人应核对行程信息并按清单提交材料；材料受理不代表审批完成。"},"例外：应急抢修须先取得值班主管书面许可，事后两个工作日内补齐加签。\n\n## 附录\n本政策中的应急条件以第三条例外为准。"]},
+    {"id":"contract","split":"dev","title":"星舟合同样例","segments":["# 星舟合同样例\n## 4. 续约\n4.1 服务期满前三十日提出续约，价格须双方书面确认。",{"repeat":24,"text":"合同解释说明：双方联系人负责信息转达，沟通记录须归档；转达意见不构成对价格或履行期限的承诺。"},"4.2 例外：试用合同不适用自动延续，必须重新签署订单。\n\n## 9. 引用\n试用项目续约须同时适用第4.1与4.2条。"]},
+    {"id":"project","split":"dev","title":"杉海项目恢复说明","segments":["# 杉海项目\n## 恢复目标\n生产环境 RPO 为15分钟，RTO 为2小时。\n\n## 边界\n以下指标不适用于测试环境；测试环境恢复目标另行约定。",{"repeat":20,"text":"演练说明：恢复记录应包括开始时间、结束时间、核对人员和故障范围，演练成功不自动证明所有业务恢复。"},"## 联系方式\n恢复窗口变更发往 ops@sugihai.example.com，工单编号采用 REC-204。"]},
+    {"id":"access","split":"test","title":"松岳资料访问制度","segments":["# 松岳访问制度\n## 第一章 申请\n### 第二条 临时访问\n外包人员的临时访问最长七天，须经资料负责人审批。",{"repeat":23,"text":"执行细则：访问权限按最小范围授予，申请材料包括用途说明、资料范围及到期日期；材料齐全不等于授予访问。"},"例外：涉及客户身份信息的资料不向外包人员开放，即使临时访问已获审批。\n\n## 第六章 关联规则\n第二条审批不能豁免客户身份信息禁用条款。"]},
+    {"id":"equipment","split":"test","title":"澄野设备借用政策","segments":["# 澄野设备借用\n## 借用清单\n- 普通显示器：部门管理员登记即可。\n- 加密开发机：须安全负责人批准。\n  - 离开办公区前须记录设备序列号。",{"repeat":19,"text":"归还说明：借用人核对配件与设备状态，在归还记录中签字，并向管理员说明异常现象。"},"补充限制：加密开发机不得携带出境，安全负责人批准不豁免此限制。"]},
+    {"id":"sla","split":"test","title":"远汀服务分级合同","segments":["# 远汀 SLA\n## 响应标准\n| 等级 | 首次响应 | 适用范围 |\n| --- | --- | --- |\n| P1 | 20分钟 | 生产中断 |\n| P2 | 4小时 | 非阻断故障 |",{"repeat":22,"text":"服务记录说明：响应指受理并确认问题，不等同于完成修复；记录包含客户名称、事件编号及沟通时间。"},"例外条款：客户未提供必要日志时，修复时限暂停，但首次响应时限不暂停。\n\n## 解释\n生产中断适用P1，不应套用P2。"]},
+    {"id":"minutes","split":"test","title":"栖川续约会议纪要","segments":["# 栖川续约纪要\n## 已确认\n会议确认仅延长测试支持到2027年3月31日，不改变正式合同期限。",{"repeat":25,"text":"讨论记录：与会者复核了测试计划、验收步骤和联系人安排，讨论意向必须与已确认决定分开记录。"},"## 待确认\n折扣幅度仍待财务审批，会议没有确认任何折扣比例。\n\n## 行动项\n请联系 renewal@qichuan.example.com，引用议题 REN-508；续约报价不得引用讨论中的暂定数值。"]},
+    {"id":"retention","split":"test","title":"云棠数据保留制度","segments":["# 云棠数据制度\n## 第二章 保留\n业务操作日志默认保留180天。",{"repeat":26,"text":"归档说明：每次归档核对批次、来源和读取范围，归档记录应与审批记录关联；归档不代表允许无限期保存。"},"## 第五章 例外\n法律保全通知涉及的日志暂停删除，直到合规负责人书面解除。\n\n## 第八章 引用\n第二章默认期限受第五章法律保全例外约束。"]}
+  ],
+  "queries": [
+    {"id":"travel-rule","split":"dev","query":"出差预算超过5000元谁审批？","evidence":[["travel","rule","单次预计费用超过人民币5000元，应加签部门负责人。"]]},
+    {"id":"travel-full","split":"dev","query":"紧急抢修超过差旅门槛时审批和补手续怎么处理？","evidence":[["travel","condition","单次预计费用超过人民币5000元，应加签部门负责人。"],["travel","exception","例外：应急抢修须先取得值班主管书面许可，事后两个工作日内补齐加签。"]]},
+    {"id":"contract-full","split":"dev","query":"试用项目可以按普通规则自动续约吗？","evidence":[["contract","rule","4.1 服务期满前三十日提出续约，价格须双方书面确认。"],["contract","exception","4.2 例外：试用合同不适用自动延续，必须重新签署订单。"],["contract","cross_reference","试用项目续约须同时适用第4.1与4.2条。"]]},
+    {"id":"project-full","split":"dev","query":"杉海生产和测试环境的RPO、RTO一样吗？","evidence":[["project","rule","生产环境 RPO 为15分钟，RTO 为2小时。"],["project","condition","以下指标不适用于测试环境；测试环境恢复目标另行约定。"]]},
+    {"id":"project-contact","split":"dev","query":"REC-204恢复窗口变更发给哪个邮箱？","evidence":[["project","rule","恢复窗口变更发往 ops@sugihai.example.com，工单编号采用 REC-204。"]]},
+    {"id":"access-full","split":"test","query":"外包获批七天访问后能看客户身份资料吗？","evidence":[["access","rule","外包人员的临时访问最长七天，须经资料负责人审批。"],["access","exception","例外：涉及客户身份信息的资料不向外包人员开放，即使临时访问已获审批。"]]},
+    {"id":"access-reference","split":"test","query":"第六章怎样限制第二条的临时访问审批？","evidence":[["access","rule","外包人员的临时访问最长七天，须经资料负责人审批。"],["access","cross_reference","第二条审批不能豁免客户身份信息禁用条款。"]]},
+    {"id":"equipment-full","split":"test","query":"批准借用加密开发机后可带到境外办公吗？","evidence":[["equipment","condition","- 加密开发机：须安全负责人批准。\n  - 离开办公区前须记录设备序列号。"],["equipment","exception","补充限制：加密开发机不得携带出境，安全负责人批准不豁免此限制。"]]},
+    {"id":"equipment-rule","split":"test","query":"显示器和加密开发机的借用流程一样吗？","evidence":[["equipment","rule","- 普通显示器：部门管理员登记即可。\n- 加密开发机：须安全负责人批准。"]]},
+    {"id":"sla-full","split":"test","query":"P1生产中断首次响应多快？缺少客户日志会暂停吗？","evidence":[["sla","rule","| P1 | 20分钟 | 生产中断 |"],["sla","exception","例外条款：客户未提供必要日志时，修复时限暂停，但首次响应时限不暂停。"]]},
+    {"id":"sla-table","split":"test","query":"P1和P2首次响应时限分别是多少？","evidence":[["sla","rule","| P1 | 20分钟 | 生产中断 |\n| P2 | 4小时 | 非阻断故障 |"]]},
+    {"id":"minutes-full","split":"test","query":"栖川续约纪要是否延长正式合同并批准了折扣？","evidence":[["minutes","rule","会议确认仅延长测试支持到2027年3月31日，不改变正式合同期限。"],["minutes","condition","折扣幅度仍待财务审批，会议没有确认任何折扣比例。"]]},
+    {"id":"minutes-contact","split":"test","query":"REN-508续约议题应该联系谁？","evidence":[["minutes","rule","请联系 renewal@qichuan.example.com，引用议题 REN-508；续约报价不得引用讨论中的暂定数值。"]]},
+    {"id":"retention-full","split":"test","query":"操作日志满180天，收到法律保全通知还能删除吗？","evidence":[["retention","rule","业务操作日志默认保留180天。"],["retention","exception","法律保全通知涉及的日志暂停删除，直到合规负责人书面解除。"]]},
+    {"id":"cross-doc","split":"test","query":"资料访问审批和日志到期删除，分别受到哪些不可直接豁免的限制？","evidence":[["access","exception","例外：涉及客户身份信息的资料不向外包人员开放，即使临时访问已获审批。"],["retention","exception","法律保全通知涉及的日志暂停删除，直到合规负责人书面解除。"]]},
+    {"id":"unknown-dev","split":"dev","query":"青岚国际头等舱补贴是多少？","evidence":[]},
+    {"id":"unknown-test","split":"test","query":"云棠客户密码的默认有效期是多少？","evidence":[]}
+  ]
+}

@@ -107,3 +107,10 @@ scripts/summarize_resume_experiments.py可统计逐轮/逐题一致性、按题�
 scripts/retrieval_eval提供qrels、Recall/MRR/Hit/nDCG和按文档聚类的配对区间；summarize_hybrid_retrieval.py负责只读归档，核验断言复核未改变原始排名/标注/参数。verify_hybrid_e04_report.py仅处理本次旧报告的一项片段断言过严，不是自动重试/绕过其他失败的通道；原资源已清理，不能再次复核那个旧run。
 
 证据位于文档/阶段1/实验数据/20261022-e04：36条测试查询上RRF Recall@5=98.61%，全文90.28%，纯向量100%；不能只报告对全文的改善而隐瞒纯向量更优。6条无答案均返回候选，不是拒答验证；权限验证是实际SQL谓词，不是完整角色RLS。E04新增13项本地测试，Worker813通过/2跳过；不把测试数当模型检索正确率。
+
+## 阶段二切分离线基线（2026-11-02）
+
+新增 `data/chunking_phase2_v1.json`、`../../scripts/evaluate_chunking_baseline.py` 与
+`test_chunking_baseline.py`。8份虚构资料／17题，证据以原文范围标注；词项重合代理不是真实Hybrid。
+详见 `文档/阶段2/01-切分语料与离线基线-2026-11-02.md`（从Worker根目录起算）。
+真实供应商、SQL／Qdrant召回和答案基线尚待单独授权，不以离线指标宣称3.1完整验收。
