@@ -11,3 +11,11 @@ Calendar_mcp_server/**/__pycache__/
 Calendar_mcp_server/.pytest_cache/
 /data/knowledge-sources/
 /简历/
+/tmp/pdfs/resume-read/page.png
+/aegis_frontend/.env.development
+/Email_mcp_server/.env.example
+/aegis_frontend/.env.production
+/aegis_agent_worker/evaluation-results/.gitignore
+/aegis_agent_worker/.gitignore
+/aegis_frontend/.gitignore
+/Email_mcp_server/.gitignore
