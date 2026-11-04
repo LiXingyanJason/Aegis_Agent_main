@@ -12,6 +12,7 @@ from app.repository.memory_lifecycle_repository import MemoryWriteError
 import json
 from app.param.memory_delete_param import MemoryDeleteParam
 from app.param.memory_revoke_param import MemoryRevokeParam
+from app.param.memory_formation_param import MemoryFormationParam
 from app.security.dependencies import CurrentUser, get_current_user, get_tenant_session
 from app.service.memory_service import MemoryService
 from app.vo.memory_vo import (
@@ -29,6 +30,18 @@ def _no_store(response:Response):
 
 router = APIRouter(prefix="/memories", tags=["memories"],dependencies=[Depends(_no_store)])
 _memory_service = MemoryService()
+
+
+@router.get('/formation-settings')
+async def formation_settings(current_user:CurrentUser=Depends(get_current_user),session=Depends(get_tenant_session)):
+    from app.service.memory_formation_service import MemoryFormationService
+    return success(await MemoryFormationService().read(session,current_user.user))
+
+
+@router.put('/formation-settings')
+async def update_formation_settings(param:MemoryFormationParam,current_user:CurrentUser=Depends(get_current_user),session=Depends(get_tenant_session)):
+    from app.service.memory_formation_service import MemoryFormationService
+    return success(await MemoryFormationService().update(session,current_user.user,param))
 
 
 async def _write(operation):

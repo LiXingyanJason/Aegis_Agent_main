@@ -64,6 +64,9 @@ class MemoryContextService:
         try:
             async with self._database.session() as session:
                 async with tenant_transaction(session, context):
+                    usage_setting=getattr(self._repository,'formation_use_existing',None)
+                    if usage_setting and not await usage_setting(session,tenant_id=run.tenant_id,user_id=run.user_id):
+                        return empty('memory_usage_disabled')
                     # 从用户在这个“长期记忆”页面保存的记录中的全部条目。同时包含“长期摘要”和“实体记忆”
                     recall=getattr(self._repository,'recall_candidates',None)
                     if recall is not None:
@@ -155,6 +158,9 @@ class MemoryContextService:
         """调用前提交安全元数据；审计失败则不发送带记忆的模型请求。"""
         async with self._database.session() as session:
             async with tenant_transaction(session, TenantContext(tenant_id=run.tenant_id,user_id=run.user_id)):
+                usage_setting=getattr(self._repository,'formation_use_existing',None)
+                if usage_setting and not await usage_setting(session,tenant_id=run.tenant_id,user_id=run.user_id):
+                    raise HarnessError('MEMORY_CONTEXT_CHANGED','用户已关闭已有记忆使用，请重新执行任务')
                 try:
                     await self._repository.record_bundle_usage(session, run=run, attempt_id=attempt_id, bundle=bundle)
                 except NoResultFound:

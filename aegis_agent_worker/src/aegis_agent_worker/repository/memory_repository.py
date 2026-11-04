@@ -9,6 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class MemoryRepository:
+    async def formation_use_existing(self,session,*,tenant_id,user_id):
+        row=(await session.execute(text('SELECT use_existing FROM memory_formation_settings WHERE tenant_id=:tenant AND user_id=:user'),
+            dict(tenant=tenant_id,user=user_id))).mappings().first()
+        return row is None or row['use_existing']
+
     """仅暴露读取非敏感记忆和记录实际使用情况的最小能力。"""
 
     async def recall_candidates(self,session,*,tenant_id,user_id,hints,policy):
