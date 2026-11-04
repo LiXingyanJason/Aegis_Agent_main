@@ -19,3 +19,6 @@ Calendar_mcp_server/.pytest_cache/
 /aegis_agent_worker/.gitignore
 /aegis_frontend/.gitignore
 /Email_mcp_server/.gitignore
+/tmp/
+
+/tmp/gepa-pdf-reader/
